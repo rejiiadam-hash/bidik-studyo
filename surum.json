@@ -1,9 +1,11 @@
 {
-  "surum": "1.6.1",
+  "surum": "1.7.0",
   "tarih": "2026-10-15",
   "notlar": [
-    "Yedek ses denemesi: Ayarlar > Yedek ses > 'Ornek sesleri uret' ile Bidik'in sesi (Ahmet) ve internetsiz Piper sesini karsilastir.",
-    "Yazim duzeltmesi sonrasi durma artik kirmizi hata degil, sari uyari olarak gorunur."
+    "Bidik'in kostum dolabi: 11 kostum, her konuya otomatik uygun kiyafet.",
+    "Onay ekraninda kostum secici ve kucuk onizleme; istersen degistir ya da kostumsuz sec.",
+    "Yeni konular: 'burclar ve gokyuzu' (dogru bilgiler) ve 'cocuklarin neden sorulari'.",
+    "Sapkali sahnelerde Bidik altyaziya ve karta carpmayacak sekilde olceklenir."
   ],
   "dosyalar": {
     "program/GELISTIRICI.txt": "24e10b02892addbc87b87d078143cb77a09521d86239fe3b78d2a0628b03d138",
@@ -13,16 +15,16 @@
     "program/font/LICENSE.txt": "63d3ba759d12804c5b31a9d5940d855c1820d1f5999e6b0872eb1c7ff045fbc9",
     "program/gereksinimler.txt": "ea75906866e55afdfe66e5eb98a011d93e5e7eea72949ec672fdf817265f0a3a",
     "program/github_kanal.py": "073f7240c08dac6bbc105da3062ad0fe2ce688747cee9fb72621aab0a54cce3f",
-    "program/karakter.py": "a7ac6bd65ef97f259f6a3aaa123ec7b10df23a127e2f023da726e0af4407a7a7",
+    "program/karakter.py": "b3f0eb8d661cde885545ef64059514bbdea1de710fc9bf1628eedf9b8458f6a9",
     "program/kisayol.ps1": "8b01102bef0e33a74e1a10756c1d030ef45381b8a3bcd2bd0cfd16252d872a5b",
-    "program/ortak.py": "d4cd530c5128321858986d237e16280fc7bc254ea123a86ea235e10aff63cb7a",
-    "program/panel.html": "8cfe8e855b33a401378f2362e7902632901dd03c686e67ba291c367d477b4a6f",
-    "program/panel.py": "bfedb0f40b1e4561bcb0b60b6b1193de9c9790674bf98fd4b0394ad9835e0905",
-    "program/senaryo_motoru.py": "a5ca0600b9412743cb18f90ff3327d3b81cf7970fd46857ccae8e17df9c84d28",
+    "program/kostumler.py": "0a0446aa4c0c56e1d37b6dfb4fda4eaa1f70e59946eca476840a3c539e8dce12",
+    "program/ortak.py": "7bdf52ba89a5347a913cca7bfa4d28109b49967940594a822e0d156eb1877b2b",
+    "program/panel.html": "b6b237aa5f492637579ce65cc3cc9d8302f7840dbb97f9a13b99899ec0c36dd9",
+    "program/panel.py": "b1052a28d0d3bd170a70350fd54df0c96acf9b39c513d8501b5e0b060391e67d",
+    "program/senaryo_motoru.py": "6e17bc63e71e5191671de2f1f438e1f65c682a129d16a1c167be733fc837ab18",
     "program/telefon.py": "5d2d8793c6184446d809ef0f4b73342a9eb0fdab559f7c51ce8ab07e7af29892",
     "program/uygulama.py": "d7965fa103804248cd0ddf13f66a2ddc5fb11b688eb3d8f361c1bc4a698a82b4",
-    "program/video_uret.py": "db203a74f7c15d930da55edec05a0f44c7f7d35746c1ee27e09590ddc218f740",
-    "program/yedek_ses.py": "f0724ed36c81ca25ca15b2cba5c7cb5055246ae55fb7df599a5801e81dac08d4",
+    "program/video_uret.py": "887acbf862693a3a359cb903440c37f7cc3f13782c6216636b2ec7ef005174c8",
     "program/youtube_yukle.py": "98ca5ff5b53fa406f6216f21a9c87b17caece3ea8d02f51d975176ea1cb440b3"
   }
 }
