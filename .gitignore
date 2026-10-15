@@ -1,0 +1,14 @@
+__pycache__/
+*.pyc
+# GIZLI: asla depoya konmaz
+ayarlar.json
+client_secret*.json
+youtube_token.json
+*.log
+videolar/
+senaryolar/
+ses_onbellek/
+silinenler/
+yedek/
+guncelleme/
+.venv/

@@ -1,0 +1,25 @@
+{
+  "surum": "1.5.1",
+  "tarih": "2026-10-15",
+  "notlar": [
+    "GitHub guncelleme kanali acildi (rejiiadam-hash/bidik-studyo)."
+  ],
+  "dosyalar": {
+    "program/GELISTIRICI.txt": "24e10b02892addbc87b87d078143cb77a09521d86239fe3b78d2a0628b03d138",
+    "program/bidik.ico": "28def8b8467f59bfad08aa6ae749258f23e47fa9aaa0c100cef59c8b2d8c16a3",
+    "program/bidik.png": "eaefa6925920f2927db821cfcd582a98b21786cce794bd3f3ef3f7e68f5018a0",
+    "program/font/DejaVuSans-Bold.ttf": "5c1247acef7f2b8522a31742c76d6adcb5569bacc0be7ceaa4dc39dd252ce895",
+    "program/font/LICENSE.txt": "63d3ba759d12804c5b31a9d5940d855c1820d1f5999e6b0872eb1c7ff045fbc9",
+    "program/gereksinimler.txt": "ea75906866e55afdfe66e5eb98a011d93e5e7eea72949ec672fdf817265f0a3a",
+    "program/github_kanal.py": "073f7240c08dac6bbc105da3062ad0fe2ce688747cee9fb72621aab0a54cce3f",
+    "program/karakter.py": "a7ac6bd65ef97f259f6a3aaa123ec7b10df23a127e2f023da726e0af4407a7a7",
+    "program/kisayol.ps1": "8b01102bef0e33a74e1a10756c1d030ef45381b8a3bcd2bd0cfd16252d872a5b",
+    "program/ortak.py": "d4cd530c5128321858986d237e16280fc7bc254ea123a86ea235e10aff63cb7a",
+    "program/panel.html": "a6d5a783c8132d7aa4f382c2e872b069fc2152e14ad31e4d442d7c5725fb6690",
+    "program/panel.py": "cd6ef6d47c8c928804e2adac49568904cd67cc0759408796a021681b9043ab6b",
+    "program/senaryo_motoru.py": "a5ca0600b9412743cb18f90ff3327d3b81cf7970fd46857ccae8e17df9c84d28",
+    "program/uygulama.py": "bd5b079e206273fdf6a246a8096cebebd00350c9fd1fb098af9ebac6738398b8",
+    "program/video_uret.py": "db203a74f7c15d930da55edec05a0f44c7f7d35746c1ee27e09590ddc218f740",
+    "program/youtube_yukle.py": "98ca5ff5b53fa406f6216f21a9c87b17caece3ea8d02f51d975176ea1cb440b3"
+  }
+}

@@ -1,0 +1,15 @@
+BIDIK STUDYO - GELISTIRICI NOTU (guncelleme nasil gonderilir)
+
+Uygulama BIDIK\guncelleme\surum.json dosyasini izler. Icindeki "surum",
+program\surum.txt'den buyukse panelde "Yeni guncelleme var" bandi cikar.
+
+Paket yapisi:
+  guncelleme\program\...   -> program\ klasorune kopyalanir (ayni goreli yol)
+  guncelleme\kok\...       -> BIDIK\ kok klasorune kopyalanir (istege bagli)
+  guncelleme\surum.json    -> {"surum": "1.2.0", "tarih": "YYYY-AA-GG", "notlar": ["..."]}
+
+Kurallar:
+  - surum.json EN SON yazilir (yarim paket gorunmesin).
+  - gereksinimler.txt degisirse pip install kendiliginden calisir.
+  - Uygulama once program\'i yedek\ klasorune yedekler (son 3 yedek tutulur),
+    sonra kendini yeniden baslatir.
