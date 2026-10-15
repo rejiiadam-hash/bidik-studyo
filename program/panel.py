@@ -112,6 +112,7 @@ def durum():
     return {
         "is": IS,
         "bekleyen": bekleyen,
+        "ertelenen": ertelenenler(),
         "videolar": videolar[:30],
         "ayar": {"gemini_var": bool(a.get("gemini_api_key")), "gunluk_video": a["gunluk_video"],
                  "alanlar": a["alanlar"], "son_cagri": a.get("son_cagri", True), "tema": a.get("tema", "koyu"),
@@ -477,6 +478,38 @@ def onayla(v):
     is_baslat(f"Video uretiliyor: {s['baslik']}", f)
 
 
+def ertelenenler():
+    liste = []
+    for p in motor.ertelenen_dosyalar():
+        try:
+            s = oku(p)
+        except (OSError, ValueError):
+            continue
+        liste.append({"_id": rel(p), "baslik": s.get("baslik", ""), "alan": s.get("alan", ""), "konu": s.get("konu", ""),
+                      "kostum": s.get("kostum", ""), "ertelendi": s.get("ertelendi", ""),
+                      "replikler": [x.get("replik", "") for x in s.get("sahneler", [])]})
+    return sorted(liste, key=lambda x: x["ertelendi"], reverse=True)
+
+
+def ertele(v):
+    """Senaryoyu onay listesinden kaldirir (silmez); konu tekrar onerilmez, 'Geri getir' ile doner."""
+    yol = guvenli(v["id"])
+    s = oku(yol)
+    s["ertelendi"] = datetime.date.today().isoformat()
+    yaz(yol, s)
+    tasi(yol, "ertelenen")
+
+
+def geri_getir(v):
+    yol = guvenli(v["id"])
+    if os.sep + "ertelenen" + os.sep not in yol:
+        raise ValueError("Bu senaryo ertelenenlerde degil.")
+    s = oku(yol)
+    s.pop("ertelendi", None)
+    yaz(yol, s)
+    tasi(yol, "bekleyen")
+
+
 def reddet(v):
     yol = guvenli(v["id"])
     s = oku(yol)
@@ -703,7 +736,7 @@ ISLEMLER = {"/api/senaryo-uret": senaryo_uret, "/api/kaydet": kaydet, "/api/onay
             "/api/reddet": reddet, "/api/ayar": ayar, "/api/klasor": klasor_ac,
             "/api/guncelle": guncelle, "/api/nabiz": nabiz,
             "/api/paylas": paylas, "/api/video-sil": video_sil, "/api/youtube-istemci": youtube_istemci,
-            "/api/youtube-bagla": youtube_bagla, "/api/youtube-kes": youtube_kes, "/api/destek": destek, "/api/github-kontrol": github_kontrol, "/api/sifre": sifre_ayarla, "/api/telefon": telefon_islem, "/api/kapat": kapat, "/api/analiz": analiz_rapor, "/api/analiz-guncelle": analiz_guncelle, "/api/yeniden-uret": yeniden_uret}
+            "/api/youtube-bagla": youtube_bagla, "/api/youtube-kes": youtube_kes, "/api/destek": destek, "/api/github-kontrol": github_kontrol, "/api/sifre": sifre_ayarla, "/api/telefon": telefon_islem, "/api/kapat": kapat, "/api/ertele": ertele, "/api/geri-getir": geri_getir, "/api/analiz": analiz_rapor, "/api/analiz-guncelle": analiz_guncelle, "/api/yeniden-uret": yeniden_uret}
 
 
 # --- sunucu -------------------------------------------------------------------
@@ -879,7 +912,7 @@ class Isleyici(BaseHTTPRequestHandler):
 
 
 def hazirla():
-    for d in ("bekleyen", "onaylanan", "reddedilen"):
+    for d in ("bekleyen", "onaylanan", "reddedilen", "ertelenen"):
         os.makedirs(os.path.join(SENARYO, d), exist_ok=True)
     os.makedirs(VIDEO, exist_ok=True)
     if not os.path.exists(os.path.join(KOK, "ayarlar.json")):

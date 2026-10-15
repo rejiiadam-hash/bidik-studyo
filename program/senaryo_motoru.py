@@ -403,7 +403,7 @@ def calistir(ilerleme=None):
     ilerle(5, "Model seciliyor")
     modeller = model_sec(ayar["model"])
     kullanilan = [k["konu"] for k in hafiza()["konular"]][-200:]
-    bekleyen = [json.load(open(p, encoding="utf-8")).get("konu", "") for p in bekleyen_dosyalar()]
+    bekleyen = [json.load(open(p, encoding="utf-8")).get("konu", "") for p in bekleyen_dosyalar() + ertelenen_dosyalar()]
     kullanilan += bekleyen
     aday_sayisi = min(int(ayar["aday_sayisi"]), max(5, int(ayar["gunluk_video"]) * 2))   # kisa cevap = hizli ve kesilmez
     alanlar = alan_sec(ayar["alanlar"], aday_sayisi)
@@ -495,6 +495,12 @@ def calistir(ilerleme=None):
 def bekleyen_dosyalar():
     import glob
     return sorted(glob.glob(os.path.join(SENARYO, "bekleyen", "*", "*.json")))
+
+
+def ertelenen_dosyalar():
+    """Ertelenen senaryolar: konulari yeni senaryolarda tekrar onerilmez, istenince onaya geri doner."""
+    import glob
+    return sorted(glob.glob(os.path.join(SENARYO, "ertelenen", "*", "*.json")))
 
 
 if __name__ == "__main__":

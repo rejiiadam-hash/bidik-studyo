@@ -59,6 +59,17 @@ main{width:100%;max-width:1240px;margin:0 auto;padding:18px 24px 60px}
 @keyframes uc{0%{transform:translateY(0) scale(.6);opacity:0}15%{opacity:.95}100%{transform:translateY(-130px) scale(1.15);opacity:0}}
 .sevgi-mini{display:none;align-items:center;gap:6px;font-weight:800;font-size:13px;color:#ffd6de}
 .sevgi-mini span{display:inline-block;animation:atis 1.2s ease-in-out infinite}
+/* --- ertelenenler --- */
+.ekart{display:flex;gap:12px;align-items:flex-start;position:relative;padding:14px 14px 14px 18px;opacity:.92}
+.ekart::before{content:"";position:absolute;left:0;top:12px;bottom:12px;width:6px;border-radius:0 6px 6px 0;background:var(--mavi)}
+.ekart img{width:58px;height:80px;border-radius:10px;background:#faf4e6;flex:none;object-fit:cover}
+.ekart .govde{flex:1;min-width:0}
+.ekart .etiket-ert{display:inline-block;font-size:11.5px;font-weight:800;letter-spacing:.6px;color:var(--mavi);
+  background:rgba(61,127,217,.14);border-radius:99px;padding:2px 10px;margin-bottom:6px}
+.ekart b{display:block;font-size:15px;margin-bottom:4px}
+.ekart .replik-ozet{font-size:13px;color:var(--soluk);margin:4px 0 8px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.egrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(360px,1fr));gap:12px}
+@media (max-width:700px){.egrid{grid-template-columns:1fr}}
 /* --- analiz --- */
 .donemler{display:inline-flex;background:var(--cip);border-radius:12px;padding:4px;gap:4px}
 .donemler button{border:none;background:transparent;padding:7px 14px;border-radius:9px;font-size:14px}
@@ -339,6 +350,7 @@ body:not(.uzak) .sadece-uzak{display:none !important}
     <div id="ilkKurulum"></div>
     <h2>Onay bekleyen senaryolar</h2>
     <div id="bekleyen"></div>
+    <div id="ertelenenBolum"></div>
   </section>
 
   <section class="sekme" id="s-videolar">
@@ -529,6 +541,7 @@ function senaryoKarti(s, i){
     <div class="dugmeler">
       <button class="yesil" data-is onclick="onayla(${i})">✓ Onayla ve videoyu üret</button>
       <button onclick="kaydet(${i})">Kaydet</button>
+      <button onclick="ertele(${i})" title="Onay listesinden kalksın, sonra geri getirebilirsin">⏸ Ertele</button>
       <button class="kirmizi" onclick="reddet(${i})">Reddet</button>
       <span class="toplam">${toplam.toFixed(1)} sn</span>
     </div></div>`;
@@ -694,6 +707,7 @@ function ciz(){
   $("ilkKurulum").innerHTML = a.gemini_var ? "" :
     `<div class="uyari"><b>Başlamak için bir adım kaldı</b>Senaryoları yapay zekânın yazabilmesi için ücretsiz bir Gemini API anahtarı gerekiyor.
      <a href="https://aistudio.google.com/apikey" target="_blank">aistudio.google.com/apikey</a> adresinden al, <b>Ayarlar</b> sekmesine yapıştırıp kaydet.</div>`;
+  ertelenenCiz(d);
   $("bekleyen").innerHTML = d.bekleyen.length ? `<div class="izgara">${d.bekleyen.map(senaryoKarti).join("")}</div>` :
     `<div class="bos">Onay bekleyen senaryo yok. Yukarıdaki <b>✨ Yeni senaryolar yaz</b> düğmesine bas.</div>`;
   $("videolar").innerHTML = bekleyenVideo.length ? `<div class="vizgara">${bekleyenVideo.map(videoKarti).join("")}</div>` :
@@ -722,6 +736,26 @@ async function kaydet(i, sessiz){ const r = await post("/api/kaydet",{id:D.bekle
   if(!sessiz){ r.hatalar.length ? bildir("Kaydedildi ama: "+r.hatalar.join("; "),true) : bildir("Kaydedildi"); yenile(true);} return r; }
 async function onayla(i){ const r = await kaydet(i,true); if(r.hatalar.length){ bildir(r.hatalar.join("; "),true); return; }
   await post("/api/onayla",{id:D.bekleyen[i]._id}); bildir("Video üretimi başladı (1–3 dk). Hazır olunca Videolar sekmesinde."); yenile(false); }
+async function ertele(i){
+  await kaydet(i, true);   // ekrandaki duzenlemeler kaybolmasin
+  await post("/api/ertele",{id:D.bekleyen[i]._id});
+  bildir("Senaryo ertelendi. Aşağıdaki 'Ertelenenler' bölümünden istediğin zaman geri getirebilirsin."); yenile(true);
+}
+async function geriGetir(id){ await post("/api/geri-getir",{id}); bildir("Senaryo onay listesine geri geldi."); yenile(true); }
+async function ertelenenReddet(id){ if(!confirm("Bu ertelenen senaryo reddedilsin mi? Konu tekrar önerilmez.")) return;
+  await post("/api/reddet",{id}); yenile(true); }
+function ertelenenCiz(d){
+  const l = d.ertelenen || [];
+  $("ertelenenBolum").innerHTML = !l.length ? "" : `<h2>⏸ Ertelenenler <span class="cip">${l.length}</span></h2>
+    <div class="egrid">${l.map(e => `<div class="kart ekart">
+      <img src="/kostum/${esc(e.kostum||"yok")}.png" alt="" loading="lazy">
+      <div class="govde"><span class="etiket-ert">⏸ ERTELENEN${e.ertelendi ? " · " + esc(gunEtiketi(e.ertelendi).replace(/^(Bugün|Dün|Yarın) · /,"$1, ")) : ""}</span>
+        <b>${esc(e.baslik)}</b>
+        <div class="etiketler" style="margin:0"><span class="cip">${esc(e.alan)}</span><span class="cip">${esc(e.konu)}</span></div>
+        <div class="replik-ozet">“${esc(e.replikler[0]||"")}”</div>
+        <div class="dugmeler" style="margin-top:0"><button class="ana" onclick="geriGetir('${esc(e._id)}')">↩ Geri getir</button>
+          <button class="kirmizi" onclick="ertelenenReddet('${esc(e._id)}')">Reddet</button></div></div></div>`).join("")}</div>`;
+}
 async function reddet(i){ if(!confirm("Bu senaryo reddedilsin mi? Konu tekrar önerilmez.")) return;
   await post("/api/reddet",{id:D.bekleyen[i]._id}); yenile(true); }
 async function senaryoUret(){ await post("/api/senaryo-uret",{}); bildir("Senaryolar yazılıyor…"); sekme("senaryolar"); yenile(false); }
