@@ -1,8 +1,11 @@
 {
-  "surum": "1.5.1",
+  "surum": "1.6.0",
   "tarih": "2026-10-15",
   "notlar": [
-    "GitHub guncelleme kanali acildi (rejiiadam-hash/bidik-studyo)."
+    "Telefondan erisim: Ayarlar > Telefondan erisim bolumunden sifre belirle, Tailscale ile ac.",
+    "Telefonda sifreli giris; bilgisayarda sifre sorulmaz. Sifre degistirme ve klasor islemleri sadece bilgisayardan.",
+    "Arka plan modu: bilgisayar acilinca baslar, pencere kapansa da calisir, calisirken bilgisayar uyumaz (istege bagli).",
+    "Telefona uygun ekran; uzun replikler artik alt satira geciyor (yazim hatasi gozden kacmasin)."
   ],
   "dosyalar": {
     "program/GELISTIRICI.txt": "24e10b02892addbc87b87d078143cb77a09521d86239fe3b78d2a0628b03d138",
@@ -15,10 +18,11 @@
     "program/karakter.py": "a7ac6bd65ef97f259f6a3aaa123ec7b10df23a127e2f023da726e0af4407a7a7",
     "program/kisayol.ps1": "8b01102bef0e33a74e1a10756c1d030ef45381b8a3bcd2bd0cfd16252d872a5b",
     "program/ortak.py": "d4cd530c5128321858986d237e16280fc7bc254ea123a86ea235e10aff63cb7a",
-    "program/panel.html": "a6d5a783c8132d7aa4f382c2e872b069fc2152e14ad31e4d442d7c5725fb6690",
-    "program/panel.py": "cd6ef6d47c8c928804e2adac49568904cd67cc0759408796a021681b9043ab6b",
+    "program/panel.html": "daf10c60b31af939dadf48fb3019741a8851fb5c4ebf488fd14f9b221472d6ec",
+    "program/panel.py": "2fcd2cf19456116a886e7fdbe0048a756a0c31e452fe29e6f74d5ef05fd0a27e",
     "program/senaryo_motoru.py": "a5ca0600b9412743cb18f90ff3327d3b81cf7970fd46857ccae8e17df9c84d28",
-    "program/uygulama.py": "bd5b079e206273fdf6a246a8096cebebd00350c9fd1fb098af9ebac6738398b8",
+    "program/telefon.py": "5d2d8793c6184446d809ef0f4b73342a9eb0fdab559f7c51ce8ab07e7af29892",
+    "program/uygulama.py": "d7965fa103804248cd0ddf13f66a2ddc5fb11b688eb3d8f361c1bc4a698a82b4",
     "program/video_uret.py": "db203a74f7c15d930da55edec05a0f44c7f7d35746c1ee27e09590ddc218f740",
     "program/youtube_yukle.py": "98ca5ff5b53fa406f6216f21a9c87b17caece3ea8d02f51d975176ea1cb440b3"
   }

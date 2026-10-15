@@ -12,12 +12,14 @@ from video_uret import uret, dogrula, IKONLAR, RENKLER
 import senaryo_motoru as motor
 import youtube_yukle as yt
 import github_kanal
+import telefon
 
 PORT = 8765
 GUNCELLEME = os.path.join(KOK, "guncelleme")
 YEDEK = os.path.join(KOK, "yedek")
 NABIZ = {"son": None}           # Edge uygulama modunda pencere kapandi mi anlamak icin
 KAPAT = {"fonk": None}          # uygulama.py pencereyi kapatma fonksiyonunu buraya koyar
+ARKA = {"acik": False}       # uygulama.py --arka: pencere olmadan arka planda calisiyor
 IS = {"calisiyor": False, "baslik": "", "yuzde": 0, "mesaj": "", "hata": "", "bitti": "", "no": 0}
 KILIT = threading.Lock()
 
@@ -103,12 +105,119 @@ def durum():
                  "alanlar": a["alanlar"], "son_cagri": a.get("son_cagri", True), "tema": a.get("tema", "koyu"),
                  "paylasim_saatleri": a.get("paylasim_saatleri") or ["11:00", "15:00", "19:00"],
                  "youtube_hazir": yt.hazir_mi(), "youtube_bagli": yt.bagli_mi(),
-                 "youtube_kanal": a.get("youtube_kanal", ""), "youtube_silme": yt.silme_izni_var()},
+                 "youtube_kanal": a.get("youtube_kanal", ""), "youtube_silme": yt.silme_izni_var(),
+                 "sifre_var": sifre_var(), "arka": ARKA["acik"]},
         "secenek": {"ifade": IFADELER, "kol": KOL_POZLARI, "ikon": IKONLAR, "renk": list(RENKLER)},
         "toplam_islenen": len(motor.hafiza()["konular"]),
         "surum": surum(),
         "guncelleme": bekleyen_guncelleme(),
     }
+
+
+# --- telefondan erisim: sifre ve oturum ------------------------------------------
+import hashlib, hmac, secrets
+from http.cookies import SimpleCookie
+
+OTURUM_DOSYA = os.path.join(KOK, "oturumlar.json")
+OTURUM_SURE = 30 * 24 * 3600
+GIRIS = {"hata": 0, "kilit": 0.0}
+YEREL_HOSTLAR = {"127.0.0.1", "localhost"}
+SADECE_YEREL = {"/api/sifre", "/api/telefon", "/api/klasor", "/api/youtube-istemci", "/api/kapat"}
+
+
+def _ozet(sifre, tuz, tur=200_000):
+    return hashlib.pbkdf2_hmac("sha256", sifre.encode("utf-8"), bytes.fromhex(tuz), tur).hex()
+
+
+def sifre_var():
+    return bool((ayarlar().get("panel_sifre") or {}).get("ozet"))
+
+
+def _sifre_dogru(sifre):
+    k = ayarlar().get("panel_sifre") or {}
+    if not k.get("ozet"):
+        return False
+    return hmac.compare_digest(_ozet(sifre, k["tuz"], int(k.get("tur", 200_000))), k["ozet"])
+
+
+def _oturumlar():
+    try:
+        with open(OTURUM_DOSYA, encoding="utf-8") as f:
+            veri = json.load(f)
+    except (OSError, ValueError):
+        return {}
+    simdi = time.time()
+    return {k: v for k, v in veri.items() if v > simdi}
+
+
+def _oturumlari_yaz(o):
+    with open(OTURUM_DOSYA, "w", encoding="utf-8") as f:
+        json.dump(o, f)
+
+
+def _oturum_ac():
+    jeton = secrets.token_urlsafe(32)
+    o = _oturumlar()
+    o[hashlib.sha256(jeton.encode()).hexdigest()] = time.time() + OTURUM_SURE
+    _oturumlari_yaz(o)
+    return jeton
+
+
+def _jeton(h):
+    try:
+        c = SimpleCookie(h.headers.get("Cookie") or "")
+        return c["bidik_oturum"].value if "bidik_oturum" in c else ""
+    except Exception:
+        return ""
+
+
+def _oturum_gecerli(h):
+    j = _jeton(h)
+    return bool(j) and hashlib.sha256(j.encode()).hexdigest() in _oturumlar()
+
+
+def uzak_mi(h):
+    """Istek bu bilgisayarin kendisinden degilse (telefon / Tailscale) True."""
+    host = (h.headers.get("Host") or "").strip().lower()
+    host = host.rsplit(":", 1)[0] if host.count(":") == 1 else host
+    ip = h.client_address[0]
+    # Tailscale serve istegi 127.0.0.1'den iletir ama yonlendirme basliklari ekler
+    yonlendirildi = any(h.headers.get(k) for k in ("X-Forwarded-For", "X-Forwarded-Host", "Forwarded",
+                                                     "Tailscale-User-Login", "Tailscale-User-Name"))
+    return ip not in ("127.0.0.1", "::1") or host not in YEREL_HOSTLAR or yonlendirildi
+
+
+def sifre_ayarla(v):
+    sifre = str(v.get("sifre") or "")
+    if len(sifre) < 6:
+        raise ValueError("Sifre en az 6 karakter olmali.")
+    tuz = secrets.token_hex(16)
+    ayar_kaydet({"panel_sifre": {"tuz": tuz, "ozet": _ozet(sifre, tuz), "tur": 200_000}})
+    _oturumlari_yaz({})   # eski telefon oturumlari kapanir
+    return {"mesaj": "Sifre kaydedildi. Telefonda yeniden giris yapman gerekecek."}
+
+
+GIRIS_HTML = """<!doctype html><html lang="tr"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1"><meta name="theme-color" content="#14151d">
+<link rel="manifest" href="/manifest.json"><link rel="apple-touch-icon" href="/bidik.png">
+<meta name="apple-mobile-web-app-capable" content="yes"><title>Bıdık Stüdyo</title>
+<style>body{margin:0;min-height:100vh;display:flex;align-items:center;justify-content:center;background:#14151d;color:#ecebf3;
+font:16px system-ui,-apple-system,"Segoe UI",sans-serif}form{width:min(340px,90vw);text-align:center}
+img{width:96px}h1{font-size:22px;margin:10px 0 18px}input{width:100%;box-sizing:border-box;font:inherit;padding:14px;
+border-radius:12px;border:1.5px solid #2e3144;background:#151722;color:#ecebf3;margin-bottom:12px}
+button{width:100%;font:inherit;font-weight:700;padding:14px;border-radius:12px;border:none;background:#ffb703;color:#23253a}
+p{color:#e63946;min-height:22px;font-size:14px}</style></head><body>
+<form onsubmit="gir(event)"><img src="/bidik.png" alt=""><h1>Bıdık Stüdyo</h1>
+<input id="s" type="password" placeholder="Şifre" autocomplete="current-password" autofocus>
+<button>Giriş</button><p id="h">__MESAJ__</p></form>
+<script>async function gir(e){e.preventDefault();const r=await fetch("/api/giris",{method:"POST",
+headers:{"Content-Type":"application/json"},body:JSON.stringify({sifre:document.getElementById("s").value})});
+const j=await r.json();if(j.ok)location.replace("/");else document.getElementById("h").textContent=j.hata||"Hata";}</script>
+</body></html>"""
+
+MANIFEST = {"name": "Bıdık Stüdyo", "short_name": "Bıdık", "start_url": "/", "display": "standalone",
+            "background_color": "#14151d", "theme_color": "#14151d",
+            "icons": [{"src": "/bidik.png", "sizes": "192x192", "type": "image/png"}]}
 
 
 # --- surum / guncelleme --------------------------------------------------------
@@ -196,7 +305,8 @@ def yeniden_baslat():
     bayrak = 0
     if sys.platform.startswith("win"):
         bayrak = 0x00000008 | 0x00000200   # DETACHED_PROCESS | CREATE_NEW_PROCESS_GROUP
-    subprocess.Popen([sys.executable, hedef, "--yeniden"], cwd=KOK, creationflags=bayrak, close_fds=True)
+    argumanlar = [sys.executable, hedef, "--yeniden"] + (["--arka"] if ARKA["acik"] else [])
+    subprocess.Popen(argumanlar, cwd=KOK, creationflags=bayrak, close_fds=True)
     time.sleep(0.3)
     try:
         if KAPAT["fonk"]:
@@ -445,6 +555,7 @@ def destek(_):
         f"Ses kutuphanesi (edge-tts): {_paket_surumu('edge-tts')}",
         f"YouTube: {'bagli (' + a.get('youtube_kanal', '') + ')' if yt.bagli_mi() else 'bagli degil'}",
         github_kanal.durum_metni(),
+        f"Arka plan: {'evet' if ARKA['acik'] else 'hayir'} | telefon sifresi: {'var' if sifre_var() else 'yok'}",
         f"Son is: {IS.get('baslik')} | durum: {'calisiyor' if IS.get('calisiyor') else 'bitti'} | hata: {IS.get('hata') or '-'}",
     ]
     log = os.path.join(KOK, "bidik.log")
@@ -463,6 +574,30 @@ def github_kontrol(_):
     except Exception as e:
         github_kanal.DURUM["hata"] = str(e)[:200]
     return {"metin": github_kanal.durum_metni()}
+
+
+def telefon_islem(v):
+    """Ayarlar > Telefondan erisim karti (sadece bu bilgisayardan)."""
+    islem = v.get("islem", "durum")
+    if islem == "otomatik":
+        acik = bool(v.get("acik"))
+        telefon.otomatik_baslat(acik)
+        ayar_kaydet({"arka_plan": acik})
+        ts = {}
+    elif islem == "ac":
+        ts = telefon.tailscale_ac()
+    elif islem == "kapat":
+        ts = telefon.tailscale_kapat()
+    else:
+        ts = telefon.tailscale_durum()
+    return {"tailscale": ts, "sifre_var": sifre_var(), "otomatik": telefon.otomatik_baslat_var(),
+            "arka": ARKA["acik"]}
+
+
+def kapat(_):
+    """Uygulamayi (arka plan dahil) tamamen kapatir."""
+    threading.Timer(0.5, lambda: os._exit(0)).start()
+    return {"mesaj": "Uygulama kapaniyor"}
 
 
 def youtube_istemci(v):
@@ -524,7 +659,7 @@ ISLEMLER = {"/api/senaryo-uret": senaryo_uret, "/api/kaydet": kaydet, "/api/onay
             "/api/reddet": reddet, "/api/ayar": ayar, "/api/klasor": klasor_ac,
             "/api/guncelle": guncelle, "/api/nabiz": nabiz,
             "/api/paylas": paylas, "/api/video-sil": video_sil, "/api/youtube-istemci": youtube_istemci,
-            "/api/youtube-bagla": youtube_bagla, "/api/youtube-kes": youtube_kes, "/api/destek": destek, "/api/github-kontrol": github_kontrol, "/api/yeniden-uret": yeniden_uret}
+            "/api/youtube-bagla": youtube_bagla, "/api/youtube-kes": youtube_kes, "/api/destek": destek, "/api/github-kontrol": github_kontrol, "/api/sifre": sifre_ayarla, "/api/telefon": telefon_islem, "/api/kapat": kapat, "/api/yeniden-uret": yeniden_uret}
 
 
 # --- sunucu -------------------------------------------------------------------
@@ -540,9 +675,78 @@ class Isleyici(BaseHTTPRequestHandler):
         self.end_headers()
         self.wfile.write(b)
 
+    def _html(self, metin, kod=200):
+        b = metin.encode("utf-8")
+        self.send_response(kod)
+        self.send_header("Content-Type", "text/html; charset=utf-8")
+        self.send_header("Cache-Control", "no-store")
+        self.send_header("Content-Length", str(len(b)))
+        self.end_headers()
+        self.wfile.write(b)
+
+    def _kapi(self, yol):
+        """Uzak istekte oturum yoksa cevabi verir ve False dondurur."""
+        if not uzak_mi(self) or yol in ("/bidik.png", "/manifest.json", "/api/giris"):
+            return True
+        if not sifre_var():
+            self._html(GIRIS_HTML.replace("__MESAJ__", "Telefon erişimi kapalı: önce bilgisayardaki uygulamada "
+                                          "Ayarlar &gt; Telefondan erişim bölümünden şifre belirle."), 403)
+            return False
+        if _oturum_gecerli(self):
+            if yol in SADECE_YEREL:
+                self._json({"ok": False, "hata": "Bu islem sadece bilgisayardan yapilabilir."}, 403)
+                return False
+            return True
+        if yol.startswith("/api/") or yol.startswith("/dosya/"):
+            self._json({"ok": False, "hata": "Oturum kapali, yeniden giris yap.", "giris": True}, 401)
+        else:
+            self._html(GIRIS_HTML.replace("__MESAJ__", ""))
+        return False
+
+    def _giris(self, v):
+        simdi = time.time()
+        if simdi < GIRIS["kilit"]:
+            return self._json({"ok": False, "hata": f"Cok fazla hatali deneme. {int(GIRIS['kilit'] - simdi) + 1} sn bekle."}, 429)
+        if not _sifre_dogru(str(v.get("sifre") or "")):
+            GIRIS["hata"] += 1
+            if GIRIS["hata"] >= 5:
+                GIRIS["kilit"] = simdi + min(900, 60 * 2 ** (GIRIS["hata"] - 5))
+            time.sleep(1)
+            return self._json({"ok": False, "hata": "Sifre yanlis."}, 401)
+        GIRIS.update(hata=0, kilit=0.0)
+        jeton = _oturum_ac()
+        https = (self.headers.get("X-Forwarded-Proto") or "").lower() == "https" or \
+            (self.headers.get("X-Forwarded-Host") or self.headers.get("Host") or "").lower().split(":")[0].endswith(".ts.net")
+        guvenli_cerez = "; Secure" if https else ""
+        b = json.dumps({"ok": True}).encode()
+        self.send_response(200)
+        self.send_header("Content-Type", "application/json; charset=utf-8")
+        self.send_header("Set-Cookie", f"bidik_oturum={jeton}; Path=/; Max-Age={OTURUM_SURE}; HttpOnly; SameSite=Strict{guvenli_cerez}")
+        self.send_header("Content-Length", str(len(b)))
+        self.end_headers()
+        self.wfile.write(b)
+
+    def _cikis(self):
+        j = _jeton(self)
+        if j:
+            o = _oturumlar()
+            o.pop(hashlib.sha256(j.encode()).hexdigest(), None)
+            _oturumlari_yaz(o)
+        b = json.dumps({"ok": True}).encode()
+        self.send_response(200)
+        self.send_header("Content-Type", "application/json; charset=utf-8")
+        self.send_header("Set-Cookie", "bidik_oturum=; Path=/; Max-Age=0; HttpOnly; SameSite=Strict")
+        self.send_header("Content-Length", str(len(b)))
+        self.end_headers()
+        self.wfile.write(b)
+
     def do_GET(self):
         yol = urlparse(self.path).path
-        if yol == "/":
+        if not self._kapi(yol):
+            return
+        if yol == "/manifest.json":
+            self._json(MANIFEST)
+        elif yol == "/":
             b = open(os.path.join(os.path.dirname(__file__), "panel.html"), "rb").read()
             self.send_response(200)
             self.send_header("Content-Type", "text/html; charset=utf-8")
@@ -596,10 +800,21 @@ class Isleyici(BaseHTTPRequestHandler):
 
     def do_POST(self):
         yol = urlparse(self.path).path
+        if not self._kapi(yol):
+            return
+        uzunluk = int(self.headers.get("Content-Length") or 0)
+        if uzunluk > 5_000_000:
+            return self.send_error(413)
+        if yol == "/api/giris":
+            try:
+                return self._giris(json.loads(self.rfile.read(uzunluk) or b"{}"))
+            except ValueError:
+                return self._json({"ok": False, "hata": "gecersiz istek"}, 400)
+        if yol == "/api/cikis":
+            return self._cikis()
         fonk = ISLEMLER.get(yol)
         if not fonk:
             return self.send_error(404)
-        uzunluk = int(self.headers.get("Content-Length") or 0)
         try:
             v = json.loads(self.rfile.read(uzunluk) or b"{}")
             sonuc = fonk(v) or {}

@@ -4,6 +4,10 @@ Bidik Studyo masaustu uygulamasi.
 Paneli kendi penceresinde acar (pywebview / Microsoft Edge WebView2).
 pywebview kurulamadiysa Edge'i "uygulama modunda" (adres cubugu olmadan) acar;
 bu modda pencere kapaninca program da kendiliginden kapanir.
+
+--arka : pencere acmadan sadece sunucuyu calistirir (telefondan erisim icin; bilgisayar
+         acilinca Baslangic kisayoluyla baslar, uykuyu engeller). Ayarlarda "arka_plan" aciksa
+         pencere uygulamasi da sunucuyu bu ayri surece birakir: pencere kapansa da panel calisir.
 """
 import os, sys, time, socket, threading, subprocess, urllib.request
 
@@ -76,6 +80,32 @@ def sunucuyu_baslat():
     return True
 
 
+def arka_plan():
+    """Pencere yok: sunucu + uyku engelleme. Zaten calisan bir sunucu varsa hicbir sey yapmaz."""
+    if not sunucuyu_baslat():
+        print("arka plan: sunucu zaten calisiyor")
+        return
+    panel.ARKA["acik"] = True
+    import telefon
+    telefon.uyku_engelle(True)
+    print("arka planda calisiyor (uyku engellendi)")
+    while True:
+        time.sleep(3600)
+
+
+def arka_plani_baslat():
+    """Ayri bir arka plan sureci baslatir ve sunucunun cevap vermesini bekler."""
+    import telefon
+    bayrak = (0x00000008 | 0x00000200) if sys.platform.startswith("win") else 0
+    subprocess.Popen([telefon._pythonw(), os.path.abspath(__file__), "--arka"], cwd=KOK,
+                     creationflags=bayrak, close_fds=True)
+    for _ in range(60):
+        time.sleep(0.5)
+        if sunucu_cevap_veriyor():
+            return True
+    return False
+
+
 def pywebview_ile(sahip):
     import webview
     if sys.platform.startswith("win"):
@@ -140,7 +170,17 @@ def edge_ile(sahip):
 
 
 def main():
+    if "--arka" in sys.argv:
+        arka_plan()
+        return
+    from ortak import ayarlar
+    if ayarlar().get("arka_plan") and "--yeniden" not in sys.argv and not sunucu_cevap_veriyor():
+        if not arka_plani_baslat():
+            print("arka plan sureci baslatilamadi; sunucu bu pencerede calisacak")
     sahip = sunucuyu_baslat()
+    if sahip and ayarlar().get("arka_plan"):
+        import telefon
+        telefon.uyku_engelle(True)
     try:
         import webview  # noqa: F401
         pywebview_ile(sahip)

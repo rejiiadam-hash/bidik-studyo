@@ -5,6 +5,9 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Bıdık Stüdyo</title>
 <link rel="icon" href="/bidik.png">
+<link rel="manifest" href="/manifest.json"><link rel="apple-touch-icon" href="/bidik.png">
+<meta name="theme-color" content="#14151d"><meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="Bıdık">
 <style>
 :root{
   --bg:#faf4e6; --kart:#fffdf7; --cizgi:#e6dcc6; --metin:#23253a; --soluk:#6d6a63; --girdi:#ffffff;
@@ -83,6 +86,7 @@ td.sure{width:66px} td.ifade{width:104px} td.kol{width:126px}
 .kartsatir td{padding-top:0}
 .kartsatir .ic{display:flex;gap:6px;align-items:center;font-size:12.5px;color:var(--soluk)}
 .kartsatir input{max-width:150px}
+textarea.replik{resize:none;field-sizing:content;min-height:2.2em;overflow:hidden;line-height:1.35}
 .hatalar{color:var(--kirmizi);font-size:13px;margin-top:6px}
 .dugmeler{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px;align-items:center}
 .toplam{font-size:13px;color:var(--soluk);margin-left:auto}
@@ -141,8 +145,37 @@ button.tehlike{background:var(--kirmizi);border-color:var(--kirmizi);color:#fff}
 button.tehlike:hover{background:#c92f3b}
 .hizli button.secili{background:var(--sari);border-color:var(--sari);color:#23253a}
 .hizli button:disabled{text-decoration:line-through}
-@media (max-width:700px){.izgara,.vizgara{grid-template-columns:1fr}.vkart{flex-direction:column}.vkart video{width:100%}
-  td.kol,th.kol{display:none}.ust small,.ust h1{display:none} nav{overflow-x:auto}}
+/* telefondan erisim karti */
+.tel{display:flex;flex-direction:column;gap:14px;max-width:860px}
+.tel .adres{font-size:18px;font-weight:800;word-break:break-all;color:var(--mavi)}
+.uzak .yerel{display:none !important}
+body:not(.uzak) .sadece-uzak{display:none !important}
+@media (max-width:700px){
+  body{font-size:16px}
+  .ust{padding:8px 12px 0;gap:10px} .ust img{width:34px;height:34px}
+  .ust small,.ust h1{display:none}
+  #uretBtn{padding:8px 12px;font-size:14px}
+  nav{overflow-x:auto;padding:6px 8px 0;scrollbar-width:none} nav::-webkit-scrollbar{display:none}
+  nav button{padding:10px 12px;white-space:nowrap;font-size:14px}
+  .is{padding:6px 12px 10px}
+  main{padding:12px 10px 90px}
+  .izgara,.vizgara,.ayarlar{grid-template-columns:1fr}
+  .kart{padding:12px;border-radius:16px}
+  td.sure,th:nth-child(2),td.ifade,th:nth-child(3),td.kol,th.kol{display:none}
+  td.no{padding-top:10px}
+  textarea.replik{min-height:3.3em}
+  input[type=text],input[type=password],input[type=number],input[type=date],input[type=time],textarea,select{font-size:16px;padding:9px 10px}
+  button,.btn{padding:11px 14px}
+  .dugmeler button,.dugmeler .btn{flex:1 1 auto;justify-content:center}
+  .toplam{margin-left:0;width:100%;text-align:right}
+  .vkart{flex-direction:column}
+  .vkart video{width:auto;max-width:100%;max-height:68vh;align-self:center}
+  .vkart .sag{padding-right:0}
+  .bildirim{left:10px;right:10px;bottom:10px;max-width:none}
+  .guncel{flex-direction:column;align-items:flex-start}.guncel .sag{margin-left:0;width:100%}
+  .guncel .sag button{width:100%;justify-content:center}
+  .pencere{padding:16px}
+}
 </style>
 </head>
 <body>
@@ -220,10 +253,15 @@ button.tehlike:hover{background:#c92f3b}
       </div>
       <div class="genis dugmeler" style="margin-top:0">
         <button class="ana" onclick="ayarKaydet()">Ayarları kaydet</button>
-        <button onclick="post('/api/klasor',{})">📁 BIDIK klasörünü aç</button>
+        <button class="yerel" onclick="post('/api/klasor',{})">📁 BIDIK klasörünü aç</button>
+        <button class="sadece-uzak" onclick="cikis()">🚪 Bu cihazda çıkış yap</button>
         <button onclick="destekKopyala()" title="Bir sorun olursa bunu Claude'a yapıştır">🛟 Destek bilgisini kopyala</button>
         <span class="toplam" id="islenen"></span>
       </div>
+    </div>
+    <div class="yerel">
+      <h2>📱 Telefondan erişim</h2>
+      <div class="tel" id="telKart"><div class="kucuk">Yükleniyor…</div></div>
     </div>
   </section>
 </main>
@@ -250,6 +288,8 @@ button.tehlike:hover{background:#c92f3b}
 let sonIsNo = null;
 let D = null, isVardi = false, guncelleniyor = false, eskiSurum = null, aktifSekme = "senaryolar", paylasilacak = null;
 const $ = id => document.getElementById(id);
+const UZAK = !["127.0.0.1","localhost"].includes(location.hostname);
+if(UZAK) document.body.classList.add("uzak");
 const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 const ADLAR = {normal:"normal",mutlu:"mutlu",saskin:"şaşkın",kizgin:"kızgın",uzgun:"üzgün",sinsi:"sinsi",utangac:"utangaç",
   serbest:"serbest",el_salla:"el sallama",isaret:"işaret",kollar_havada:"kollar havada",bel:"eller belde",yuz_avuc:"yüz avuç"};
@@ -261,6 +301,7 @@ function bildir(m, hata){ const b=$("bildirim"); b.textContent=m; b.className="b
 
 async function post(url, veri){
   const r = await fetch(url,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(veri)});
+  if(r.status === 401){ location.reload(); throw new Error("oturum"); }
   const j = await r.json();
   if(!j.ok){ bildir(j.hata||"Hata", true); throw new Error(j.hata); }
   return j;
@@ -272,6 +313,7 @@ function sekme(ad){
   document.querySelectorAll(".sekme").forEach(s => s.classList.toggle("acik", s.id === "s-"+ad));
   document.querySelectorAll("nav button").forEach(b => b.classList.toggle("secili", b.dataset.sekme === ad));
   if(location.hash !== "#"+ad) history.replaceState(null, "", "#"+ad);
+  if(ad === "ayarlar" && !UZAK) telefonYenile("durum");
   window.scrollTo(0,0);
 }
 function temaUygula(t){ document.documentElement.dataset.tema = t; $("temaBtn").textContent = t === "koyu" ? "☀️" : "🌙"; }
@@ -281,7 +323,7 @@ async function temaDegis(){ const t = document.documentElement.dataset.tema === 
 /* --- yenileme --- */
 async function yenile(tam){
   let d;
-  try{ d = await (await fetch("/api/durum",{cache:"no-store"})).json(); }
+  try{ const r = await fetch("/api/durum",{cache:"no-store"}); if(r.status === 401){ location.reload(); return; } d = await r.json(); }
   catch(e){ setTimeout(()=>yenile(tam), 1500); return; }
   if(D && d.surum !== D.surum){ location.reload(); return; }
   const is = d.is;
@@ -313,7 +355,7 @@ function senaryoKarti(s, i){
       <td class="sure"><input type="number" step="0.1" min="1" max="6" value="${x.sure}" data-a="sure" data-j="${j}"></td>
       <td class="ifade"><select data-a="ifade" data-j="${j}">${secim(D.secenek.ifade,x.ifade)}</select></td>
       <td class="kol"><select data-a="kol" data-j="${j}">${secim(D.secenek.kol,x.kol||"serbest")}</select></td>
-      <td><input type="text" maxlength="70" value="${esc(x.replik)}" title="${esc(x.replik)}" data-a="replik" data-j="${j}"></td>
+      <td><textarea class="replik" rows="1" maxlength="70" data-a="replik" data-j="${j}">${esc(x.replik)}</textarea></td>
     </tr>${x.kart?`<tr class="kartsatir"><td></td><td colspan="4"><div class="ic">🪧 bilgi kartı:
       <input type="text" value="${esc(x.kart.buyuk)}" data-a="kart.buyuk" data-j="${j}">
       <input type="text" value="${esc(x.kart.alt)}" data-a="kart.alt" data-j="${j}"></div></td></tr>`:""}`).join("");
@@ -358,7 +400,7 @@ function videoKarti(v){
         ${paylasildi ? `<a class="btn" href="${esc(v.youtube_url)}" target="_blank">▶ YouTube'da aç</a>`
                      : `<button class="ana" data-is onclick="paylasAc(${i})">🚀 Paylaş</button>`}
         <button onclick="kopyala(${i})">Metni kopyala</button>
-        <button onclick="post('/api/klasor',{id:'${esc(v._id)}'})">📁 Dosya</button>
+        <button class="yerel" onclick="post('/api/klasor',{id:'${esc(v._id)}'})">📁 Dosya</button>
       </div>
     </div></div>`;
 }
@@ -550,6 +592,43 @@ async function yayinla(){
   await post("/api/paylas",{id:v._id, tarih, saat, ...vForm(i)});
   paylasKapat(); bildir(`Yükleniyor… ${tarih.split("-").reverse().join(".")} ${saat}'de yayınlanacak`); yenile(false);
 }
+
+/* --- telefondan erisim --- */
+async function telefonYenile(islem, ek){
+  if(islem !== "durum") $("telKart").insertAdjacentHTML("afterbegin", `<div class="kucuk" id="telBekle">⏳ Bekleniyor…</div>`);
+  try{ telCiz(await post("/api/telefon",{islem, ...(ek||{})})); }catch(e){ const b=$("telBekle"); if(b) b.remove(); }
+}
+function telCiz(r){
+  const t = r.tailscale || {}, adim = (no, tamam, baslik, icerik) =>
+    `<div class="kart adim ${tamam?"tamam":""}"><div class="no">${tamam?"✓":no}</div><div class="govde"><b>${baslik}</b>${icerik}</div></div>`;
+  let ts;
+  if(!t.kurulu) ts = `<p>Ücretsiz Tailscale uygulamasını bu bilgisayara kur, açılınca Google hesabınla giriş yap. Panel internete açılmaz; sadece senin cihazların görür.</p>
+      <div class="dugmeler"><a class="btn" href="https://tailscale.com/download/windows" target="_blank">Tailscale'i indir ↗</a>
+      <button onclick="telefonYenile('durum')">🔄 Kurdum, kontrol et</button></div>`;
+  else if(!t.bagli) ts = `<p>${esc(t.mesaj)}</p><div class="dugmeler"><button onclick="telefonYenile('durum')">🔄 Tekrar kontrol et</button></div>`;
+  else if(!t.yayinda) ts = `<p>Tailscale hazır (${esc(t.ad)}). Şimdi paneli Tailscale ağına aç.</p>
+      ${t.mesaj?`<p class="hatalar">${esc(t.mesaj)}</p>`:""}
+      ${t.onay_url?`<div class="dugmeler"><a class="btn" href="${esc(t.onay_url)}" target="_blank">Onay sayfasını aç ↗</a></div>`:""}
+      <div class="dugmeler"><button class="ana" ${r.sifre_var?"":"disabled title='Önce şifre belirle'"} onclick="telefonYenile('ac')">📡 Telefon erişimini aç</button></div>`;
+  else ts = `<p>Telefondan açılacak adres:</p><div class="adres">${esc(t.url)}</div>
+      <div class="dugmeler"><button onclick="navigator.clipboard.writeText('${esc(t.url)}');bildir('Adres kopyalandı')">📋 Adresi kopyala</button>
+      <button class="kirmizi" onclick="if(confirm('Telefon erişimi kapatılsın mı?'))telefonYenile('kapat')">Erişimi kapat</button></div>`;
+  $("telKart").innerHTML = [
+    adim(1, r.sifre_var, "Telefon şifresi belirle", `<p>Telefondan girerken bu şifre sorulur (bilgisayarda sorulmaz). ${r.sifre_var?"Şifre kayıtlı; istersen değiştirebilirsin.":""}</p>
+      <div class="dugmeler" style="margin-top:0"><input id="telSifre" type="password" placeholder="En az 6 karakter" autocomplete="new-password" style="max-width:260px">
+      <button class="ana" onclick="sifreKaydet()">Şifreyi kaydet</button></div>`),
+    adim(2, t.yayinda, "Bilgisayarda Tailscale", ts),
+    adim(3, false, "Telefonda", `<ol><li>Telefona <b>Tailscale</b> uygulamasını kur (App Store / Google Play), <b>aynı hesapla</b> giriş yap ve bağlan.</li>
+      <li>Telefonun tarayıcısında yukarıdaki adresi aç, şifreni gir.</li>
+      <li>Tarayıcı menüsünden <b>Ana ekrana ekle</b>: Bıdık uygulama gibi açılır.</li></ol>`),
+    adim(4, r.otomatik, "Bilgisayar hep hazır olsun", `<label style="font-weight:400;display:flex;gap:8px;align-items:flex-start">
+      <input type="checkbox" style="width:auto;margin-top:4px" ${r.otomatik?"checked":""} onchange="telefonYenile('otomatik',{acik:this.checked}).then(()=>bildir(this.checked?'Açıldı. Etkinleşmesi için uygulamayı bir kez kapatıp yeniden aç.':'Kapatıldı'))">
+      <span>Bilgisayar açılınca Bıdık Stüdyo arka planda başlasın, pencere kapansa da çalışsın ve uygulama çalışırken bilgisayar uyumasın.</span></label>
+      ${r.arka?`<p>Şu an arka planda çalışıyor.</p><div class="dugmeler"><button class="kirmizi" onclick="if(confirm('Uygulama tamamen kapatılsın mı? Telefondan erişim de kapanır.'))post('/api/kapat',{})">⏻ Uygulamayı tamamen kapat</button></div>`:""}`),
+  ].join("");
+}
+async function sifreKaydet(){ const r = await post("/api/sifre",{sifre:$("telSifre").value}); bildir(r.mesaj); telefonYenile("durum"); }
+async function cikis(){ await fetch("/api/cikis",{method:"POST"}); location.reload(); }
 
 async function destekKopyala(){ const r = await post("/api/destek",{});
   await navigator.clipboard.writeText(r.metin); bildir("Destek bilgisi kopyalandı. Claude'a yapıştırabilirsin."); }
