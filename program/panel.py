@@ -13,6 +13,7 @@ import senaryo_motoru as motor
 import youtube_yukle as yt
 import github_kanal
 import telefon
+import yedek_ses
 
 PORT = 8765
 GUNCELLEME = os.path.join(KOK, "guncelleme")
@@ -20,7 +21,7 @@ YEDEK = os.path.join(KOK, "yedek")
 NABIZ = {"son": None}           # Edge uygulama modunda pencere kapandi mi anlamak icin
 KAPAT = {"fonk": None}          # uygulama.py pencereyi kapatma fonksiyonunu buraya koyar
 ARKA = {"acik": False}       # uygulama.py --arka: pencere olmadan arka planda calisiyor
-IS = {"calisiyor": False, "baslik": "", "yuzde": 0, "mesaj": "", "hata": "", "bitti": "", "no": 0}
+IS = {"calisiyor": False, "baslik": "", "yuzde": 0, "mesaj": "", "hata": "", "uyari": "", "bitti": "", "no": 0}
 KILIT = threading.Lock()
 
 
@@ -57,11 +58,16 @@ def tasi(yol, hedef_tur):
     return yeni
 
 
+class Durdu(Exception):
+    """Islem bilerek durdu; kullaniciya sari uyari olarak gosterilir."""
+    pass
+
+
 def is_baslat(baslik, fonk):
     with KILIT:
         if IS["calisiyor"]:
             raise RuntimeError("Zaten bir islem suruyor: " + IS["baslik"])
-        IS.update(calisiyor=True, baslik=baslik, yuzde=0, mesaj="Basliyor", hata="", bitti="", no=IS["no"] + 1)
+        IS.update(calisiyor=True, baslik=baslik, yuzde=0, mesaj="Basliyor", hata="", uyari="", bitti="", no=IS["no"] + 1)
 
     def ilerle(y, m):
         IS.update(yuzde=int(y), mesaj=m)
@@ -70,6 +76,9 @@ def is_baslat(baslik, fonk):
         try:
             sonuc = fonk(ilerle)
             IS.update(bitti=sonuc or "Tamamlandi")
+        except Durdu as e:          # beklenen durma (or. yazim duzeltildi): hata degil, uyari
+            print("Durdu:", e)
+            IS.update(uyari=str(e))
         except Exception as e:
             traceback.print_exc()
             IS.update(hata=str(e))
@@ -106,7 +115,7 @@ def durum():
                  "paylasim_saatleri": a.get("paylasim_saatleri") or ["11:00", "15:00", "19:00"],
                  "youtube_hazir": yt.hazir_mi(), "youtube_bagli": yt.bagli_mi(),
                  "youtube_kanal": a.get("youtube_kanal", ""), "youtube_silme": yt.silme_izni_var(),
-                 "sifre_var": sifre_var(), "arka": ARKA["acik"]},
+                 "sifre_var": sifre_var(), "arka": ARKA["acik"], "ses_ornekleri": yedek_ses.ornekler()},
         "secenek": {"ifade": IFADELER, "kol": KOL_POZLARI, "ikon": IKONLAR, "renk": list(RENKLER)},
         "toplam_islenen": len(motor.hafiza()["konular"]),
         "surum": surum(),
@@ -430,9 +439,9 @@ def _yazim_kapisi(yol, ilerle):
             mesaj.append("BILGI SUPHELI: " + (r["bilgi_sorunu"] or "denetim bu bilgiye guvenmedi")
                          + " Metni duzenle ya da reddet.")
         if r["duzeltmeler"]:
-            mesaj.append("Yazim duzeltildi (senaryo guncellendi, kontrol edip tekrar onayla): "
-                         + " | ".join(r["duzeltmeler"]))
-        raise ValueError(" ".join(mesaj))
+            mesaj.append(f"{len(r['duzeltmeler'])} yazim hatasi duzeltildi. Senaryoyu kontrol edip tekrar onayla. ("
+                         + " | ".join(r["duzeltmeler"]) + ")")
+        raise Durdu(" ".join(mesaj))
     yaz(yol, s)   # imza kaydedildi
 
 
@@ -594,6 +603,10 @@ def telefon_islem(v):
             "arka": ARKA["acik"]}
 
 
+def ses_ornegi(_):
+    is_baslat("Ses ornekleri hazirlaniyor", yedek_ses.ornek_uret)
+
+
 def kapat(_):
     """Uygulamayi (arka plan dahil) tamamen kapatir."""
     threading.Timer(0.5, lambda: os._exit(0)).start()
@@ -659,7 +672,7 @@ ISLEMLER = {"/api/senaryo-uret": senaryo_uret, "/api/kaydet": kaydet, "/api/onay
             "/api/reddet": reddet, "/api/ayar": ayar, "/api/klasor": klasor_ac,
             "/api/guncelle": guncelle, "/api/nabiz": nabiz,
             "/api/paylas": paylas, "/api/video-sil": video_sil, "/api/youtube-istemci": youtube_istemci,
-            "/api/youtube-bagla": youtube_bagla, "/api/youtube-kes": youtube_kes, "/api/destek": destek, "/api/github-kontrol": github_kontrol, "/api/sifre": sifre_ayarla, "/api/telefon": telefon_islem, "/api/kapat": kapat, "/api/yeniden-uret": yeniden_uret}
+            "/api/youtube-bagla": youtube_bagla, "/api/youtube-kes": youtube_kes, "/api/destek": destek, "/api/github-kontrol": github_kontrol, "/api/sifre": sifre_ayarla, "/api/telefon": telefon_islem, "/api/kapat": kapat, "/api/ses-ornegi": ses_ornegi, "/api/yeniden-uret": yeniden_uret}
 
 
 # --- sunucu -------------------------------------------------------------------
@@ -770,7 +783,7 @@ class Isleyici(BaseHTTPRequestHandler):
         if not os.path.isfile(tam):
             return self.send_error(404)
         boyut = os.path.getsize(tam)
-        tur = {"mp4": "video/mp4", "png": "image/png"}.get(tam.rsplit(".", 1)[-1], "application/octet-stream")
+        tur = {"mp4": "video/mp4", "png": "image/png", "wav": "audio/wav"}.get(tam.rsplit(".", 1)[-1], "application/octet-stream")
         bas, son = 0, boyut - 1
         aralik = self.headers.get("Range")
         if aralik and aralik.startswith("bytes="):
