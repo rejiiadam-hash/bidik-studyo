@@ -24,6 +24,8 @@ import json, math, os, shutil, subprocess, sys, tempfile, wave, struct, asyncio
 from PIL import Image, ImageDraw, ImageFont
 from karakter import ciz_bidik, IFADELER, KOL_POZLARI
 from kostumler import KOSTUMLER, ust_boy
+import arka_planlar
+SON_URETIM = {}   # son uretilen videonun secimleri (panel meta'ya yazar)
 from ortak import FONT, ffmpeg, komut, KOK
 
 FPS = 30
@@ -224,7 +226,7 @@ def altyazi(d, metin, y=300, boyut=66):
     ust = y * SS - len(satirlar) * sat_h / 2
     d.rounded_rectangle([W * SS / 2 - tw / 2 - pad, ust - 26 * SS,
                          W * SS / 2 + tw / 2 + pad, ust + len(satirlar) * sat_h + 26 * SS],
-                        radius=40 * SS, fill=LACI)
+                        radius=40 * SS, fill=LACI, outline=(255, 255, 255), width=3 * SS)
     for i, s in enumerate(satirlar):
         d.text((W * SS / 2, ust + sat_h * (i + 0.5)), s, font=fb, fill=(255, 255, 255), anchor="mm")
 
@@ -477,6 +479,21 @@ def uret(senaryo_yolu, cikti=None, sesli=None, ilerleme=None, izin_sessiz=False)
     zmax = max([float(x.get("ziplama", 0)) for x in sen["sahneler"] if not x.get("kart")] or [0])
     buyuk_olcek = sigan_olcek(1.95, ust, zmax + 30, ALTYAZI_ALT)
     kart_olcek = sigan_olcek(1.3, ust, 10, KART_ALT)
+    # konuya gore arka plan: bir kere cizilir, her karede kopyasi kullanilir
+    from ortak import ayarlar as _ay
+    if _ay().get("arka_plan", True) and sen.get("arka_tema") != "sade":
+        tema = sen.get("arka_tema") if sen.get("arka_tema") in arka_planlar.TEMALAR else \
+            arka_planlar.tema_bul(sen.get("alan", ""), sen.get("konu", ""), kostum or "")
+        no = sen["arka_no"] if isinstance(sen.get("arka_no"), int) else arka_planlar.secim(tema)
+        arka = arka_planlar.ciz(tema, no, W * SS, H * SS)
+        SON_URETIM["arka_plan"] = f"{tema}-{no}"
+    else:
+        arka = Image.new("RGB", (W * SS, H * SS), ARKA)
+        ad = ImageDraw.Draw(arka)
+        zy0 = int(H * 0.80 * SS)
+        ad.rectangle([0, zy0, W * SS, H * SS], fill=ZEMIN)
+        ad.line([(0, zy0), (W * SS, zy0)], fill=LACI, width=6 * SS)
+        SON_URETIM["arka_plan"] = "sade"
     n = 0
     for si, s in enumerate(sen["sahneler"]):
         toplam = int(round(s["_sure"] * FPS))
@@ -491,11 +508,8 @@ def uret(senaryo_yolu, cikti=None, sesli=None, ilerleme=None, izin_sessiz=False)
         cagri_olcek = sigan_olcek(1.3, ust, 10, KART_ALT - 60)
         for k in range(toplam):
             t = k / FPS
-            img = Image.new("RGB", (W * SS, H * SS), ARKA)
+            img = arka.copy()
             d = ImageDraw.Draw(img)
-            zy = int(H * 0.80 * SS)
-            d.rectangle([0, zy, W * SS, H * SS], fill=ZEMIN)
-            d.line([(0, zy), (W * SS, zy)], fill=LACI, width=6 * SS)
             cagri_k = n - cagri_basla          # >= 0 ise son 2 saniyedeyiz
             if kart and cagri_k < 0:
                 bilgi_karti(d, kart, k / 8)
