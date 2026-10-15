@@ -24,7 +24,6 @@ import json, math, os, shutil, subprocess, sys, tempfile, wave, struct, asyncio
 from PIL import Image, ImageDraw, ImageFont
 from karakter import ciz_bidik, IFADELER, KOL_POZLARI
 from kostumler import KOSTUMLER, ust_boy
-import arka_planlar
 from ortak import FONT, ffmpeg, komut, KOK
 
 FPS = 30
@@ -64,7 +63,6 @@ def dogrula(sen):
     return hatalar
 
 
-SON_URETIM = {}       # son videonun ek bilgileri (arka plan adi...) - panel meta'ya yazar
 ALTYAZI_ALT = 410      # altyazi kutusunun alt siniri (px): Bidik'in tepesi bunun altinda kalmali
 KART_ALT = 805         # bilgi karti / son cagri kartinin alt siniri
 
@@ -475,11 +473,6 @@ def uret(senaryo_yolu, cikti=None, sesli=None, ilerleme=None, izin_sessiz=False)
     cagri_basla = toplam_kare - int(SON_CAGRI_SN * FPS) if cagri_acik else 10 ** 9
     kostum = sen.get("kostum") or None
     ust = ust_boy(kostum)
-    # konuya uygun arka plan (senaryoda sabitlenmediyse otomatik, art arda tekrar etmeyen)
-    arka_ad = sen.get("arka_plan") if sen.get("arka_plan") in arka_planlar.SAHNELER else arka_planlar.secim(sen.get("alan", ""))
-    SON_URETIM["arka_plan"] = arka_ad
-    arka_taban = arka_planlar.ciz(arka_ad, SS)
-    golgeli = {}
     # tum video icin tek buyuk-sahne olcegi (sahneler arasi "buyume/kuculme" sicramasi olmasin)
     zmax = max([float(x.get("ziplama", 0)) for x in sen["sahneler"] if not x.get("kart")] or [0])
     buyuk_olcek = sigan_olcek(1.95, ust, zmax + 30, ALTYAZI_ALT)
@@ -498,13 +491,11 @@ def uret(senaryo_yolu, cikti=None, sesli=None, ilerleme=None, izin_sessiz=False)
         cagri_olcek = sigan_olcek(1.3, ust, 10, KART_ALT - 60)
         for k in range(toplam):
             t = k / FPS
-            anahtar = (kaydir, round(sahne_olcek, 3))
-            if anahtar not in golgeli:            # golge sahnenin konumuna gore bir kez cizilir
-                g = arka_taban.copy()
-                arka_planlar.golge_ekle(g, (W / 2 + kaydir) * SS, SS, sahne_olcek)
-                golgeli[anahtar] = g
-            img = golgeli[anahtar].copy()
+            img = Image.new("RGB", (W * SS, H * SS), ARKA)
             d = ImageDraw.Draw(img)
+            zy = int(H * 0.80 * SS)
+            d.rectangle([0, zy, W * SS, H * SS], fill=ZEMIN)
+            d.line([(0, zy), (W * SS, zy)], fill=LACI, width=6 * SS)
             cagri_k = n - cagri_basla          # >= 0 ise son 2 saniyedeyiz
             if kart and cagri_k < 0:
                 bilgi_karti(d, kart, k / 8)

@@ -368,10 +368,8 @@ def siradaki_no(gun):
 
 def _video_yap(senaryo_yolu, s, mp4, ilerle):
     """Videoyu uretir, meta + yayin metnini yazar; sessiz kalan sahne numaralarini dondurur."""
-    import video_uret
     _, sure, sesli, sessiz = uret(senaryo_yolu, mp4, ilerleme=ilerle)
-    meta = dict(s, _video_sure=round(sure, 1), _sesli=sesli, _sessiz_sahneler=sessiz,
-                _arka_plan=video_uret.SON_URETIM.get("arka_plan", ""))
+    meta = dict(s, _video_sure=round(sure, 1), _sesli=sesli, _sessiz_sahneler=sessiz)
     yaz(mp4[:-4] + ".json", meta)
     with open(mp4[:-4] + "_yayin.txt", "w", encoding="utf-8") as fp:
         fp.write(f"BASLIK:\n{s['baslik']} #shorts\n\nACIKLAMA:\n{aciklama_tam(s)}\n\n"

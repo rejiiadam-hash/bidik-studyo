@@ -192,8 +192,6 @@ def astronot_on(img, d, g):
     kd = ImageDraw.Draw(katman)
     o = w
     kd.ellipse([o, o, o + 2 * r, o + 2 * r], fill=(140, 200, 255, 20), outline=(35, 37, 58, 255), width=w)
-    ic = int(w * 0.55)   # koyu arka planlarda da gorunsun: ic tarafta acik renkli ince kenar
-    kd.ellipse([o + w * 0.8, o + w * 0.8, o + 2 * r - w * 0.8, o + 2 * r - w * 0.8], outline=(215, 230, 255, 230), width=ic)
     # parlama
     kd.arc([o + r * 0.25, o + r * 0.2, o + r * 1.4, o + r * 1.35], 195, 250, fill=(255, 255, 255, 230), width=int(14 * s))
     kd.arc([o + r * 0.25, o + r * 0.2, o + r * 1.4, o + r * 1.35], 258, 270, fill=(255, 255, 255, 230), width=int(14 * s))
