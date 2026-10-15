@@ -14,6 +14,7 @@ import youtube_yukle as yt
 import github_kanal
 import telefon
 import kostumler
+import analiz
 
 PORT = 8765
 GUNCELLEME = os.path.join(KOK, "guncelleme")
@@ -629,6 +630,14 @@ def kostum_resmi(ad):
     return _KOSTUM_RESIM[ad]
 
 
+def analiz_rapor(v):
+    return {"rapor": analiz.rapor(v.get("donem", "haftalik"))}
+
+
+def analiz_guncelle(_):
+    is_baslat("Analiz verileri YouTube'dan aliniyor", analiz.cek)
+
+
 def kapat(_):
     """Uygulamayi (arka plan dahil) tamamen kapatir."""
     threading.Timer(0.5, lambda: os._exit(0)).start()
@@ -694,7 +703,7 @@ ISLEMLER = {"/api/senaryo-uret": senaryo_uret, "/api/kaydet": kaydet, "/api/onay
             "/api/reddet": reddet, "/api/ayar": ayar, "/api/klasor": klasor_ac,
             "/api/guncelle": guncelle, "/api/nabiz": nabiz,
             "/api/paylas": paylas, "/api/video-sil": video_sil, "/api/youtube-istemci": youtube_istemci,
-            "/api/youtube-bagla": youtube_bagla, "/api/youtube-kes": youtube_kes, "/api/destek": destek, "/api/github-kontrol": github_kontrol, "/api/sifre": sifre_ayarla, "/api/telefon": telefon_islem, "/api/kapat": kapat, "/api/yeniden-uret": yeniden_uret}
+            "/api/youtube-bagla": youtube_bagla, "/api/youtube-kes": youtube_kes, "/api/destek": destek, "/api/github-kontrol": github_kontrol, "/api/sifre": sifre_ayarla, "/api/telefon": telefon_islem, "/api/kapat": kapat, "/api/analiz": analiz_rapor, "/api/analiz-guncelle": analiz_guncelle, "/api/yeniden-uret": yeniden_uret}
 
 
 # --- sunucu -------------------------------------------------------------------
@@ -883,6 +892,7 @@ def hazirla():
                 alanlar.append(yeni)
         ayar_kaydet({"alanlar": alanlar, "alanlar_v2": True})
     github_kanal.baslat()   # bilgisayar kapaliyken GitHub'a konan guncellemeleri acilinca indirir
+    analiz.baslat()         # gunde bir kez YouTube istatistiklerini ceker
 
 
 class SessizSunucu(ThreadingHTTPServer):

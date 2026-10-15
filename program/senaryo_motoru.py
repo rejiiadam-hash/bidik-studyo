@@ -191,7 +191,36 @@ def _cevap_coz(cevap):
 
 
 # --- istemler -----------------------------------------------------------------
+def alan_sec(tum, adet):
+    """
+    Konu alanlarini secer:
+      - analize gore cok izlenen alanlar daha sik (agirlik 0.6-2.0; verisi olmayanlar ortalama),
+      - bugun/dun islenen alanlar yarim agirlik (her gun farkli konular),
+      - ayni partide bir alan en fazla 2 kez.
+    """
+    try:
+        import analiz
+        agirlik = analiz.alan_agirliklari(tum)
+    except Exception:
+        agirlik = {a: 1.0 for a in tum}
+    yakin = {(datetime.date.today() - datetime.timedelta(days=i)).isoformat() for i in (0, 1)}
+    son_alanlar = {k.get("alan") for k in hafiza()["konular"] if k.get("tarih") in yakin}
+    w = {a: agirlik.get(a, 1.0) * (0.5 if a in son_alanlar else 1.0) for a in tum}
+    secilen = []
+    for _ in range(adet):
+        aday = [a for a in tum if secilen.count(a) < 2] or tum
+        secilen.append(random.choices(aday, weights=[w[a] for a in aday])[0])
+    return secilen
+
+
 def yazar_istemi(ayar, kullanilan, alanlar):
+    try:
+        import analiz
+        iyiler = analiz.en_iyi_basliklar(3)
+    except Exception:
+        iyiler = []
+    ilham = ("\n- Kanalda en cok izlenen son videolar (ton ve kanca icin ilham al, KONUYU TEKRARLAMA): "
+             + " | ".join(iyiler)) if iyiler else ""
     return f"""Sen Turkce YouTube Shorts yazarisin. Kanalin tek ve sabit karakteri BIDIK:
 sari, yumurta seklinde, kafasinda kivrik percem olan, kirmizi ayakkabili, merakli ve biraz sakar sevimli bir yaratik.
 Her video ~15 saniye: Bidik ilginc ve DOGRU bir bilgiyi komik bir durum uzerinden anlatir.
@@ -205,7 +234,7 @@ KURALLAR
 - Son sahne ilk sahneye baglanip dongu hissi versin veya komik bir son vurusla bitsin.
 - 4-6 sahne, toplam sure 13-16 saniye, her replik en fazla 60 karakter, gunluk konusma dili.
 - Bu konular daha once islendi, TEKRARLAMA: {", ".join(kullanilan) or "yok"}
-- Tum senaryolar birbirinden farkli konu ve farkli espri yapisinda olsun.
+- Tum senaryolar birbirinden farkli konu ve farkli espri yapisinda olsun.{ilham}
 - "burclar ve gokyuzu" alani: astrolojinin TARIHI, KULTURU ve GOKBILIMI hakkinda dogru bilgiler
   (or. burclarin kokeni, takimyildizlarin kaymasi, 13. takimyildiz Yilanci). Burclarin kisilik/gelecek
   belirledigini ASLA iddia etme; bu bilimsel olarak dogru degildir.
@@ -377,7 +406,7 @@ def calistir(ilerleme=None):
     bekleyen = [json.load(open(p, encoding="utf-8")).get("konu", "") for p in bekleyen_dosyalar()]
     kullanilan += bekleyen
     aday_sayisi = min(int(ayar["aday_sayisi"]), max(5, int(ayar["gunluk_video"]) * 2))   # kisa cevap = hizli ve kesilmez
-    alanlar = [random.choice(ayar["alanlar"]) for _ in range(aday_sayisi)]
+    alanlar = alan_sec(ayar["alanlar"], aday_sayisi)
     ilerle(15, f"{len(alanlar)} aday senaryo yaziliyor ({modeller[0]})")
     adaylar = _liste(gemini_json(modeller, yazar_istemi(ayar, kullanilan, alanlar), 1.1, ilerle), "senaryolar")
 

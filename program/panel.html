@@ -59,6 +59,34 @@ main{width:100%;max-width:1240px;margin:0 auto;padding:18px 24px 60px}
 @keyframes uc{0%{transform:translateY(0) scale(.6);opacity:0}15%{opacity:.95}100%{transform:translateY(-130px) scale(1.15);opacity:0}}
 .sevgi-mini{display:none;align-items:center;gap:6px;font-weight:800;font-size:13px;color:#ffd6de}
 .sevgi-mini span{display:inline-block;animation:atis 1.2s ease-in-out infinite}
+/* --- analiz --- */
+.donemler{display:inline-flex;background:var(--cip);border-radius:12px;padding:4px;gap:4px}
+.donemler button{border:none;background:transparent;padding:7px 14px;border-radius:9px;font-size:14px}
+.donemler button.secili{background:var(--sari);color:#23253a}
+.analiz-ust{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:14px}
+.kutucuklar{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:12px;margin-bottom:16px}
+.kutucuk{background:var(--kart);border:2px solid var(--cizgi);border-radius:16px;padding:14px 16px}
+.kutucuk .etiket{font-size:12.5px;color:var(--soluk);font-weight:600}
+.kutucuk .deger{font-size:28px;font-weight:800;margin-top:2px;font-variant-numeric:tabular-nums}
+.kutucuk .ek{font-size:12.5px;color:var(--soluk);margin-top:2px}
+.kutucuk .ek.arti{color:var(--yesil)}
+.grafikler{display:grid;grid-template-columns:repeat(auto-fit,minmax(340px,1fr));gap:14px;margin-bottom:16px}
+.grafik h3{margin:0 0 4px;font-size:15.5px}
+.grafik .alt{font-size:12.5px;color:var(--soluk);margin-bottom:10px}
+.cubuklar{display:flex;flex-direction:column;gap:8px}
+.cubuk-satir{display:grid;grid-template-columns:118px 1fr 64px;align-items:center;gap:10px;font-size:13.5px;padding:3px 0;border-radius:8px}
+.cubuk-satir:hover{background:var(--cip)}
+.cubuk-satir .ad{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.cubuk-satir .iz{height:16px;background:var(--cip);border-radius:4px;overflow:hidden}
+.cubuk-satir .dol{height:100%;background:var(--sari);border-radius:0 4px 4px 0;min-width:3px}
+.cubuk-satir .sayi2{text-align:right;font-variant-numeric:tabular-nums;font-weight:700}
+.analiz-tablo{width:100%;border-collapse:collapse;font-size:13.5px}
+.analiz-tablo th{text-align:left;color:var(--soluk);font-size:12px;padding:6px 8px;border-bottom:1.5px solid var(--cizgi)}
+.analiz-tablo td{padding:8px;border-bottom:1px solid var(--cizgi);vertical-align:middle}
+.analiz-tablo td.n{text-align:right;font-variant-numeric:tabular-nums;font-weight:700}
+.analiz-tablo tr:hover td{background:var(--cip)}
+#ipucuKutu{position:fixed;pointer-events:none;background:#23253a;color:#fff;font-size:13px;padding:8px 11px;border-radius:10px;
+  box-shadow:var(--golge);display:none;z-index:50;max-width:260px;line-height:1.4}
 /* --- gune gore paylasilanlar --- */
 details.gun{background:var(--kart);border:2px solid var(--cizgi);border-radius:16px;margin-bottom:12px;box-shadow:var(--golge)}
 details.gun > summary{list-style:none;cursor:pointer;padding:12px 16px;display:flex;align-items:center;gap:10px;font-weight:700;font-size:15.5px;user-select:none}
@@ -218,7 +246,7 @@ body:not(.uzak) .sadece-uzak{display:none !important}
   main{padding:12px 10px 90px}
   .izgara,.vizgara,.ayarlar{grid-template-columns:1fr}
   .kart{padding:12px;border-radius:16px}
-  td.sure,th:nth-child(2),td.ifade,th:nth-child(3),td.kol,th.kol{display:none}
+  td.sure,table:not(.analiz-tablo) th:nth-child(2),td.ifade,table:not(.analiz-tablo) th:nth-child(3),td.kol,th.kol{display:none}
   td.no{padding-top:10px}
   textarea.replik{min-height:3.3em}
   input[type=text],input[type=password],input[type=number],input[type=date],input[type=time],textarea,select{font-size:16px;padding:9px 10px}
@@ -247,6 +275,9 @@ body:not(.uzak) .sadece-uzak{display:none !important}
   .ust .baslik{display:none}
   main{padding:12px 10px 96px}
   .bildirim{bottom:84px}
+  .kutucuklar{grid-template-columns:1fr 1fr;gap:8px}
+  .kutucuk{padding:10px 12px}.kutucuk .deger{font-size:21px}.kutucuk .ek{font-size:11.5px}
+  .cubuk-satir{grid-template-columns:92px 1fr 54px}
 }
 </style>
 </head>
@@ -279,6 +310,7 @@ body:not(.uzak) .sadece-uzak{display:none !important}
   <nav id="sekmeler">
     <button data-sekme="senaryolar" onclick="sekme('senaryolar')"><span class="ikon">📝</span> Senaryolar<span class="sayi" id="bSayi"></span></button>
     <button data-sekme="videolar" onclick="sekme('videolar')"><span class="ikon">🎬</span> Videolar<span class="sayi" id="vSayi"></span></button>
+    <button data-sekme="analiz" onclick="sekme('analiz')"><span class="ikon">📊</span> Analiz</button>
     <button data-sekme="youtube" onclick="sekme('youtube')"><span class="ikon">▶️</span> YouTube</button>
     <button data-sekme="ayarlar" onclick="sekme('ayarlar')"><span class="ikon">⚙️</span> Ayarlar</button>
   </nav>
@@ -314,6 +346,19 @@ body:not(.uzak) .sadece-uzak{display:none !important}
     <div id="videolar"></div>
     <h2>Paylaşılanlar</h2>
     <div id="paylasilanlar"></div>
+  </section>
+
+  <section class="sekme" id="s-analiz">
+    <div class="analiz-ust">
+      <div class="donemler" id="donemler">
+        <button data-donem="gunluk" onclick="analizYukle('gunluk')">Günlük</button>
+        <button data-donem="haftalik" onclick="analizYukle('haftalik')">Haftalık</button>
+        <button data-donem="aylik" onclick="analizYukle('aylik')">Aylık</button>
+      </div>
+      <button data-is onclick="analizGuncelle()">🔄 Verileri şimdi güncelle</button>
+      <span class="kucuk" id="analizSon"></span>
+    </div>
+    <div id="analizIcerik"><div class="bos">Yükleniyor…</div></div>
   </section>
 
   <section class="sekme" id="s-youtube">
@@ -384,6 +429,7 @@ body:not(.uzak) .sadece-uzak{display:none !important}
   </div>
 </div>
 <div class="bildirim" id="bildirim"></div>
+<div id="ipucuKutu"></div>
 <div class="perde" id="perde"><img src="/bidik.png" alt=""><div id="perdeMesaj">Güncelleniyor…</div>
   <div class="cubuk"><div id="perdeCubuk"></div></div></div>
 
@@ -411,7 +457,7 @@ async function post(url, veri){
 }
 
 /* --- sekmeler ve tema --- */
-const SEKME_ADI = {senaryolar:"📝 Senaryolar", videolar:"🎬 Videolar", youtube:"▶️ YouTube", ayarlar:"⚙️ Ayarlar"};
+const SEKME_ADI = {senaryolar:"📝 Senaryolar", videolar:"🎬 Videolar", analiz:"📊 Analiz", youtube:"▶️ YouTube", ayarlar:"⚙️ Ayarlar"};
 function sekme(ad){
   aktifSekme = ad;
   $("sayfaBaslik").textContent = SEKME_ADI[ad] || "";
@@ -419,6 +465,7 @@ function sekme(ad){
   document.querySelectorAll("nav button").forEach(b => b.classList.toggle("secili", b.dataset.sekme === ad));
   if(location.hash !== "#"+ad) history.replaceState(null, "", "#"+ad);
   if(ad === "ayarlar" && !UZAK) telefonYenile("durum");
+  if(ad === "analiz") analizYukle();
   window.scrollTo(0,0);
 }
 function temaUygula(t){ document.documentElement.dataset.tema = t; $("temaBtn").textContent = t === "koyu" ? "☀️" : "🌙"; }
@@ -439,7 +486,8 @@ async function yenile(tam){
   document.querySelectorAll("[data-is]").forEach(b => b.disabled = is.calisiyor || b.hasAttribute("data-kapali"));
   // is bittiyse (cok hizli bitip hic "calisiyor" gorulmemis olsa bile) ekrani yenile ve haber ver
   const yeniBitti = !is.calisiyor && is.no !== sonIsNo && sonIsNo !== null;
-  if((isVardi && !is.calisiyor) || yeniBitti){ is.hata ? bildir(is.hata,true) : is.uyari ? bildir(is.uyari,"uyari") : bildir(is.bitti||"Tamamlandı"); tam = true; }
+  if((isVardi && !is.calisiyor) || yeniBitti){ is.hata ? bildir(is.hata,true) : is.uyari ? bildir(is.uyari,"uyari") : bildir(is.bitti||"Tamamlandı"); tam = true;
+    if(aktifSekme === "analiz") analizYukle(); }
   isVardi = is.calisiyor; if(!is.calisiyor) sonIsNo = is.no;
   if(tam || !D){ D = d; ciz(); }
   else if(JSON.stringify(d.guncelleme) !== JSON.stringify(D.guncelleme)){ D.guncelleme = d.guncelleme; guncelBant(d); }
@@ -769,6 +817,60 @@ async function yayinla(){
   paylasKapat(); bildir(`Yükleniyor… ${tarih.split("-").reverse().join(".")} ${saat}'de yayınlanacak`); yenile(false);
 }
 
+/* --- analiz --- */
+let analizDonem = "haftalik";
+const say = n => n === null || n === undefined ? "–" : Number(n).toLocaleString("tr-TR");
+function cubukGrafik(satirlar, ipucu){
+  if(!satirlar.length) return `<div class="kucuk">Henüz veri yok.</div>`;
+  const enCok = Math.max(...satirlar.map(x=>x.ort), 1);
+  return `<div class="cubuklar">${satirlar.map(x=>`<div class="cubuk-satir" data-ipucu="${esc(ipucu(x))}">
+      <span class="ad">${esc(x.ad)}</span><span class="iz"><span class="dol" style="display:block;width:${(100*x.ort/enCok).toFixed(1)}%"></span></span>
+      <span class="sayi2">${say(x.ort)}</span></div>`).join("")}</div>`;
+}
+async function analizYukle(donem){
+  if(donem) analizDonem = donem;
+  document.querySelectorAll("#donemler button").forEach(b => b.classList.toggle("secili", b.dataset.donem === analizDonem));
+  let r;
+  try{ r = (await post("/api/analiz",{donem:analizDonem})).rapor; }catch(e){ return; }
+  const o = r.ozet, adi = {gunluk:"Son 24 saat", haftalik:"Son 7 gün", aylik:"Son 30 gün"}[r.donem];
+  $("analizSon").textContent = r.son_cekim ? `Son güncelleme: ${tarihYaz(r.son_cekim)}` + (r.hata ? ` · son deneme hatası: ${r.hata}` : "") : "";
+  if(!r.son_cekim){
+    $("analizIcerik").innerHTML = `<div class="bos">${D && D.ayar.youtube_bagli ? "Henüz analiz verisi yok. <b>🔄 Verileri şimdi güncelle</b>'ye bas; sonra uygulama bunu her gün kendisi yapar."
+      : "Analiz için önce YouTube sekmesinden hesabını bağla."}</div>`; return;
+  }
+  const kut = (etiket, deger, ek, arti) => `<div class="kutucuk"><div class="etiket">${etiket}</div><div class="deger">${deger}</div>${ek?`<div class="ek ${arti?"arti":""}">${ek}</div>`:""}</div>`;
+  const gecmisNot = r.gecmis_gun < 2 ? "Artışlar 2. günden itibaren görünür (veri birikiyor)" : "";
+  const taban = o.taban_donem ? `${adi} paylaşılan videolar` : `Bu dönemde paylaşım yok; tüm Bıdık videoları`;
+  $("analizIcerik").innerHTML = `
+    <div class="kutucuklar">
+      ${kut(`${adi} izlenme`, o.donem_izlenme === null ? "–" : "+" + say(o.donem_izlenme), o.donem_izlenme === null ? gecmisNot : "tüm kanal videolarında", o.donem_izlenme > 0)}
+      ${kut("Toplam izlenme", say(o.toplam_izlenme), "kanalın tüm videoları")}
+      ${kut("Abone", say(o.abone), o.abone_artis === null ? gecmisNot : (o.abone_artis >= 0 ? "+" : "") + say(o.abone_artis) + " bu dönemde", o.abone_artis > 0)}
+      ${kut(`${adi} paylaşılan`, say(o.donem_video) + " video", "")}
+      ${kut("Video başına izlenme", say(o.ort_izlenme), taban)}
+      ${kut("Beğeni oranı", "%" + String(o.etkilesim).replace(".", ","), "beğeni / izlenme")}
+    </div>
+    <div class="grafikler">
+      <div class="kart grafik"><h3>Konuya göre ortalama izlenme</h3><div class="alt">${taban} · video başına</div>
+        ${cubukGrafik(r.alanlar, x => `${x.ad} · ${x.adet} video · ortalama ${say(x.ort)} · toplam ${say(x.toplam)} izlenme`)}</div>
+      <div class="kart grafik"><h3>Yayın saatine göre ortalama izlenme</h3><div class="alt">${taban} · video başına</div>
+        ${cubukGrafik(r.saatler, x => `${x.ad} · ${x.adet} video · ortalama ${say(x.ort)} izlenme`)}</div>
+    </div>
+    ${r.hizli.length ? `<div class="kart" style="margin-bottom:16px"><h3 style="margin:0 0 8px;font-size:15.5px">🔥 Son 24 saatte en hızlı yükselenler</h3>
+      <table class="analiz-tablo"><tr><th>Video</th><th style="text-align:right">+24 saat</th><th style="text-align:right">Toplam</th></tr>
+      ${r.hizli.map(v=>`<tr><td><a href="https://youtube.com/shorts/${esc(v.id)}" target="_blank">${esc(v.baslik)}</a></td><td class="n">+${say(v.artis24)}</td><td class="n">${say(v.izlenme)}</td></tr>`).join("")}</table></div>` : ""}
+    <div class="kart"><h3 style="margin:0 0 8px;font-size:15.5px">🏆 En çok izlenenler</h3><div class="alt kucuk" style="margin-bottom:8px">${taban}</div>
+      <div style="overflow-x:auto"><table class="analiz-tablo"><tr><th>Video</th><th>Konu</th><th>Yayın</th><th style="text-align:right">İzlenme</th><th style="text-align:right">Beğeni</th><th style="text-align:right">Yorum</th></tr>
+      ${r.en_cok.map(v=>`<tr><td><a href="https://youtube.com/shorts/${esc(v.id)}" target="_blank">${esc(v.baslik)}</a></td><td>${esc((r.alanlar.find(a=>a.anahtar===v.alan)||{}).ad || v.alan || "–")}</td>
+        <td>${tarihYaz(v.yayin)}</td><td class="n">${say(v.izlenme)}</td><td class="n">${say(v.begeni)}</td><td class="n">${say(v.yorum)}</td></tr>`).join("")}</table></div></div>
+    <p class="kucuk">Veriler her gün bir kez YouTube'dan otomatik alınır. Senaryo motoru, en çok izlenen konulara biraz daha sık yer verir; bugün ve dün işlenen konuları geri plana alır ki her gün farklı konular gelsin.</p>`;
+}
+async function analizGuncelle(){ await post("/api/analiz-guncelle",{}); bildir("Analiz verileri YouTube'dan alınıyor…"); yenile(false); }
+document.addEventListener("mousemove", e => { const h = e.target.closest && e.target.closest("[data-ipucu]"), k = $("ipucuKutu");
+  if(!h){ k.style.display = "none"; return; }
+  k.textContent = h.dataset.ipucu; k.style.display = "block";
+  k.style.left = Math.min(e.clientX + 14, innerWidth - k.offsetWidth - 8) + "px"; k.style.top = (e.clientY + 14) + "px"; });
+
 /* --- telefondan erisim --- */
 async function telefonYenile(islem, ek){
   if(islem !== "durum") $("telKart").insertAdjacentHTML("afterbegin", `<div class="kucuk" id="telBekle">⏳ Bekleniyor…</div>`);
@@ -822,7 +924,7 @@ async function guncelle(){
 document.addEventListener("keydown", e => { if(e.key === "Escape"){ paylasKapat(); silKapat(); } });
 setInterval(()=>fetch("/api/nabiz",{method:"POST",body:"{}"}).catch(()=>{}), 5000);
 fetch("/api/nabiz",{method:"POST",body:"{}"}).catch(()=>{});
-sekme(["senaryolar","videolar","youtube","ayarlar"].includes(location.hash.slice(1)) ? location.hash.slice(1) : "senaryolar");
+sekme(["senaryolar","videolar","analiz","youtube","ayarlar"].includes(location.hash.slice(1)) ? location.hash.slice(1) : "senaryolar");
 kalpleriBaslat();
 adminGoster();
 yenile(true);
