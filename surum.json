@@ -3,12 +3,13 @@
   "tarih": "2026-10-15",
   "notlar": [
     "Yeni gorunum: sekmeler solda alt alta (telefonda altta).",
-    "Paylasilan videolar yayin gunune gore gruplu, acilip kapanabilir.",
-    "Sevgi kosesi: Karimi cok seviyorum.",
-    "Acilista siyah-beyaz yonetici girisi (admin yazip Enter)."
+    "Paylasilan videolar yayin gunune gore gruplu; gun basligina tiklayip ac/kapa.",
+    "Sevgi kosesi: Karimi cok seviyorum ❤️",
+    "Acilista siyah-beyaz yonetici girisi: admin yaz, Enter."
   ],
   "dosyalar": {
     "program/GELISTIRICI.txt": "24e10b02892addbc87b87d078143cb77a09521d86239fe3b78d2a0628b03d138",
+    "program/arka_planlar.py": "6e5fad0318cb9adbfdf52d662c025bd1c59ad96ee1ea50c550fd2874fa001b96",
     "program/bidik.ico": "28def8b8467f59bfad08aa6ae749258f23e47fa9aaa0c100cef59c8b2d8c16a3",
     "program/bidik.png": "eaefa6925920f2927db821cfcd582a98b21786cce794bd3f3ef3f7e68f5018a0",
     "program/font/DejaVuSans-Bold.ttf": "5c1247acef7f2b8522a31742c76d6adcb5569bacc0be7ceaa4dc39dd252ce895",
@@ -17,14 +18,14 @@
     "program/github_kanal.py": "073f7240c08dac6bbc105da3062ad0fe2ce688747cee9fb72621aab0a54cce3f",
     "program/karakter.py": "b3f0eb8d661cde885545ef64059514bbdea1de710fc9bf1628eedf9b8458f6a9",
     "program/kisayol.ps1": "8b01102bef0e33a74e1a10756c1d030ef45381b8a3bcd2bd0cfd16252d872a5b",
-    "program/kostumler.py": "0a0446aa4c0c56e1d37b6dfb4fda4eaa1f70e59946eca476840a3c539e8dce12",
+    "program/kostumler.py": "89732de3c46d049943a59cb27ed58eb8773fe1600e1da113d6a3901e1f4bbe91",
     "program/ortak.py": "7bdf52ba89a5347a913cca7bfa4d28109b49967940594a822e0d156eb1877b2b",
     "program/panel.html": "179db9091828fbee3abbb95e37d4cde91a3c9cf304b65763b635ba620701a38d",
-    "program/panel.py": "b1052a28d0d3bd170a70350fd54df0c96acf9b39c513d8501b5e0b060391e67d",
+    "program/panel.py": "644165ded4ae43fd166e4f6d8e69bd94fa334d23a9a78bc9c530bf40ce698993",
     "program/senaryo_motoru.py": "6e17bc63e71e5191671de2f1f438e1f65c682a129d16a1c167be733fc837ab18",
     "program/telefon.py": "5d2d8793c6184446d809ef0f4b73342a9eb0fdab559f7c51ce8ab07e7af29892",
     "program/uygulama.py": "d7965fa103804248cd0ddf13f66a2ddc5fb11b688eb3d8f361c1bc4a698a82b4",
-    "program/video_uret.py": "887acbf862693a3a359cb903440c37f7cc3f13782c6216636b2ec7ef005174c8",
+    "program/video_uret.py": "e7fe0052236f2b429295372adf2b5963225cc64710ba80786f2dca747529bd7e",
     "program/youtube_yukle.py": "98ca5ff5b53fa406f6216f21a9c87b17caece3ea8d02f51d975176ea1cb440b3"
   }
 }
