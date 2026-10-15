@@ -1,12 +1,14 @@
 {
-  "surum": "1.10.0",
+  "surum": "1.11.0",
   "tarih": "2026-10-15",
   "notlar": [
-    "Acilis hareketleri: Bidik her videoya konuya uygun farkli bir girisle baslar (roket, tava, perde, cali, piksel...).",
-    "Ayni giris art arda gelmez."
+    "Yeni: Analiz sekmesi (gunluk / haftalik / aylik): izlenme, abone, konu ve yayin saatine gore grafikler, en cok izlenenler.",
+    "YouTube verileri her gun otomatik alinir; yeni izin gerekmez.",
+    "Senaryo motoru cok izlenen konulara biraz daha sik yer verir, her gun farkli konular getirir."
   ],
   "dosyalar": {
     "program/GELISTIRICI.txt": "24e10b02892addbc87b87d078143cb77a09521d86239fe3b78d2a0628b03d138",
+    "program/analiz.py": "48654c185167b1ef7e3d8cff6dd0e966856facc1cba7e876b3817416439d9a56",
     "program/arka_planlar.py": "dd665f3f27537234e1210d1abb856ff3a944a96e4507bc375ab761d64359c186",
     "program/bidik.ico": "28def8b8467f59bfad08aa6ae749258f23e47fa9aaa0c100cef59c8b2d8c16a3",
     "program/bidik.png": "eaefa6925920f2927db821cfcd582a98b21786cce794bd3f3ef3f7e68f5018a0",
@@ -19,9 +21,9 @@
     "program/kisayol.ps1": "8b01102bef0e33a74e1a10756c1d030ef45381b8a3bcd2bd0cfd16252d872a5b",
     "program/kostumler.py": "a041a730f8753887c1cdc180c8b906ed9791b7539e5c55fe26f669e63717aa33",
     "program/ortak.py": "7bdf52ba89a5347a913cca7bfa4d28109b49967940594a822e0d156eb1877b2b",
-    "program/panel.html": "179db9091828fbee3abbb95e37d4cde91a3c9cf304b65763b635ba620701a38d",
-    "program/panel.py": "26bef9150b9d3ab3296c2e5effaa3aff7095cba65f1fa26eebca1dab018fe8dd",
-    "program/senaryo_motoru.py": "6e17bc63e71e5191671de2f1f438e1f65c682a129d16a1c167be733fc837ab18",
+    "program/panel.html": "c869b462148cac738fe2ef7c81524fd6a65e8d5fde50788a34dd9486a54e4733",
+    "program/panel.py": "0c853ff5c3272d0ac9428364b102983ee42f569b18a5ce55614c2a4b51080b98",
+    "program/senaryo_motoru.py": "586f88c49b6be94192af2607a81a76e385a4af9fbb09ba23c324a417c54b8df1",
     "program/telefon.py": "5d2d8793c6184446d809ef0f4b73342a9eb0fdab559f7c51ce8ab07e7af29892",
     "program/uygulama.py": "d7965fa103804248cd0ddf13f66a2ddc5fb11b688eb3d8f361c1bc4a698a82b4",
     "program/video_uret.py": "8dc94b3732d345951a159b5b577804d1d42e5562e902b6c045809c1206d33557",
