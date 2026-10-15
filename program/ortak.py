@@ -15,7 +15,8 @@ VARSAYILAN_AYAR = {
     "aday_sayisi": 9,
     "model": "",
     "alanlar": ["hayvanlar", "bilim", "uzay", "insan vucudu", "tarih", "psikoloji",
-                "yemek ve mutfak bilimi", "teknoloji", "dunya cografyasi"],
+                "yemek ve mutfak bilimi", "teknoloji", "dunya cografyasi",
+                "burclar ve gokyuzu", "cocuklarin neden sorulari"],
     "uslup": "Aile dostu, kufursuz, kimseyi asagilamayan; zeki ve absurt mizah.",
     "youtube_gizlilik": "private",
     "son_cagri": True,   # videonun son 2 sn'sinde Begen + Abone ol animasyonu

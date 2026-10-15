@@ -62,9 +62,16 @@ def _kol(d, omuz, el, s, renk_cizgi, dirsek_bukum=0.0, el_ac=False):
               fill=RENK["govde"], outline=renk_cizgi, width=int(KONTUR * s * 0.8))
 
 
+def _percem(d, tepe, s):
+    """Imza kivrik tutam; kostumlu hallerde sapkanin tepesinden cikar."""
+    p1 = _bezier(tepe, (tepe[0] + 10 * s, tepe[1] - 80 * s), (tepe[0] + 60 * s, tepe[1] - 60 * s))
+    p2 = _bezier(p1[-1], (tepe[0] + 85 * s, tepe[1] - 40 * s), (tepe[0] + 55 * s, tepe[1] - 25 * s), 12)
+    _kalin_cizgi(d, p1 + p2[1:], 13 * s, RENK["perçem"])
+
+
 def ciz_bidik(img, x, y, olcek=1.0, ifade="normal", agiz=0.0, kirp=0.0,
               bakis=(0.0, 0.0), kol="serbest", ziplama=0.0, egilme=0.0,
-              kol_faz=0.0):
+              kol_faz=0.0, kostum=None):
     """
     x, y     : ayaklarin orta noktasi (yere bastigi yer)
     agiz     : 0 kapali ... 1 tamamen acik (konusma icin)
@@ -74,7 +81,10 @@ def ciz_bidik(img, x, y, olcek=1.0, ifade="normal", agiz=0.0, kirp=0.0,
     ziplama  : govdenin yukari kalkmasi (px, olcek 1'de)
     egilme   : -1..1 govde sag/sol egilmesi
     kol_faz  : el sallama gibi hareketler icin 0..1 dongu fazi
+    kostum   : None ya da KOSTUMLER'den biri (konuya uygun kiyafet)
     """
+    from kostumler import KOSTUMLER
+    kos = KOSTUMLER.get(kostum) if kostum else None
     s = olcek
     d = ImageDraw.Draw(img)
     c = RENK["cizgi"]
@@ -102,12 +112,14 @@ def ciz_bidik(img, x, y, olcek=1.0, ifade="normal", agiz=0.0, kirp=0.0,
     d.chord([gx - rx * 0.78, gy + ry * 0.15, gx + rx * 0.78, gy + ry * 0.92],
             start=10, end=170, fill=RENK["govde_golge"])
     d.ellipse(govde_bbox, outline=c, width=w)
+    g = {"gx": gx, "gy": gy, "rx": rx, "ry": ry, "s": s, "c": c, "w": w, "faz": kol_faz}
+    if kos and kos.get("govde"):
+        kos["govde"](img, d, g)          # onluk, stetoskop... (agiz ve kollar ustte kalir)
 
     # --- imza percem (kafadaki kivrik tutam) ----------------------------------
     tepe = (gx, gy - ry + 4 * s)
-    p1 = _bezier(tepe, (gx + 10 * s, tepe[1] - 80 * s), (gx + 60 * s, tepe[1] - 60 * s))
-    p2 = _bezier(p1[-1], (gx + 85 * s, tepe[1] - 40 * s), (gx + 55 * s, tepe[1] - 25 * s), 12)
-    _kalin_cizgi(d, p1 + p2[1:], 13 * s, RENK["perçem"])
+    if not (kos and kos.get("kafa")):
+        _percem(d, tepe, s)
 
     # --- kollar ----------------------------------------------------------------
     omuz_sol = (gx - rx * 0.92, gy + 10 * s)
@@ -261,6 +273,14 @@ def ciz_bidik(img, x, y, olcek=1.0, ifade="normal", agiz=0.0, kirp=0.0,
                   fill=(120, 200, 255), outline=c)
         d.ellipse([tx - 14 * s, ty - 10 * s, tx + 14 * s, ty + 16 * s],
                   fill=(120, 200, 255), outline=c, width=int(5 * s))
+
+    # --- kostum: kafa katmani (sapka, kulaklik, gozluk) -------------------------
+    if kos and kos.get("kafa"):
+        yeni_tepe = kos["kafa"](img, d, g)
+        if yeni_tepe is not False:
+            _percem(d, yeni_tepe or tepe, s)
+    if kos and kos.get("on"):
+        kos["on"](img, d, g)             # en onde: astronot fanusu
 
 
 def kare(genislik=1080, yukseklik=1920, arka=(250, 244, 230), ss=2, **params):

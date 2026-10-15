@@ -23,6 +23,7 @@ gore oynar; kurulu degilse video sessiz + altyazili uretilir.
 import json, math, os, shutil, subprocess, sys, tempfile, wave, struct, asyncio
 from PIL import Image, ImageDraw, ImageFont
 from karakter import ciz_bidik, IFADELER, KOL_POZLARI
+from kostumler import KOSTUMLER, ust_boy
 from ortak import FONT, ffmpeg, komut, KOK
 
 FPS = 30
@@ -57,7 +58,19 @@ def dogrula(sen):
         toplam += float(s.get("sure", 0))
     if not SINIR_SURE[0] <= toplam <= SINIR_SURE[1]:
         hatalar.append(f"toplam sure {toplam:.1f} sn ({SINIR_SURE[0]:.0f}-{SINIR_SURE[1]:.0f} olmali)")
+    if sen.get("kostum") and sen["kostum"] not in KOSTUMLER:
+        hatalar.append(f"gecersiz kostum {sen['kostum']}")
     return hatalar
+
+
+ALTYAZI_ALT = 410      # altyazi kutusunun alt siniri (px): Bidik'in tepesi bunun altinda kalmali
+KART_ALT = 805         # bilgi karti / son cagri kartinin alt siniri
+
+
+def sigan_olcek(istenen, ust_px, ziplama, alt_sinir):
+    """Bidik'i (kostum + percem + ziplama dahil) verilen cizginin altina sigdiran en buyuk olcek."""
+    zemin = H * 0.80
+    return min(istenen, (zemin - alt_sinir) / (435 + ust_px + max(0.0, ziplama)))
 
 
 # --- ses ---------------------------------------------------------------------
@@ -427,6 +440,12 @@ def uret(senaryo_yolu, cikti=None, sesli=None, ilerleme=None, izin_sessiz=False)
     from ortak import ayarlar
     cagri_acik = ayarlar().get("son_cagri", True)
     cagri_basla = toplam_kare - int(SON_CAGRI_SN * FPS) if cagri_acik else 10 ** 9
+    kostum = sen.get("kostum") or None
+    ust = ust_boy(kostum)
+    # tum video icin tek buyuk-sahne olcegi (sahneler arasi "buyume/kuculme" sicramasi olmasin)
+    zmax = max([float(x.get("ziplama", 0)) for x in sen["sahneler"] if not x.get("kart")] or [0])
+    buyuk_olcek = sigan_olcek(1.95, ust, zmax + 30, ALTYAZI_ALT)
+    kart_olcek = sigan_olcek(1.3, ust, 10, KART_ALT)
     n = 0
     for si, s in enumerate(sen["sahneler"]):
         toplam = int(round(s["_sure"] * FPS))
@@ -436,6 +455,9 @@ def uret(senaryo_yolu, cikti=None, sesli=None, ilerleme=None, izin_sessiz=False)
         hedef_zip = float(s.get("ziplama", 0))
         kaydir = -150 if p.get("kol") == "isaret" else 0
         kart = s.get("kart")
+        # sahne boyunca sabit olcek: kostum/percem altyaziya ya da karta carpmasin
+        sahne_olcek = kart_olcek if kart else buyuk_olcek
+        cagri_olcek = sigan_olcek(1.3, ust, 10, KART_ALT - 60)
         for k in range(toplam):
             t = k / FPS
             img = Image.new("RGB", (W * SS, H * SS), ARKA)
@@ -456,16 +478,16 @@ def uret(senaryo_yolu, cikti=None, sesli=None, ilerleme=None, izin_sessiz=False)
             else:
                 agiz = 0.0
             kirp = 1.0 if (n % 75) in (0, 1, 2) else 0.0
-            olcek = 1.3 if kart else 1.95
+            olcek = sahne_olcek
             if kart:  # kartli sahnede Bidik kucuk ve yerde durur, kartla cakismaz
                 zip_ = min(zip_, 10)
             if cagri_k >= 0:  # video sonu kartina yer ac: Bidik yumusakca kuculur
-                hedef = 1.3
+                hedef = cagri_olcek
                 gecis = min(1.0, cagri_k / 8)
                 olcek = olcek + (hedef - olcek) * (gecis * gecis * (3 - 2 * gecis))
                 zip_ = min(zip_, 10)
             ciz_bidik(img, x=(W / 2 + kaydir) * SS, y=H * 0.80 * SS, olcek=olcek * SS,
-                      agiz=agiz, kirp=kirp, ziplama=zip_, kol_faz=t * 1.6, **p)
+                      agiz=agiz, kirp=kirp, ziplama=zip_, kol_faz=t * 1.6, kostum=kostum, **p)
             altyazi(d, s.get("replik", ""))
             if cagri_k >= 0:
                 son_cagri(d, cagri_k)

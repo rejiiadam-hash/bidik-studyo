@@ -67,9 +67,10 @@ button:disabled{opacity:.45;cursor:not-allowed}
   border-radius:14px;box-shadow:var(--golge);display:none;z-index:30;border:1px solid #3a3d57}
 .bildirim.hata{background:var(--kirmizi);border-color:var(--kirmizi)}
 .bildirim.uyari{background:var(--sari);border-color:var(--sari);color:#23253a}
-.sesler{display:flex;flex-direction:column;gap:10px;margin-top:10px}
-.sesler div{display:flex;flex-wrap:wrap;align-items:center;gap:10px}.sesler b{min-width:190px}
-.sesler audio{max-width:100%}
+.kostum{display:flex;align-items:center;gap:12px;margin:10px 0 4px;background:var(--cip);border-radius:14px;padding:6px 10px}
+.kostum img{width:66px;height:90px;border-radius:10px;background:#faf4e6;flex:none;object-fit:cover}
+.kostum label{font-size:12.5px;color:var(--soluk);font-weight:600;display:block;margin-bottom:3px}
+.kostum select{max-width:240px}
 .izgara{display:grid;grid-template-columns:repeat(auto-fill,minmax(520px,1fr));gap:16px}
 .kart{background:var(--kart);border:2px solid var(--cizgi);border-radius:18px;padding:16px;box-shadow:var(--golge);position:relative}
 input[type=text],input[type=password],input[type=number],input[type=date],input[type=time],textarea,select{
@@ -263,14 +264,6 @@ body:not(.uzak) .sadece-uzak{display:none !important}
         <span class="toplam" id="islenen"></span>
       </div>
     </div>
-    <h2>🔊 Yedek ses (deneme)</h2>
-    <div class="kart" style="max-width:860px">
-      <p style="margin-top:0">Microsoft'un ses servisi takıldığında videolar internetsiz çalışan <b>Piper</b> sesiyle üretilebilir.
-        Karar vermeden önce dinle: aynı cümle Bıdık'ın normal sesi (Ahmet) ve Piper ile söyleniyor.</p>
-      <div class="kucuk">İlk seferde Piper kurulur ve ses modeli (~60 MB) indirilir; 1–3 dakika sürebilir.</div>
-      <div class="dugmeler"><button class="ana" data-is onclick="sesOrnegi()">🔊 Örnek sesleri üret</button></div>
-      <div class="sesler" id="sesler"></div>
-    </div>
     <div class="yerel">
       <h2>📱 Telefondan erişim</h2>
       <div class="tel" id="telKart"><div class="kucuk">Yükleniyor…</div></div>
@@ -377,6 +370,12 @@ function senaryoKarti(s, i){
     ${s.puan?`<div class="puan"><span>kanca <b>${p.kanca}</b></span><span>komiklik <b>${p.komiklik}</b></span><span>bilgi <b>${p.bilgi}</b></span><span>son <b>${p.son}</b></span></div>`:""}
     ${s.editor_notu?`<div class="not">Editör: ${esc(s.editor_notu)}</div>`:""}
     <div class="dogrula"><b>Bilgiyi kontrol et:</b> ${esc(s.dogrulama_notu||"-")}</div>
+    <div class="kostum"><img src="/kostum/${esc(s.kostum||"yok")}.png" alt="" loading="lazy">
+      <div><label>🎭 Bıdık'ın kostümü</label>
+      <select data-a="kostum" onchange="this.closest('.kostum').querySelector('img').src='/kostum/'+(this.value||'yok')+'.png'">
+        <option value="" ${s.kostum?"":"selected"}>Kostümsüz</option>
+        ${D.secenek.kostum.map(k=>`<option value="${k.id}" ${k.id===s.kostum?"selected":""}>${esc(k.ad)}</option>`).join("")}
+      </select></div></div>
     <table><tr><th></th><th>sn</th><th>ifade</th><th class="kol">kol</th><th>replik</th></tr>${satirlar}</table>
     ${s._hatalar.length?`<div class="hatalar">⚠ ${esc(s._hatalar.join("; "))}</div>`:""}
     <div class="dugmeler">
@@ -491,8 +490,6 @@ function ciz(){
   $("gDurum").innerHTML = `<span class="nokta ${a.gemini_var?"tamam":""}"></span>${a.gemini_var?"kayıtlı":"girilmedi"}`;
   $("gunluk").value = a.gunluk_video; $("alanlar").value = a.alanlar.join(", ");
   $("sonCagri").checked = a.son_cagri; $("temaSec").value = a.tema; $("saatler").value = a.paylasim_saatleri.join(", ");
-  const SES_ADI = {"1_ahmet.wav":"1) Ahmet (şu anki Bıdık sesi)","2_piper_bidik.wav":"2) Piper, Bıdık tonunda","3_piper_dogal.wav":"3) Piper, doğal hali"};
-  $("sesler").innerHTML = (a.ses_ornekleri||[]).map(f=>`<div><b>${esc(SES_ADI[f]||f)}</b><audio controls preload="none" src="/dosya/sesler/ornek/${encodeURIComponent(f)}?t=${Date.now()}"></audio></div>`).join("");
   $("islenen").textContent = `Şimdiye kadar işlenen konu: ${d.toplam_islenen} · Sürüm v${d.surum}`;
   document.querySelectorAll("[data-is]").forEach(b => b.disabled = d.is.calisiyor || b.hasAttribute("data-kapali"));
 }
@@ -641,7 +638,6 @@ function telCiz(r){
       ${r.arka?`<p>Şu an arka planda çalışıyor.</p><div class="dugmeler"><button class="kirmizi" onclick="if(confirm('Uygulama tamamen kapatılsın mı? Telefondan erişim de kapanır.'))post('/api/kapat',{})">⏻ Uygulamayı tamamen kapat</button></div>`:""}`),
   ].join("");
 }
-async function sesOrnegi(){ await post("/api/ses-ornegi",{}); bildir("Ses örnekleri hazırlanıyor… (ilk sefer 1–3 dk)"); yenile(false); }
 async function sifreKaydet(){ const r = await post("/api/sifre",{sifre:$("telSifre").value}); bildir(r.mesaj); telefonYenile("durum"); }
 async function cikis(){ await fetch("/api/cikis",{method:"POST"}); location.reload(); }
 

@@ -16,6 +16,7 @@ import json, os, random, re, sys, datetime, urllib.request, urllib.error
 from video_uret import dogrula, IKONLAR, RENKLER
 from karakter import IFADELER, KOL_POZLARI
 from ortak import ayarlar, HAFIZA, SENARYO
+from kostumler import KOSTUMLER, kostum_sec
 
 API = "https://generativelanguage.googleapis.com/v1beta"
 
@@ -205,6 +206,11 @@ KURALLAR
 - 4-6 sahne, toplam sure 13-16 saniye, her replik en fazla 60 karakter, gunluk konusma dili.
 - Bu konular daha once islendi, TEKRARLAMA: {", ".join(kullanilan) or "yok"}
 - Tum senaryolar birbirinden farkli konu ve farkli espri yapisinda olsun.
+- "burclar ve gokyuzu" alani: astrolojinin TARIHI, KULTURU ve GOKBILIMI hakkinda dogru bilgiler
+  (or. burclarin kokeni, takimyildizlarin kaymasi, 13. takimyildiz Yilanci). Burclarin kisilik/gelecek
+  belirledigini ASLA iddia etme; bu bilimsel olarak dogru degildir.
+- "cocuklarin neden sorulari" alani: cocuklarin sordugu "Neden?" sorulari (gokyuzu neden mavi, neden esneriz...).
+  Cok basit, sicak, aile dostu dil; her yastan izleyici icin (sadece kucuk cocuklara hitap etme).
 
 Sahne alanlari:
 - "sure": saniye (1.5-4)
@@ -382,6 +388,8 @@ def calistir(ilerleme=None):
         s.setdefault("baslik", s.get("konu") or "Bıdık")
         s.setdefault("konu", s["baslik"])
         s.setdefault("alan", "genel")
+        if s.get("kostum") not in KOSTUMLER:
+            s["kostum"] = kostum_sec(s.get("alan"), s.get("konu"))   # konuya uygun kiyafet
         h = dogrula(s)
         if h:
             print("  elendi (format):", s.get("baslik"), "-", "; ".join(h))

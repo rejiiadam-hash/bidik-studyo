@@ -13,7 +13,7 @@ import senaryo_motoru as motor
 import youtube_yukle as yt
 import github_kanal
 import telefon
-import yedek_ses
+import kostumler
 
 PORT = 8765
 GUNCELLEME = os.path.join(KOK, "guncelleme")
@@ -93,6 +93,8 @@ def durum():
     for p in motor.bekleyen_dosyalar():
         s = oku(p)
         s["_id"] = rel(p)
+        if "kostum" not in s:   # eski senaryolar: konuya gore oneri (kaydedince dosyaya yazilir)
+            s["kostum"] = kostumler.kostum_sec(s.get("alan"), s.get("konu"))
         s["_hatalar"] = dogrula(s)
         bekleyen.append(s)
     videolar = []
@@ -115,8 +117,9 @@ def durum():
                  "paylasim_saatleri": a.get("paylasim_saatleri") or ["11:00", "15:00", "19:00"],
                  "youtube_hazir": yt.hazir_mi(), "youtube_bagli": yt.bagli_mi(),
                  "youtube_kanal": a.get("youtube_kanal", ""), "youtube_silme": yt.silme_izni_var(),
-                 "sifre_var": sifre_var(), "arka": ARKA["acik"], "ses_ornekleri": yedek_ses.ornekler()},
-        "secenek": {"ifade": IFADELER, "kol": KOL_POZLARI, "ikon": IKONLAR, "renk": list(RENKLER)},
+                 "sifre_var": sifre_var(), "arka": ARKA["acik"]},
+        "secenek": {"ifade": IFADELER, "kol": KOL_POZLARI, "ikon": IKONLAR, "renk": list(RENKLER),
+                    "kostum": [{"id": k, "ad": v["ad"]} for k, v in kostumler.KOSTUMLER.items()]},
         "toplam_islenen": len(motor.hafiza()["konular"]),
         "surum": surum(),
         "guncelleme": bekleyen_guncelleme(),
@@ -603,8 +606,25 @@ def telefon_islem(v):
             "arka": ARKA["acik"]}
 
 
-def ses_ornegi(_):
-    is_baslat("Ses ornekleri hazirlaniyor", yedek_ses.ornek_uret)
+_KOSTUM_RESIM = {}
+
+
+def kostum_resmi(ad):
+    """Onay ekranindaki kucuk kostum onizlemesi (bellekte saklanir)."""
+    if ad != "yok" and ad not in kostumler.KOSTUMLER:
+        return None
+    if ad not in _KOSTUM_RESIM:
+        import io
+        from PIL import Image
+        from karakter import ciz_bidik
+        ss, gw, gy = 2, 220, 300
+        img = Image.new("RGB", (gw * ss, gy * ss), (250, 244, 230))
+        ciz_bidik(img, x=gw / 2 * ss, y=(gy - 12) * ss, olcek=0.42 * ss, ifade="mutlu",
+                  kostum=None if ad == "yok" else ad, kol_faz=0.15)
+        tampon = io.BytesIO()
+        img.resize((gw, gy), Image.LANCZOS).save(tampon, "PNG")
+        _KOSTUM_RESIM[ad] = tampon.getvalue()
+    return _KOSTUM_RESIM[ad]
 
 
 def kapat(_):
@@ -672,7 +692,7 @@ ISLEMLER = {"/api/senaryo-uret": senaryo_uret, "/api/kaydet": kaydet, "/api/onay
             "/api/reddet": reddet, "/api/ayar": ayar, "/api/klasor": klasor_ac,
             "/api/guncelle": guncelle, "/api/nabiz": nabiz,
             "/api/paylas": paylas, "/api/video-sil": video_sil, "/api/youtube-istemci": youtube_istemci,
-            "/api/youtube-bagla": youtube_bagla, "/api/youtube-kes": youtube_kes, "/api/destek": destek, "/api/github-kontrol": github_kontrol, "/api/sifre": sifre_ayarla, "/api/telefon": telefon_islem, "/api/kapat": kapat, "/api/ses-ornegi": ses_ornegi, "/api/yeniden-uret": yeniden_uret}
+            "/api/youtube-bagla": youtube_bagla, "/api/youtube-kes": youtube_kes, "/api/destek": destek, "/api/github-kontrol": github_kontrol, "/api/sifre": sifre_ayarla, "/api/telefon": telefon_islem, "/api/kapat": kapat, "/api/yeniden-uret": yeniden_uret}
 
 
 # --- sunucu -------------------------------------------------------------------
@@ -772,6 +792,16 @@ class Isleyici(BaseHTTPRequestHandler):
             self._dosya(unquote(yol[len("/dosya/"):]))
         elif yol == "/bidik.png":
             self._dosya("program/bidik.png")
+        elif yol.startswith("/kostum/") and yol.endswith(".png"):
+            b = kostum_resmi(yol[len("/kostum/"):-4])
+            if b is None:
+                return self.send_error(404)
+            self.send_response(200)
+            self.send_header("Content-Type", "image/png")
+            self.send_header("Cache-Control", "max-age=86400")
+            self.send_header("Content-Length", str(len(b)))
+            self.end_headers()
+            self.wfile.write(b)
         else:
             self.send_error(404)
 
@@ -843,6 +873,13 @@ def hazirla():
     os.makedirs(VIDEO, exist_ok=True)
     if not os.path.exists(os.path.join(KOK, "ayarlar.json")):
         ayar_kaydet({})
+    a = ayarlar()
+    if not a.get("alanlar_v2"):   # bir kerelik: yeni konu alanlarini mevcut listeye ekle
+        alanlar = list(a.get("alanlar") or [])
+        for yeni in ("burclar ve gokyuzu", "cocuklarin neden sorulari"):
+            if yeni not in alanlar:
+                alanlar.append(yeni)
+        ayar_kaydet({"alanlar": alanlar, "alanlar_v2": True})
     github_kanal.baslat()   # bilgisayar kapaliyken GitHub'a konan guncellemeleri acilinca indirir
 
 
