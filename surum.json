@@ -1,11 +1,8 @@
 {
-  "surum": "1.8.0",
+  "surum": "1.8.1",
   "tarih": "2026-10-15",
   "notlar": [
-    "Yeni gorunum: sekmeler solda alt alta (telefonda altta).",
-    "Paylasilan videolar yayin gunune gore gruplu; gun basligina tiklayip ac/kapa.",
-    "Sevgi kosesi: Karimi cok seviyorum ❤️",
-    "Acilista siyah-beyaz yonetici girisi: admin yaz, Enter."
+    "Duzeltme: ses servisi takilinca bekleyip sadece eksik replikleri tekrar deneme ozelligi geri geldi (yanlislikla kaybolmustu)."
   ],
   "dosyalar": {
     "program/GELISTIRICI.txt": "24e10b02892addbc87b87d078143cb77a09521d86239fe3b78d2a0628b03d138",
@@ -25,7 +22,7 @@
     "program/senaryo_motoru.py": "6e17bc63e71e5191671de2f1f438e1f65c682a129d16a1c167be733fc837ab18",
     "program/telefon.py": "5d2d8793c6184446d809ef0f4b73342a9eb0fdab559f7c51ce8ab07e7af29892",
     "program/uygulama.py": "d7965fa103804248cd0ddf13f66a2ddc5fb11b688eb3d8f361c1bc4a698a82b4",
-    "program/video_uret.py": "e7fe0052236f2b429295372adf2b5963225cc64710ba80786f2dca747529bd7e",
+    "program/video_uret.py": "850ba74decf6d26244743f7bed4b3dd7c075e74587e608ffca163153708967ec",
     "program/youtube_yukle.py": "98ca5ff5b53fa406f6216f21a9c87b17caece3ea8d02f51d975176ea1cb440b3"
   }
 }

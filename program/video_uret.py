@@ -390,18 +390,49 @@ def uret(senaryo_yolu, cikti=None, sesli=None, ilerleme=None, izin_sessiz=False)
     # her sahnenin sesi ve suresi
     # 1) once TUM replikleri seslendir; biri bile olmazsa video uretme (sessiz video asla cikmasin)
     import time as _t
-    hazir_sesler, basarisiz = {}, []
+    from ortak import ayarlar as _ayar
+    hazir_sesler = {}
     konusan = [i for i, s in enumerate(sen["sahneler"]) if sesli and s.get("replik") and s.get("konusuyor", True)]
-    for sira, i in enumerate(konusan):
-        wav = os.path.join(gecici, f"s{i}.wav")
-        ilerle(2 + int(8 * sira / max(1, len(konusan))), f"Seslendiriliyor ({sira + 1}/{len(konusan)})")
+    bekleyen = list(konusan)
+    # Ses servisi takilirsa: art arda 2 replik tamamen basarisiz olunca tur biter (servis kapali demektir),
+    # biraz beklenip SADECE eksikler tekrar istenir. Ek tur sayisi ayarlar.json "ses_ek_tur" (varsayilan 2).
+    ek_tur = max(0, int(_ayar().get("ses_ek_tur", 2)))
+    bekleme = (45, 90, 150)
+    for tur in range(1 + ek_tur):
+        if tur and bekleyen:
+            sn = bekleme[min(tur - 1, len(bekleme) - 1)]
+            while sn > 0:
+                ilerle(10, f"Ses servisi yanit vermiyor; {sn} sn sonra {tur + 1}. tur ({len(bekleyen)} replik eksik)")
+                _t.sleep(5)
+                sn -= 5
+        kalan, ust_uste = [], 0
+        for sira, i in enumerate(bekleyen):
+            if ust_uste >= 2:           # servis kapali gorunuyor: bu turu bosuna uzatma
+                kalan.append(i)
+                continue
+            wav = os.path.join(gecici, f"s{i}.wav")
+            yapilan = len(konusan) - len(bekleyen) + sira
+            ilerle(2 + int(8 * yapilan / max(1, len(konusan))),
+                   f"Seslendiriliyor ({yapilan + 1}/{len(konusan)})" + (f" - {tur + 1}. tur" if tur else ""))
+            try:
+                seslendir(sen["sahneler"][i]["replik"], wav)
+                hazir_sesler[i] = wav
+                ust_uste = 0
+            except SesHatasi as e:
+                print("Seslendirme basarisiz:", e)
+                kalan.append(i)
+                ust_uste += 1
+            _t.sleep(0.8)   # ses servisine art arda yuklenmemek icin kisa ara
+        bekleyen = kalan
+        if not bekleyen:
+            break
+    basarisiz = [i + 1 for i in bekleyen]
+    if basarisiz:
         try:
-            seslendir(sen["sahneler"][i]["replik"], wav)
-            hazir_sesler[i] = wav
-        except SesHatasi as e:
-            print("Seslendirme basarisiz:", e)
-            basarisiz.append(i + 1)
-        _t.sleep(0.8)   # ses servisine art arda yuklenmemek icin kisa ara
+            import importlib.metadata as _im
+            print("edge-tts surumu:", _im.version("edge-tts"))
+        except Exception:
+            pass
     if basarisiz and not izin_sessiz:
         shutil.rmtree(gecici, ignore_errors=True)
         raise SesHatasi(
