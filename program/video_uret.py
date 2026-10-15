@@ -25,6 +25,7 @@ from PIL import Image, ImageDraw, ImageFont
 from karakter import ciz_bidik, IFADELER, KOL_POZLARI
 from kostumler import KOSTUMLER, ust_boy
 import arka_planlar
+import girisler
 SON_URETIM = {}   # son uretilen videonun secimleri (panel meta'ya yazar)
 from ortak import FONT, ffmpeg, komut, KOK
 
@@ -494,6 +495,11 @@ def uret(senaryo_yolu, cikti=None, sesli=None, ilerleme=None, izin_sessiz=False)
         ad.rectangle([0, zy0, W * SS, H * SS], fill=ZEMIN)
         ad.line([(0, zy0), (W * SS, zy0)], fill=LACI, width=6 * SS)
         SON_URETIM["arka_plan"] = "sade"
+    # video basi giris hareketi: konuya ozel ya da genel, art arda ayni olmaz
+    tema_g = arka_planlar.tema_bul(sen.get("alan", ""), sen.get("konu", ""), kostum or "")
+    giris_ad = sen.get("giris") if sen.get("giris") in girisler.ADLAR else girisler.secim(tema_g)
+    SON_URETIM["giris"] = giris_ad
+    giris_kare = int(round(girisler.SURE_SN * FPS))
     n = 0
     for si, s in enumerate(sen["sahneler"]):
         toplam = int(round(s["_sure"] * FPS))
@@ -513,8 +519,12 @@ def uret(senaryo_yolu, cikti=None, sesli=None, ilerleme=None, izin_sessiz=False)
             cagri_k = n - cagri_basla          # >= 0 ise son 2 saniyedeyiz
             if kart and cagri_k < 0:
                 bilgi_karti(d, kart, k / 8)
-            giris = max(0.0, 1 - k / 6)
+            gt = k / giris_kare if (si == 0 and k < giris_kare) else None
+            gd = girisler.durum(giris_ad, gt) if gt is not None else None
+            giris = 0.0 if si == 0 else max(0.0, 1 - k / 6)   # diger sahnelerin basinda kucuk sicrama
             zip_ = hedef_zip * math.sin(min(1, k / 8) * math.pi / 2) + giris * 25
+            if gd and gd["ziplama"] is not None:
+                zip_ = gd["ziplama"]
             zip_ += 4 * math.sin(t * 2 * math.pi * 0.9)
             if s["_zarf"]:
                 agiz = s["_zarf"][k] if k < len(s["_zarf"]) else 0.0
@@ -531,8 +541,24 @@ def uret(senaryo_yolu, cikti=None, sesli=None, ilerleme=None, izin_sessiz=False)
                 gecis = min(1.0, cagri_k / 8)
                 olcek = olcek + (hedef - olcek) * (gecis * gecis * (3 - 2 * gecis))
                 zip_ = min(zip_, 10)
-            ciz_bidik(img, x=(W / 2 + kaydir) * SS, y=H * 0.80 * SS, olcek=olcek * SS,
-                      agiz=agiz, kirp=kirp, ziplama=zip_, kol_faz=t * 1.6, kostum=kostum, **p)
+            bx, by, bol, pp = (W / 2 + kaydir) * SS, H * 0.80 * SS, olcek * SS, dict(p)
+            if gd:
+                bol = olcek * SS * gd["olcek"]
+                bx += gd["dx"] * olcek * SS
+                by += gd["dy"] * olcek * SS
+                if gd["egilme"]:
+                    pp["egilme"] = gd["egilme"]
+                gc = {"x": bx, "y": H * 0.80 * SS, "ayak_y": by, "s": bol, "W": W * SS, "H": H * SS, "SS": SS}
+                girisler.arka(giris_ad, img, d, gt, gc)
+            if not (gd and gd["gizli"]):
+                hedef_img = img.copy() if (gd and gd["kirp_zemin"]) else img
+                ciz_bidik(hedef_img, x=bx, y=by, olcek=bol,
+                          agiz=agiz, kirp=kirp, ziplama=zip_, kol_faz=t * 1.6, kostum=kostum, **pp)
+                if hedef_img is not img:   # zeminin altinda kalan kisim gorunmesin
+                    zy_ = int(H * 0.80 * SS) + 3 * SS
+                    img.paste(hedef_img.crop((0, 0, W * SS, zy_)), (0, 0))
+            if gd:
+                girisler.on(giris_ad, img, d, gt, gc)
             altyazi(d, s.get("replik", ""))
             if cagri_k >= 0:
                 son_cagri(d, cagri_k)
