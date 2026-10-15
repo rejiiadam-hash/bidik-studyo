@@ -26,20 +26,72 @@
 html,body{background:var(--bg)}
 body{margin:0;color:var(--metin);font:15px/1.45 "Segoe UI",system-ui,-apple-system,sans-serif;transition:background .2s}
 a{color:var(--mavi)}
-header{position:sticky;top:0;z-index:5;background:var(--ust);color:#fff;box-shadow:0 2px 12px rgba(0,0,0,.15)}
-.ust{max-width:1200px;margin:0 auto;padding:10px 20px 0;display:flex;align-items:center;gap:14px}
-.ust img{width:42px;height:42px}
-.ust h1{font-size:19px;margin:0;letter-spacing:.3px;white-space:nowrap}
-.ust small{display:block;color:#a9abc4;font-weight:400;font-size:12px}
-.surum{font-size:11px;color:#7f82a0;margin-left:4px}
+/* --- yerlesim: solda dikey menu, sagda icerik --- */
+.duzen{display:flex;min-height:100vh}
+.yan{position:sticky;top:0;height:100vh;width:236px;flex:none;background:var(--ust);color:#fff;display:flex;flex-direction:column;
+  padding:18px 14px;gap:18px;z-index:6;box-shadow:2px 0 14px rgba(0,0,0,.18)}
+.marka{display:flex;align-items:center;gap:10px;padding:0 6px}
+.marka img{width:46px;height:46px}
+.marka b{font-size:18px;letter-spacing:.3px;display:block;white-space:nowrap}
+.marka small{display:block;color:#a9abc4;font-size:11.5px}
+.surum{font-size:11px;color:#7f82a0}
 .bosluk{flex:1}
-nav{max-width:1200px;margin:0 auto;padding:8px 20px 0;display:flex;gap:4px}
-nav button{background:transparent;border:none;color:#b8bad2;border-radius:12px 12px 0 0;padding:10px 16px;font-weight:600}
+nav{display:flex;flex-direction:column;gap:4px}
+nav button{background:transparent;border:none;color:#b8bad2;border-radius:12px;padding:12px 14px;font-weight:600;font-size:15px;
+  justify-content:flex-start;width:100%;position:relative}
 nav button:hover{background:var(--ust2);color:#fff}
-nav button.secili{background:var(--bg);color:var(--metin)}
-nav .sayi{background:var(--sari);color:#23253a;border-radius:99px;font-size:11.5px;padding:0 7px;margin-left:4px;font-weight:700}
+nav button.secili{background:var(--sari);color:#23253a}
+nav .sayi{background:var(--sari);color:#23253a;border-radius:99px;font-size:11.5px;padding:0 7px;margin-left:auto;font-weight:700}
+nav button.secili .sayi{background:#23253a;color:var(--sari)}
 nav .sayi:empty{display:none}
-main{max-width:1200px;margin:0 auto;padding:18px 20px 60px}
+.sag-ana{flex:1;min-width:0;display:flex;flex-direction:column}
+header{position:sticky;top:0;z-index:5;background:var(--ust);color:#fff;box-shadow:0 2px 12px rgba(0,0,0,.15)}
+.ust{padding:10px 24px;display:flex;align-items:center;gap:14px}
+.ust .baslik{font-size:17px;font-weight:700}
+main{width:100%;max-width:1240px;margin:0 auto;padding:18px 24px 60px}
+/* --- sevgi kosesi --- */
+.sevgi{position:relative;border-radius:16px;padding:16px 12px 14px;text-align:center;overflow:hidden;
+  background:linear-gradient(160deg,rgba(255,77,109,.20),rgba(255,77,109,.06));border:1.5px solid rgba(255,77,109,.35)}
+.sevgi .yazi{font-weight:800;font-size:15px;color:#ffd6de;position:relative;z-index:1;line-height:1.3}
+.sevgi .buyuk{font-size:34px;display:block;animation:atis 1.2s ease-in-out infinite;position:relative;z-index:1}
+.sevgi .ucan{position:absolute;bottom:-14px;font-size:16px;opacity:0;animation:uc 4.2s ease-in infinite}
+@keyframes atis{0%,100%{transform:scale(1)}15%{transform:scale(1.25)}30%{transform:scale(1)}45%{transform:scale(1.18)}}
+@keyframes uc{0%{transform:translateY(0) scale(.6);opacity:0}15%{opacity:.95}100%{transform:translateY(-130px) scale(1.15);opacity:0}}
+.sevgi-mini{display:none;align-items:center;gap:6px;font-weight:800;font-size:13px;color:#ffd6de}
+.sevgi-mini span{display:inline-block;animation:atis 1.2s ease-in-out infinite}
+/* --- gune gore paylasilanlar --- */
+details.gun{background:var(--kart);border:2px solid var(--cizgi);border-radius:16px;margin-bottom:12px;box-shadow:var(--golge)}
+details.gun > summary{list-style:none;cursor:pointer;padding:12px 16px;display:flex;align-items:center;gap:10px;font-weight:700;font-size:15.5px;user-select:none}
+details.gun > summary::-webkit-details-marker{display:none}
+details.gun > summary .ok{transition:transform .2s;color:var(--soluk)}
+details.gun[open] > summary .ok{transform:rotate(90deg)}
+details.gun > summary .adet{margin-left:auto;font-size:12.5px;font-weight:600;color:var(--soluk);background:var(--cip);border-radius:99px;padding:2px 10px}
+details.gun > summary .gelecek{font-size:12px;font-weight:700;color:var(--mavi);background:rgba(61,127,217,.14);border-radius:99px;padding:2px 9px}
+details.gun > .icerik{padding:0 14px 14px}
+.kgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(330px,1fr));gap:12px}
+.kkart{display:flex;gap:12px;padding:12px}
+.kkart video{width:104px;aspect-ratio:9/16;border-radius:12px;background:#000;flex:none;border:2px solid var(--cizgi)}
+.kkart .sag{flex:1;min-width:0;display:flex;flex-direction:column;gap:6px;padding-right:22px}
+.kkart b{font-size:15px;line-height:1.3}
+.kkart .dugmeler{margin-top:auto}
+.kkart .dugmeler .btn,.kkart .dugmeler button{padding:6px 10px;font-size:13px}
+.kkart .sil{width:28px;height:28px;top:8px;right:8px;font-size:15px}
+/* --- admin karsilama ekrani --- */
+#giris{position:fixed;inset:0;z-index:100;display:flex;align-items:center;justify-content:center;
+  background:repeating-linear-gradient(90deg,#0d0d0f 0 64px,#f4f4f4 64px 128px);transition:opacity .45s,transform .45s}
+#giris.kapan{opacity:0;transform:scale(1.04);pointer-events:none}
+#giris .kutu{width:min(400px,92vw);background:#0b0b0d;color:#fff;border-radius:24px;padding:30px 28px 26px;text-align:center;
+  border:3px solid #fff;box-shadow:0 30px 80px rgba(0,0,0,.55)}
+#giris svg{width:150px;height:150px;display:block;margin:0 auto 6px}
+#giris h2{display:block;margin:4px 0 2px;font-size:24px;letter-spacing:4px}
+#giris .alt{color:#bdbdc4;font-size:13px;margin-bottom:20px;letter-spacing:1px}
+#giris label{display:block;text-align:left;font-size:12.5px;font-weight:700;color:#cfcfd6;margin-bottom:6px;letter-spacing:1px}
+#giris input{width:100%;font:inherit;font-size:17px;padding:13px 14px;border-radius:12px;border:2px solid #444;background:#151518;color:#fff;text-align:center;letter-spacing:2px}
+#giris input:focus{outline:none;border-color:#fff}
+#giris .ipucu{font-size:12px;color:#8d8d96;margin-top:10px;min-height:18px}
+#giris .ipucu.hata{color:#ff6b7a}
+#giris .salla{animation:salla .4s}
+@keyframes salla{20%,60%{transform:translateX(-9px)}40%,80%{transform:translateX(9px)}}
 .sekme{display:none}
 .sekme.acik{display:block}
 h2{font-size:17px;margin:22px 0 10px;display:flex;align-items:center;gap:10px}
@@ -181,23 +233,67 @@ body:not(.uzak) .sadece-uzak{display:none !important}
   .guncel .sag button{width:100%;justify-content:center}
   .pencere{padding:16px}
 }
+@media (max-width:860px){
+  .duzen{display:block}
+  .yan{position:fixed;top:auto;bottom:0;left:0;right:0;height:auto;width:auto;flex-direction:row;padding:6px 6px calc(6px + env(safe-area-inset-bottom));
+    gap:0;box-shadow:0 -2px 14px rgba(0,0,0,.25)}
+  .yan .marka,.yan .bosluk,.yan .sevgi{display:none}
+  nav{flex-direction:row;width:100%;gap:2px;overflow:visible;padding:0}
+  nav button{flex:1;flex-direction:column;justify-content:center;gap:2px;padding:8px 2px;font-size:11.5px;border-radius:10px}
+  nav button .ikon{font-size:20px}
+  nav .sayi{position:absolute;top:2px;right:calc(50% - 22px);margin:0}
+  .sevgi-mini{display:inline-flex}
+  .ust{padding:8px 12px}
+  .ust .baslik{display:none}
+  main{padding:12px 10px 96px}
+  .bildirim{bottom:84px}
+}
 </style>
 </head>
 <body>
+<div id="giris" style="display:none">
+  <form class="kutu" id="girisKutu" onsubmit="adminGir(event)" autocomplete="off">
+    <svg viewBox="0 0 200 200" aria-hidden="true">
+      <circle cx="100" cy="100" r="96" fill="#0d0d0f" stroke="#fff" stroke-width="6"/>
+      <circle cx="100" cy="100" r="84" fill="none" stroke="#fff" stroke-width="2" stroke-dasharray="3 6"/>
+      <!-- ozgun, sade kartal: acik kanatlar, govde, sola bakan bas -->
+      <g fill="#fff">
+        <path d="M100 82 C86 70 64 58 30 56 C44 64 52 70 58 78 C46 76 36 78 26 84 C42 86 54 90 62 96 C52 98 44 102 38 110 C56 106 72 106 86 110 Z"/>
+        <path d="M100 82 C114 70 136 58 170 56 C156 64 148 70 142 78 C154 76 164 78 174 84 C158 86 146 90 138 96 C148 98 156 102 162 110 C144 106 128 106 114 110 Z"/>
+        <path d="M86 108 C88 92 94 84 100 82 C106 84 112 92 114 108 C112 124 108 138 100 150 C92 138 88 124 86 108 Z"/>
+        <path d="M100 150 L88 166 L96 162 L100 172 L104 162 L112 166 Z"/>
+        <path d="M100 84 C94 78 92 70 96 64 C100 60 108 60 110 66 L120 70 L108 72 C108 78 106 82 100 84 Z"/>
+      </g>
+      <circle cx="102" cy="67" r="2.6" fill="#0d0d0f"/>
+    </svg>
+    <h2>BEŞİKTAŞ</h2>
+    <div class="alt">BIDIK STÜDYO · YÖNETİCİ GİRİŞİ</div>
+    <label for="adminAd">KULLANICI ADI</label>
+    <input id="adminAd" type="text" placeholder="kullanıcı adı" spellcheck="false" autocapitalize="off">
+    <div class="ipucu" id="adminIpucu">Yaz ve Enter'a bas</div>
+  </form>
+</div>
+<div class="duzen">
+<aside class="yan">
+  <div class="marka"><img src="/bidik.png" alt=""><div><b>Bıdık Stüdyo</b><small>Eğlenceli Shorts · <span class="surum" id="surum"></span></small></div></div>
+  <nav id="sekmeler">
+    <button data-sekme="senaryolar" onclick="sekme('senaryolar')"><span class="ikon">📝</span> Senaryolar<span class="sayi" id="bSayi"></span></button>
+    <button data-sekme="videolar" onclick="sekme('videolar')"><span class="ikon">🎬</span> Videolar<span class="sayi" id="vSayi"></span></button>
+    <button data-sekme="youtube" onclick="sekme('youtube')"><span class="ikon">▶️</span> YouTube</button>
+    <button data-sekme="ayarlar" onclick="sekme('ayarlar')"><span class="ikon">⚙️</span> Ayarlar</button>
+  </nav>
+  <div class="bosluk"></div>
+  <div class="sevgi" id="sevgi"><span class="buyuk">❤️</span><div class="yazi">Karımı çok<br>seviyorum</div></div>
+</aside>
+<div class="sag-ana">
 <header>
   <div class="ust">
-    <img src="/bidik.png" alt="">
-    <h1>Bıdık Stüdyo<small>Eğlenceli ve bilgilendirici Shorts <span class="surum" id="surum"></span></small></h1>
+    <span class="baslik" id="sayfaBaslik"></span>
+    <span class="sevgi-mini"><span>❤️</span> Karımı çok seviyorum</span>
     <div class="bosluk"></div>
     <button class="ikonbtn" id="temaBtn" onclick="temaDegis()" title="Açık / koyu tema">☀️</button>
     <button class="ana" id="uretBtn" onclick="senaryoUret()">✨ Yeni senaryolar yaz</button>
   </div>
-  <nav id="sekmeler">
-    <button data-sekme="senaryolar" onclick="sekme('senaryolar')">📝 Senaryolar<span class="sayi" id="bSayi"></span></button>
-    <button data-sekme="videolar" onclick="sekme('videolar')">🎬 Videolar<span class="sayi" id="vSayi"></span></button>
-    <button data-sekme="youtube" onclick="sekme('youtube')">▶️ YouTube</button>
-    <button data-sekme="ayarlar" onclick="sekme('ayarlar')">⚙️ Ayarlar</button>
-  </nav>
   <div class="is" id="is">
     <div class="cubuk"><div id="isCubuk"></div></div>
     <p id="isMesaj"></p>
@@ -270,6 +366,8 @@ body:not(.uzak) .sadece-uzak{display:none !important}
     </div>
   </section>
 </main>
+</div>
+</div>
 
 <div class="pencere-arka" id="paylasPencere" onclick="if(event.target===this)paylasKapat()">
   <div class="pencere">
@@ -313,8 +411,10 @@ async function post(url, veri){
 }
 
 /* --- sekmeler ve tema --- */
+const SEKME_ADI = {senaryolar:"📝 Senaryolar", videolar:"🎬 Videolar", youtube:"▶️ YouTube", ayarlar:"⚙️ Ayarlar"};
 function sekme(ad){
   aktifSekme = ad;
+  $("sayfaBaslik").textContent = SEKME_ADI[ad] || "";
   document.querySelectorAll(".sekme").forEach(s => s.classList.toggle("acik", s.id === "s-"+ad));
   document.querySelectorAll("nav button").forEach(b => b.classList.toggle("secili", b.dataset.sekme === ad));
   if(location.hash !== "#"+ad) history.replaceState(null, "", "#"+ad);
@@ -416,6 +516,72 @@ function videoKarti(v){
     </div></div>`;
 }
 
+/* --- paylasilanlar: yayin gunune gore ac/kapa gruplar --- */
+const GUNLER = ["Pazar","Pazartesi","Salı","Çarşamba","Perşembe","Cuma","Cumartesi"];
+const AYLAR_TAM = ["Ocak","Şubat","Mart","Nisan","Mayıs","Haziran","Temmuz","Ağustos","Eylül","Ekim","Kasım","Aralık"];
+let acikGunler = null;
+function acikGunleriOku(){ if(acikGunler) return acikGunler;
+  try{ acikGunler = new Set(JSON.parse(localStorage.getItem("acikGunler") || "null") || []); acikGunler.ilk = !localStorage.getItem("acikGunler"); }
+  catch(e){ acikGunler = new Set(); acikGunler.ilk = true; }
+  return acikGunler; }
+function gunAcKapa(el){ const a = acikGunleriOku(); el.open ? a.add(el.dataset.gun) : a.delete(el.dataset.gun);
+  try{ localStorage.setItem("acikGunler", JSON.stringify([...a])); }catch(e){} }
+function gunEtiketi(anahtar){
+  const t = new Date(anahtar+"T12:00:00"), bugun = gunStr(new Date()), yarin = gunStr(new Date(Date.now()+864e5)), dun = gunStr(new Date(Date.now()-864e5));
+  const ek = anahtar===bugun ? "Bugün · " : anahtar===yarin ? "Yarın · " : anahtar===dun ? "Dün · " : "";
+  return `${ek}${t.getDate()} ${AYLAR_TAM[t.getMonth()]} ${GUNLER[t.getDay()]}`;
+}
+function kucukKart(v){
+  const i = D.videolar.indexOf(v);
+  return `<div class="kart kkart">
+    <button class="sil" title="Videoyu sil" onclick="videoSil(${i})">✕</button>
+    <video src="/dosya/${encodeURI(v._id)}" controls preload="metadata" playsinline></video>
+    <div class="sag">
+      <b>${esc(v.baslik)}</b>
+      <div class="kucuk">${v.sure?v.sure+" sn":""}</div>
+      ${durumRozeti(v)}
+      <div class="dugmeler"><a class="btn" href="${esc(v.youtube_url)}" target="_blank">▶ YouTube</a>
+        <button onclick="kopyala(${i})">Metni kopyala</button></div>
+    </div></div>`;
+}
+function gunlereBol(liste){
+  const gruplar = {};
+  for(const v of liste){ const k = v.yayin_zamani ? gunStr(new Date(v.yayin_zamani)) : (v.tarih || "?"); (gruplar[k] = gruplar[k] || []).push(v); }
+  const anahtarlar = Object.keys(gruplar).sort().reverse(), a = acikGunleriOku(), bugun = gunStr(new Date());
+  // ilk kez: bugun ve sonraki gunler acik gelsin, gecmis kapali
+  if(a.ilk){ anahtarlar.filter(k => k >= bugun).forEach(k => a.add(k)); if(!a.size && anahtarlar[0]) a.add(anahtarlar[0]); a.ilk = false; }
+  return anahtarlar.map(k => {
+    const gelecek = k > bugun || gruplar[k].some(v => v.zamanli && new Date(v.yayin_zamani) > new Date());
+    return `<details class="gun" data-gun="${k}" ${a.has(k)?"open":""} ontoggle="gunAcKapa(this)">
+      <summary><span class="ok">▶</span> 📅 ${gunEtiketi(k)} ${gelecek?`<span class="gelecek">zamanlandı</span>`:""}<span class="adet">${gruplar[k].length} video</span></summary>
+      <div class="icerik"><div class="kgrid">${gruplar[k].map(kucukKart).join("")}</div></div></details>`;
+  }).join("");
+}
+
+/* --- admin karsilama ekrani (sadece bir karsilama; gercek koruma telefondaki sifredir) --- */
+function adminGoster(){
+  let gecti = false; try{ gecti = sessionStorage.getItem("adminGecti") === "1"; }catch(e){}
+  if(gecti) return;
+  $("giris").style.display = "flex"; setTimeout(()=>$("adminAd").focus(), 50);
+}
+function adminGir(e){
+  e.preventDefault();
+  const ad = $("adminAd").value.trim().toLocaleLowerCase("tr");
+  if(ad === "admin"){
+    try{ sessionStorage.setItem("adminGecti","1"); }catch(err){}
+    $("giris").classList.add("kapan"); setTimeout(()=>$("giris").style.display="none", 460);
+  } else {
+    const k = $("girisKutu"); k.classList.remove("salla"); void k.offsetWidth; k.classList.add("salla");
+    $("adminIpucu").textContent = "Kullanıcı adı hatalı"; $("adminIpucu").classList.add("hata"); $("adminAd").select();
+  }
+}
+/* --- sevgi kosesi: ucusan kalpler --- */
+function kalpleriBaslat(){
+  const k = $("sevgi"), renk = ["❤️","💕","💖","💗","💘"];
+  for(let i=0;i<7;i++){ const h = document.createElement("span"); h.className = "ucan"; h.textContent = renk[i%renk.length];
+    h.style.left = (8 + i*13) + "%"; h.style.animationDelay = (i*0.6) + "s"; h.style.animationDuration = (3.6 + (i%3)*0.6) + "s"; k.appendChild(h); }
+}
+
 /* --- YouTube sihirbazi --- */
 function ytCiz(a){
   const bagli = a.youtube_bagli && a.youtube_kanal, hazir = a.youtube_hazir;
@@ -484,8 +650,7 @@ function ciz(){
     `<div class="bos">Onay bekleyen senaryo yok. Yukarıdaki <b>✨ Yeni senaryolar yaz</b> düğmesine bas.</div>`;
   $("videolar").innerHTML = bekleyenVideo.length ? `<div class="vizgara">${bekleyenVideo.map(videoKarti).join("")}</div>` :
     `<div class="bos">Paylaşılmayı bekleyen video yok. Senaryolar sekmesinde bir senaryoyu onaylayınca burada görünür.</div>`;
-  $("paylasilanlar").innerHTML = paylasilan.length ? `<div class="vizgara">${paylasilan.map(videoKarti).join("")}</div>` :
-    `<div class="bos">Henüz paylaşılan video yok.</div>`;
+  $("paylasilanlar").innerHTML = paylasilan.length ? gunlereBol(paylasilan) : `<div class="bos">Henüz paylaşılan video yok.</div>`;
   ytCiz(a);
   $("gDurum").innerHTML = `<span class="nokta ${a.gemini_var?"tamam":""}"></span>${a.gemini_var?"kayıtlı":"girilmedi"}`;
   $("gunluk").value = a.gunluk_video; $("alanlar").value = a.alanlar.join(", ");
@@ -514,7 +679,7 @@ async function reddet(i){ if(!confirm("Bu senaryo reddedilsin mi? Konu tekrar ö
 async function senaryoUret(){ await post("/api/senaryo-uret",{}); bildir("Senaryolar yazılıyor…"); sekme("senaryolar"); yenile(false); }
 function vForm(i){ const k=document.querySelector(`[data-v="${i}"]`);
   return {baslik:k.querySelector('[data-b="baslik"]').value, aciklama:k.querySelector('[data-b="aciklama"]').value}; }
-function kopyala(i){ const v=D.videolar[i], f=vForm(i);
+function kopyala(i){ const v=D.videolar[i], f=document.querySelector(`[data-v="${i}"]`) ? vForm(i) : {baslik:v.baslik, aciklama:v.aciklama};
   navigator.clipboard.writeText(`BAŞLIK:\n${f.baslik} #shorts\n\nAÇIKLAMA:\n${f.aciklama}\n\nETİKETLER:\n${v.etiketler.join(", ")}`);
   bildir("Başlık, açıklama ve etiketler kopyalandı"); }
 async function yenidenUret(i){
@@ -658,6 +823,8 @@ document.addEventListener("keydown", e => { if(e.key === "Escape"){ paylasKapat(
 setInterval(()=>fetch("/api/nabiz",{method:"POST",body:"{}"}).catch(()=>{}), 5000);
 fetch("/api/nabiz",{method:"POST",body:"{}"}).catch(()=>{});
 sekme(["senaryolar","videolar","youtube","ayarlar"].includes(location.hash.slice(1)) ? location.hash.slice(1) : "senaryolar");
+kalpleriBaslat();
+adminGoster();
 yenile(true);
 </script>
 </body>
