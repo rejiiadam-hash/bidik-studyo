@@ -1,10 +1,8 @@
 {
-  "surum": "1.11.0",
+  "surum": "1.12.0",
   "tarih": "2026-10-15",
   "notlar": [
-    "Yeni: Analiz sekmesi (gunluk / haftalik / aylik): izlenme, abone, konu ve yayin saatine gore grafikler, en cok izlenenler.",
-    "YouTube verileri her gun otomatik alinir; yeni izin gerekmez.",
-    "Senaryo motoru cok izlenen konulara biraz daha sik yer verir, her gun farkli konular getirir."
+    "Senaryolara Ertele dugmesi: senaryo onay listesinden kalkar, altta 'Ertelenenler' bolumunde bekler, 'Geri getir' ile doner."
   ],
   "dosyalar": {
     "program/GELISTIRICI.txt": "24e10b02892addbc87b87d078143cb77a09521d86239fe3b78d2a0628b03d138",
@@ -21,9 +19,9 @@
     "program/kisayol.ps1": "8b01102bef0e33a74e1a10756c1d030ef45381b8a3bcd2bd0cfd16252d872a5b",
     "program/kostumler.py": "a041a730f8753887c1cdc180c8b906ed9791b7539e5c55fe26f669e63717aa33",
     "program/ortak.py": "7bdf52ba89a5347a913cca7bfa4d28109b49967940594a822e0d156eb1877b2b",
-    "program/panel.html": "c869b462148cac738fe2ef7c81524fd6a65e8d5fde50788a34dd9486a54e4733",
-    "program/panel.py": "0c853ff5c3272d0ac9428364b102983ee42f569b18a5ce55614c2a4b51080b98",
-    "program/senaryo_motoru.py": "586f88c49b6be94192af2607a81a76e385a4af9fbb09ba23c324a417c54b8df1",
+    "program/panel.html": "8702dc8d8d05400579d4eee630cf340bb4e3b5a95177f26d900c30f0a5d325b5",
+    "program/panel.py": "eb5cad0c56cc2d7c486c1af7ba639e88532e51181288d6cd469377df7765dc66",
+    "program/senaryo_motoru.py": "4013b6482aa0a6e5d2733b32aba74ddd40a1cfc36433603d496531f1bb83b5a9",
     "program/telefon.py": "5d2d8793c6184446d809ef0f4b73342a9eb0fdab559f7c51ce8ab07e7af29892",
     "program/uygulama.py": "d7965fa103804248cd0ddf13f66a2ddc5fb11b688eb3d8f361c1bc4a698a82b4",
     "program/video_uret.py": "8dc94b3732d345951a159b5b577804d1d42e5562e902b6c045809c1206d33557",
