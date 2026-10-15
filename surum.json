@@ -1,11 +1,11 @@
 {
-  "surum": "1.7.0",
+  "surum": "1.8.0",
   "tarih": "2026-10-15",
   "notlar": [
-    "Bidik'in kostum dolabi: 11 kostum, her konuya otomatik uygun kiyafet.",
-    "Onay ekraninda kostum secici ve kucuk onizleme; istersen degistir ya da kostumsuz sec.",
-    "Yeni konular: 'burclar ve gokyuzu' (dogru bilgiler) ve 'cocuklarin neden sorulari'.",
-    "Sapkali sahnelerde Bidik altyaziya ve karta carpmayacak sekilde olceklenir."
+    "Yeni gorunum: sekmeler solda alt alta (telefonda altta).",
+    "Paylasilan videolar yayin gunune gore gruplu, acilip kapanabilir.",
+    "Sevgi kosesi: Karimi cok seviyorum.",
+    "Acilista siyah-beyaz yonetici girisi (admin yazip Enter)."
   ],
   "dosyalar": {
     "program/GELISTIRICI.txt": "24e10b02892addbc87b87d078143cb77a09521d86239fe3b78d2a0628b03d138",
@@ -19,7 +19,7 @@
     "program/kisayol.ps1": "8b01102bef0e33a74e1a10756c1d030ef45381b8a3bcd2bd0cfd16252d872a5b",
     "program/kostumler.py": "0a0446aa4c0c56e1d37b6dfb4fda4eaa1f70e59946eca476840a3c539e8dce12",
     "program/ortak.py": "7bdf52ba89a5347a913cca7bfa4d28109b49967940594a822e0d156eb1877b2b",
-    "program/panel.html": "b6b237aa5f492637579ce65cc3cc9d8302f7840dbb97f9a13b99899ec0c36dd9",
+    "program/panel.html": "179db9091828fbee3abbb95e37d4cde91a3c9cf304b65763b635ba620701a38d",
     "program/panel.py": "b1052a28d0d3bd170a70350fd54df0c96acf9b39c513d8501b5e0b060391e67d",
     "program/senaryo_motoru.py": "6e17bc63e71e5191671de2f1f438e1f65c682a129d16a1c167be733fc837ab18",
     "program/telefon.py": "5d2d8793c6184446d809ef0f4b73342a9eb0fdab559f7c51ce8ab07e7af29892",
