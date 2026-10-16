@@ -176,13 +176,31 @@ def _zarf(yol):
 
 
 # --- cizim parcalari -------------------------------------------------------------------------
-def _altyazi(d, metin, kim, giris):
+def _altyazi(d, metin, kim, giris, t=0.0, sure=1.0):
+    """Altyazi en fazla 3 satir; sigmazsa once yazi kuculur, yine sigmazsa metin sayfalara bolunur ve
+    konusma suresine gore sirayla gosterilir (hicbir kelime kesilmez)."""
     if not metin:
         return
-    f = _font(40)
     maks = 760 * SS
-    sat = _satirlar(d, metin, f, maks)[:3]
-    sh = 40 * 1.3 * SS
+    for px in (40, 36, 33):
+        f = _font(px)
+        tum = _satirlar(d, metin, f, maks)
+        if len(tum) <= 3:
+            break
+    sayfalar = [tum[i:i + 3] for i in range(0, len(tum), 3)]
+    if len(sayfalar) > 1:   # sayfa suresi, icindeki harf sayisiyla orantili
+        uzun = [sum(len(s) for s in sf) for sf in sayfalar]
+        oran, birikim, secili = max(0.0, min(0.999, t / max(0.1, sure - 0.3))), 0, 0
+        for i, u in enumerate(uzun):
+            birikim += u / sum(uzun)
+            if oran < birikim:
+                secili = i
+                break
+        sat = sayfalar[secili]
+        giris = giris if secili == 0 else 1.0
+    else:
+        sat = tum
+    sh = px * 1.3 * SS
     tw = max(d.textlength(s, font=f) for s in sat)
     cx = W / 2 * SS
     alt = (ALTYAZI_Y + 50) * SS
@@ -476,7 +494,7 @@ def _kare(img, d, p, k, t, n, giy, duman=0.0):
     elif tur == "kapanis":
         _abone(d, t)
     if p.get("metin") and tur not in ("kapak",):
-        _altyazi(d, p["metin"] if tur != "ozet" else "Bugün öğrendiklerimiz…", konusan, t / 0.25)
+        _altyazi(d, p["metin"] if tur != "ozet" else "Bugün öğrendiklerimiz…", konusan, t / 0.25, t, p["sure"])
 
 
 def bolum_listesi(zamanlar):
