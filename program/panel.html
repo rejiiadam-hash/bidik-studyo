@@ -627,9 +627,9 @@ function senaryoKarti(s, i){
       </select></div></div>
     <table><tr><th></th><th>sn</th><th>ifade</th><th class="kol">kol</th><th>replik</th></tr>${satirlar}</table>
     ${s._hatalar.length?`<div class="hatalar">⚠ ${esc(s._hatalar.join("; "))}</div>`:""}
-    ${kontrolRozeti(s._kontrol, (s.kontrol||{}).bilgi_sorunu)}
+    ${kontrolRozeti(s._yazim_ok, s._ses, (s.kontrol||{}).bilgi_sorunu)}
     <div class="dugmeler">
-      <button ${s._kontrol==="tamam"?"":'class="ana"'} data-is onclick="kontrolEt('senaryo', ${i})" title="Yazım hatalarını düzeltir, bilgiyi denetler ve tüm sesleri şimdiden hazırlar">🔍 Kontrol et</button>
+      ${kontrolDugmeleri("senaryo", i, s._yazim_ok, s._ses)}
       <button class="yesil" data-is onclick="onayla(${i})">✓ Onayla ve videoyu üret</button>
       <button onclick="kaydet(${i})">Kaydet</button>
       <button onclick="ertele(${i})" title="Onay listesinden kalksın, sonra geri getirebilirsin">⏸ Ertele</button>
@@ -711,16 +711,24 @@ function gunlereBol(liste){
 }
 
 /* --- Kontrol et (yazim + bilgi + sesler) --- */
-function kontrolRozeti(durum, bilgi){
-  if(bilgi && durum !== "tamam") return `<div class="hatalar" style="margin-top:8px">⚠ Bilgi şüpheli: ${esc(bilgi)}</div>`;
-  if(durum === "tamam") return `<div class="kucuk" style="margin-top:8px;color:#3aa860;font-weight:700">✔ Kontrol edildi: yazım ve bilgi denetlendi, tüm sesler hazır</div>`;
-  if(durum === "ses_eksik") return `<div class="kucuk" style="margin-top:8px;color:#d48a00;font-weight:700">⚠ Yazım tamam ama bazı sesler hazırlanamadı. Tekrar 'Kontrol et'e bas.</div>`;
-  return `<div class="kucuk" style="margin-top:8px">🔍 Üretmeden önce 'Kontrol et'e bas: yazım düzeltilir ve sesler hazırlanır, üretim yarıda kalmaz.</div>`;
+function kontrolRozeti(yazimOk, ses, bilgi){
+  if(bilgi && !yazimOk) return `<div class="hatalar" style="margin-top:8px">⚠ Bilgi şüpheli: ${esc(bilgi)}</div>`;
+  const y = yazimOk ? `<span style="color:#3aa860">✔ Yazım kontrol edildi</span>` : `<span>✍️ Yazım henüz kontrol edilmedi</span>`;
+  const sz = ses === "tamam" ? `<span style="color:#3aa860">✔ Tüm sesler hazır</span>`
+           : ses === "eksik" ? `<span style="color:#d48a00">⚠ Bazı sesler hazırlanamadı, tekrar dene</span>`
+           : `<span>🔊 Sesler henüz hazırlanmadı</span>`;
+  return `<div class="kucuk" style="margin-top:8px;font-weight:700;display:flex;gap:14px;flex-wrap:wrap">${y}${sz}</div>`;
 }
-async function kontrolEt(tur, x){
+function kontrolDugmeleri(tur, x, yazimOk, ses){
+  const arg = tur === "senaryo" ? x : `'${esc(x)}'`;
+  return `<button ${yazimOk?"":'class="ana"'} data-is onclick="kontrolEt('${tur}', ${arg}, 'yazim')" title="Yazım hatalarını düzeltir ve bilgiyi denetler">✍️ Yazımı kontrol et</button>
+    <button ${yazimOk && ses!=="tamam"?'class="ana"':""} data-is ${yazimOk?"":"data-kapali disabled"} onclick="kontrolEt('${tur}', ${arg}, 'ses')"
+      title="${yazimOk?"Tüm sesleri şimdiden hazırlar":"Önce yazımı kontrol et"}">🔊 Sesleri hazırla</button>`;
+}
+async function kontrolEt(tur, x, adim){
   let id = x;
   if(tur === "senaryo"){ const r = await kaydet(x, true); if(r.hatalar.length){ bildir(r.hatalar.join("; "), true); return; } id = D.bekleyen[x]._id; }
-  await post("/api/kontrol", {tur, id}); bildir("Kontrol başladı: yazım, bilgi ve sesler…"); yenile(false);
+  await post("/api/kontrol", {tur, id, adim}); bildir(adim === "ses" ? "Sesler hazırlanıyor…" : "Yazım ve bilgi kontrol ediliyor…"); yenile(false);
 }
 
 /* --- Bidik Hikayeleri --- */
@@ -747,13 +755,12 @@ async function hikayeYukle(){
     return `<div class="kart" style="max-width:860px;margin-bottom:14px">
       <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap"><b style="font-size:16px">${esc(b.baslik||b.konu)}</b>
         <span class="kucuk">${durumAd[b.durum]||esc(b.durum||"")} · ${satirSay} satır${sure}</span>
-        ${b.denetim_ok?`<span class="kucuk" title="Yazım ve bilgi denetiminden geçti">✔ denetlendi</span>`:`<span class="kucuk">⚠ video üretilirken yeniden denetlenecek</span>`}</div>
       ${b.video?`<video src="/dosya/${esc(b.video)}" ${b.kapak?`poster="/dosya/${esc(b.kapak)}"`:""} controls preload="none" style="width:100%;max-width:640px;border-radius:12px;margin-top:10px;background:#000"></video>`:""}
-      ${!b.youtube_url ? kontrolRozeti(b.kontrol, b.kontrol_bilgi) : ""}
+      ${!b.youtube_url ? kontrolRozeti(b.yazim_ok, b.ses_durum, b.kontrol_bilgi) : ""}
       <details style="margin-top:8px"><summary style="cursor:pointer">Metni oku</summary>${metin}</details>
       <div class="dugmeler" style="flex-wrap:wrap">
-        ${!b.youtube_url?`<button ${b.kontrol==="tamam"?"":'class="ana"'} data-is onclick="kontrolEt('hikaye', '${esc(b.id)}')" title="Yazım hatalarını düzeltir, bilgiyi denetler ve tüm sesleri şimdiden hazırlar">🔍 Kontrol et</button>`:""}
-        ${!b.youtube_url?`<button ${b.video||b.kontrol!=="tamam"?"":'class="ana"'} data-is onclick="hikayeVideo('${esc(b.id)}')">🎬 ${b.video?"Videoyu yeniden üret":"Videoyu üret"}</button>`:""}
+        ${!b.youtube_url ? kontrolDugmeleri("hikaye", b.id, b.yazim_ok, b.ses_durum) : ""}
+        ${!b.youtube_url?`<button ${b.video||b.ses_durum!=="tamam"?"":'class="ana"'} data-is onclick="hikayeVideo('${esc(b.id)}')">🎬 ${b.video?"Videoyu yeniden üret":"Videoyu üret"}</button>`:""}
         ${b.video && !b.youtube_url?`<span style="display:inline-flex;gap:6px;align-items:center;flex-wrap:wrap">
             <input type="date" id="hkT_${esc(b.id)}" value="${sonrakiGun(HK.gun)}" style="width:auto">
             <input type="time" id="hkS_${esc(b.id)}" value="${esc(HK.saat)}" style="width:auto">

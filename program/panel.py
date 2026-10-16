@@ -109,7 +109,9 @@ def durum():
             s["kostum"] = kostumler.kostum_sec(s.get("alan"), s.get("konu"))
         s["_hatalar"] = dogrula(s)
         k = s.get("kontrol") or {}
-        s["_kontrol"] = ("tamam" if k.get("ses") else "ses_eksik") if k.get("imza") == motor.imza(s) else ""
+        im = motor.imza(s)
+        s["_yazim_ok"] = k.get("yazim_imza") == im
+        s["_ses"] = ("tamam" if k.get("ses") else "eksik") if k.get("ses_imza") == im else ""
         bekleyen.append(s)
     videolar = []
     for mp4 in sorted(glob.glob(os.path.join(VIDEO, "*", "*.mp4")), reverse=True):
@@ -827,8 +829,9 @@ def hikaye_liste(_):
                                             "aciklama", "youtube_url", "yayin_zamani", "_video_sure", "dogrulama_notu", "ertelendi")}
                      | {"video": rel(mp4) if os.path.exists(mp4) else "", "kapak": rel(kapak) if os.path.exists(kapak) else "",
                         "denetim_ok": hm.denetim_gecerli(b),
-                        "kontrol": (("tamam" if (b.get("kontrol") or {}).get("ses") else "ses_eksik")
-                                    if (b.get("kontrol") or {}).get("imza") == hm.imza(b) else ""),
+                        "yazim_ok": (b.get("kontrol") or {}).get("yazim_imza") == hm.imza(b),
+                        "ses_durum": (("tamam" if (b.get("kontrol") or {}).get("ses") else "eksik")
+                                      if (b.get("kontrol") or {}).get("ses_imza") == hm.imza(b) else ""),
                         "kontrol_bilgi": (b.get("kontrol") or {}).get("bilgi_sorunu", "")})
     a = ayarlar()
     return {"hikayeler": sonuc, "gun": a.get("hikaye_gunu", 6), "saat": a.get("hikaye_saati", "12:00")}
@@ -929,19 +932,29 @@ def hikaye_paylas(v):
 
 
 # --- Kontrol et: yazim + bilgi denetimi ve tum seslerin onceden hazirlanmasi ----------------------
+def _denetim_modelleri():
+    """Yazim denetimi icin once tam (lite olmayan) modeller: hatalari daha iyi yakaliyor."""
+    tum = motor.model_sec(ayarlar()["model"])
+    tam = [m for m in tum if "lite" not in m]
+    return tam or tum
+
+
 def kontrol(v):
-    """Senaryo ya da hikaye icin: yazim hatalarini duzeltir (onay istemeden), bilgiyi denetler, tum sesleri
-    simdiden uretip onbellege koyar. Boylece 'uret' denince yazi/ses yuzunden yarida kalmaz."""
+    """v: {tur: senaryo|hikaye, id, adim: yazim|ses}
+    yazim: her basista yazim + bilgi denetimi yapar (onceki denetime guvenmez), duzeltmeleri onay istemeden kaydeder.
+    ses:   sadece yazimi kontrol edilmis metnin seslerini simdiden hazirlar (uretimde ses yuzunden yarida kalmaz)."""
     import video_uret
-    tur = v.get("tur")
+    tur, adim = v.get("tur"), v.get("adim", "yazim")
+    if adim not in ("yazim", "ses"):
+        raise ValueError("gecersiz adim")
     if tur == "senaryo":
         yol = guvenli(v["id"])
         oku_ = lambda: oku(yol)
         yaz_ = lambda s: yaz(yol, s)
         imza_ = motor.imza
 
-        def denetle_(s, ilerle):
-            r = motor.denetle(motor.model_sec(ayarlar()["model"]), [s], ilerle)[0]
+        def denetle_(s, modeller, ilerle):
+            r = motor.denetle(modeller, [s], ilerle)[0]
             if not r["tamam"]:
                 raise motor.MotorHatasi("denetim cevabi okunamadi")
             return r["bilgi_dogru"], r["bilgi_sorunu"], r["duzeltmeler"]
@@ -955,12 +968,15 @@ def kontrol(v):
         yaz_ = lambda s: yaz(jy, s)
         imza_ = hm.imza
 
-        def denetle_(s, ilerle):
-            return hm.denetle(motor.model_sec(ayarlar()["model"]), s, ilerle)
+        def denetle_(s, modeller, ilerle):
+            return hm.denetle(modeller, s, ilerle)
         sesler = hu.ses_listesi
         baslik = b0.get("baslik", "")
     else:
         raise ValueError("gecersiz tur")
+    s0 = oku_()
+    if adim == "ses" and (s0.get("kontrol") or {}).get("yazim_imza") != imza_(s0):
+        raise ValueError("Önce '✍️ Yazımı kontrol et'e bas; sesler yazımı düzeltilmiş metinden hazırlanır.")
 
     def f(ilerle):
         son = {"y": 2}
@@ -974,38 +990,55 @@ def kontrol(v):
             h = dogrula(s)
             if h:
                 raise ValueError("Önce düzelt: " + "; ".join(h))
-        toplam_duz = []
-        if not (s.get("denetim") or {}).get("imza") == imza_(s):
-            for tur_no in range(2):        # duzeltmeden sonra bir kez daha bakilir
-                ilerle2(5 + tur_no * 15, "Yazım ve bilgi denetimi" + (" (ikinci bakış)" if tur_no else ""))
+        k = dict(s.get("kontrol") or {})
+        if adim == "yazim":
+            toplam_duz = []
+            for tur_no in range(3):        # duzeltme bulundukca tekrar bakilir (en fazla 3 tur)
+                ilerle2(10 + tur_no * 30, "Yazım ve bilgi denetimi" + (f" ({tur_no + 1}. bakış)" if tur_no else ""))
                 try:
-                    dogru, sorun, duz = denetle_(s, ilerle2)
+                    try:
+                        dogru, sorun, duz = denetle_(s, _denetim_modelleri(), ilerle2)
+                    except motor.MotorHatasi:
+                        dogru, sorun, duz = denetle_(s, motor.model_sec(ayarlar()["model"]), ilerle2)
                 except motor.MotorHatasi as e:
-                    raise ValueError(f"Gemini şu an cevap vermiyor ({str(e)[:120]}). Birkaç dakika sonra tekrar 'Kontrol et'e bas.")
+                    raise ValueError(f"Gemini şu an cevap vermiyor ({str(e)[:120]}). Birkaç dakika sonra tekrar dene.")
+                toplam_duz += duz
                 if not dogru:
                     s.pop("denetim", None)
-                    s["kontrol"] = {"tarih": datetime.datetime.now().isoformat(timespec="minutes"), "bilgi_sorunu": sorun}
+                    k.update(tarih=datetime.datetime.now().isoformat(timespec="minutes"), bilgi_sorunu=sorun, yazim_imza="")
+                    s["kontrol"] = k
                     yaz_(s)
                     raise Durdu("BİLGİ ŞÜPHELİ: " + (sorun or "denetim bu bilgiye güvenmedi")
-                                + " Bu metni düzenle ya da reddet; yazım düzeltmeleri kaydedildi.")
-                toplam_duz += duz
+                                + " Bu metni düzenle ya da reddet" + ("; yazım düzeltmeleri kaydedildi." if toplam_duz else "."))
+                yaz_(s)                     # her turun duzeltmesi hemen kaydedilir
                 if not duz:
                     break
             s["denetim"] = {"imza": imza_(s), "tarih": datetime.date.today().isoformat(), "duzeltmeler": toplam_duz}
+            k.update(yazim_imza=imza_(s), yazim_tarih=datetime.datetime.now().isoformat(timespec="minutes"),
+                     duzeltmeler=toplam_duz[-20:], bilgi_sorunu="")
+            s["kontrol"] = k
             yaz_(s)
-        ilerle2(40, "Sesler hazırlanıyor")
+            if toplam_duz:
+                return (f"{len(toplam_duz)} yazım hatası düzeltildi ve kaydedildi: " + " | ".join(toplam_duz[:6])
+                        + (" …" if len(toplam_duz) > 6 else "") + ". Şimdi '🔊 Sesleri hazırla'ya basabilirsin.")
+            return "Yazım ve bilgi temiz, düzeltilecek bir şey yok. Şimdi '🔊 Sesleri hazırla'ya basabilirsin."
+        # adim == "ses"
+        if k.get("yazim_imza") != imza_(s):
+            raise ValueError("Metin değişmiş; önce '✍️ Yazımı kontrol et'e bas.")
+        ilerle2(5, "Sesler hazırlanıyor")
         liste = sesler(s)
         eksik = video_uret.sesleri_hazirla(liste, ilerle2)
         s = oku_()
-        s["kontrol"] = {"tarih": datetime.datetime.now().isoformat(timespec="minutes"), "imza": imza_(s),
-                        "ses": not eksik, "ses_sayisi": len(liste), "eksik": len(eksik), "duzeltme": len(toplam_duz)}
+        k = dict(s.get("kontrol") or {})
+        k.update(ses_imza=imza_(s), ses=not eksik, ses_sayisi=len(liste), eksik=len(eksik),
+                 ses_tarih=datetime.datetime.now().isoformat(timespec="minutes"))
+        s["kontrol"] = k
         yaz_(s)
-        duz_m = f"{len(toplam_duz)} yazım hatası düzeltildi, " if toplam_duz else "Yazım temiz, "
         if eksik:
-            return (duz_m + f"{len(liste) - len(eksik)}/{len(liste)} ses hazır. Ses servisi {len(eksik)} satıra cevap "
-                    "vermedi; birkaç dakika sonra tekrar 'Kontrol et'e bas (hazır sesler saklandı).")
-        return duz_m + f"tüm sesler ({len(liste)}) hazır. Artık üretim yazı/ses yüzünden yarıda kalmaz."
-    is_baslat(f"Kontrol: {baslik}", f)
+            return (f"{len(liste) - len(eksik)}/{len(liste)} ses hazır. Ses servisi {len(eksik)} satıra cevap vermedi; "
+                    "birkaç dakika sonra tekrar '🔊 Sesleri hazırla'ya bas (hazır sesler saklandı).")
+        return f"Tüm sesler ({len(liste)}) hazır. Artık üretim yazı/ses yüzünden yarıda kalmaz."
+    is_baslat(("Yazım kontrolü: " if adim == "yazim" else "Sesler: ") + baslik, f)
 
 
 def analiz_rapor(v):
