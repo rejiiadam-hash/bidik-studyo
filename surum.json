@@ -1,8 +1,8 @@
 {
-  "surum": "1.19.0",
+  "surum": "1.19.1",
   "tarih": "2026-10-16",
   "notlar": [
-    "Kontrol et dugmesi: yazim duzeltme + bilgi denetimi + tum seslerin onceden hazirlanmasi; uretimde yazim duzeltmesi durdurmaz"
+    "Uzun cumleler parca parca seslendirilir (ses servisi uzun metinlerde daha sik takiliyor)"
   ],
   "dosyalar": {
     "program/GELISTIRICI.txt": "24e10b02892addbc87b87d078143cb77a09521d86239fe3b78d2a0628b03d138",
@@ -28,7 +28,7 @@
     "program/sohbet.py": "a0f17d44f0e7acdbf873549467eba8bc428bb5ee1d11b0820cd145cddd4f52bd",
     "program/telefon.py": "5d2d8793c6184446d809ef0f4b73342a9eb0fdab559f7c51ce8ab07e7af29892",
     "program/uygulama.py": "d7965fa103804248cd0ddf13f66a2ddc5fb11b688eb3d8f361c1bc4a698a82b4",
-    "program/video_uret.py": "8f70e045edd789cc3b90fe0303910284884abd86f731b22d5dac5956259f13c2",
+    "program/video_uret.py": "a7705f536ad94d23dea8c6ee96392401834f8bff19d0d956ef637be3ef2137f8",
     "program/youtube_yukle.py": "5e47cb296a9222bef5c2cfc7204f6825b32476775649d9706082275c10378494"
   }
 }

@@ -125,6 +125,64 @@ def _cumleler(metin):
     return parca if len(parca) > 1 else [p.strip() for p in re.split(r"[,;:]\s*", metin) if p.strip()]
 
 
+def _parcala(metin, maks=75):
+    """Uzun metni cumle, gerekirse virgul sinirlarindan en fazla ~maks karakterlik parcalara boler."""
+    import re
+    parcalar = []
+    for c in [x.strip() for x in re.split(r"(?<=[.!?…])\s+", metin) if x.strip()]:
+        if len(c) <= maks:
+            parcalar.append(c)
+            continue
+        mevcut = ""
+        for v in re.split(r"(?<=[,;:])\s+", c):
+            if mevcut and len(mevcut) + 1 + len(v) > maks:
+                parcalar.append(mevcut)
+                mevcut = v
+            else:
+                mevcut = (mevcut + " " + v).strip()
+        if mevcut:
+            parcalar.append(mevcut)
+    # cok kisa parcalari bir oncekiyle birlestir (tek kelimelik ses tuhaf durur)
+    sonuc = []
+    for x in parcalar:
+        if sonuc and len(x) < 12 and len(sonuc[-1]) + len(x) < maks:
+            sonuc[-1] += " " + x
+        else:
+            sonuc.append(x)
+    return sonuc
+
+
+def _parca_parca(metin, wav, ses, duz_filtre):
+    """Uzun repliklerde: her parca ayri istenir (parca basina 3 deneme), sonra birlestirilir."""
+    import time
+    yollar = []
+    try:
+        for k, p in enumerate(_parcala(metin)):
+            pm, pw = f"{wav}.p{k}.mp3", f"{wav}.p{k}.wav"
+            for deneme in range(3):
+                try:
+                    _tts_mp3(p, pm, prosodi=True, ses=ses)
+                    _wav_yap(pm, pw)
+                    break
+                except Exception:
+                    if deneme == 2:
+                        raise
+                    time.sleep(2 + deneme * 3)
+            if os.path.exists(pm):
+                os.remove(pm)
+            yollar.append(pw)
+            time.sleep(0.5)
+        liste = wav + ".liste.txt"
+        with open(liste, "w", encoding="utf-8") as f:
+            f.writelines("file '" + y.replace(os.sep, "/") + "'\n" for y in yollar)
+        komut([ffmpeg(), "-y", "-loglevel", "error", "-f", "concat", "-safe", "0", "-i", liste, wav])
+        os.remove(liste)
+    finally:
+        for y in yollar:
+            if os.path.exists(y):
+                os.remove(y)
+
+
 def _ses_uret(metin, wav, ses=None):
     """
     Sirayla dener (her basarisizlikta biraz daha uzun bekleyerek):
@@ -136,6 +194,13 @@ def _ses_uret(metin, wav, ses=None):
     mp3 = wav + ".mp3"
     son_hata = None
     duz_filtre = DUZ_SESE_FILTRE if (ses or SES) == SES else None   # Bidik'e benzetme filtresi sadece Bidik icin
+    if len(metin) > 80 and len(_parcala(metin)) > 1:
+        # uzun cumleler ses servisinde daha sik "No audio" veriyor: once parca parca dene
+        try:
+            _parca_parca(metin, wav, ses, duz_filtre)
+            return
+        except Exception as e:
+            print(f"Parca parca seslendirme olmadi ({e}); tum metin deneniyor")
     for deneme in range(6):
         try:
             if deneme < 2:
