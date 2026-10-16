@@ -22,7 +22,7 @@ import json, math, os, shutil, subprocess, tempfile, wave, struct
 from PIL import Image, ImageDraw, ImageFont
 
 import arka_planlar
-from bilge import ciz_bilge
+from bilge import ciz_bilge, TEMA_AKSESUAR
 from karakter import ciz_bidik, IFADELER, KOL_POZLARI
 from kostumler import KOSTUMLER, kostum_sec
 from ortak import FONT, ffmpeg
@@ -102,6 +102,21 @@ def dogrula(b):
 def _parca(tur, **k):
     k["tur"] = tur
     return k
+
+
+TEMA_KOSTUM = {v: k for k, v in arka_planlar.KOSTUM_TEMA.items()}   # uzay -> astronot ...
+
+
+def giyim(b):
+    """Her kisim icin (Bidik'in kostumu, Bilge'nin aksesuari): kismin arka plan temasina gore degisir.
+    Kisimda "kostum" yazilmissa o kullanilir; 'genel' temada bolumun konusuna uygun kostum."""
+    ana = b.get("kostum") if b.get("kostum") in KOSTUMLER else kostum_sec(b.get("alan", ""), b.get("konu", ""))
+    sonuc = []
+    for bo in b["bolumler"]:
+        tema = bo.get("tema") if bo.get("tema") in arka_planlar.TEMALAR else "genel"
+        kos = bo.get("kostum") if bo.get("kostum") in KOSTUMLER else (TEMA_KOSTUM.get(tema) or ana)
+        sonuc.append((kos, TEMA_AKSESUAR.get(tema, "mezuniyet")))
+    return sonuc
 
 
 def cizelge(b):
@@ -292,6 +307,7 @@ def uret(bolum_yolu, cikti=None, sesli=None, ilerleme=None):
         ff = subprocess.Popen([ffmpeg(), "-y", "-loglevel", "error", "-f", "rawvideo", "-pix_fmt", "rgb24",
                                "-s", f"{W}x{H}", "-r", str(FPS), "-i", "-", "-c:v", "libx264", "-preset", "veryfast",
                                "-crf", "20", "-pix_fmt", "yuv420p", sessiz_mp4], stdin=subprocess.PIPE)
+        giy = giyim(b)
         n, onceki_bolum = 0, 0
         zamanlar = [(0.0, "Giriş")]
         for pi, p in enumerate(parcalar):
@@ -308,7 +324,10 @@ def uret(bolum_yolu, cikti=None, sesli=None, ilerleme=None):
                 else:
                     img = arkalar[bolum].copy()
                 d = ImageDraw.Draw(img, "RGBA")
-                _kare(img, d, p, k, t, n, kostum)
+                degisim = p["tur"] == "bolum" and bolum != onceki_bolum and giy[bolum] != giy[onceki_bolum]
+                simdiki = giy[onceki_bolum] if (degisim and k < 6) else giy[bolum]
+                duman = max(0.0, 1 - abs(k - 6) / 6) if (degisim and k < 12) else 0.0
+                _kare(img, d, p, k, t, n, simdiki, duman)
                 ff.stdin.write(img.reduce(SS).tobytes())
                 n += 1
                 if n % 24 == 0:
@@ -349,7 +368,8 @@ def _ses_izi(parcalar, hedef):
             out.writeframes(veri + b"\x00\x00" * (ornek - len(veri) // 2))
 
 
-def _kare(img, d, p, k, t, n, kostum):
+def _kare(img, d, p, k, t, n, giy, duman=0.0):
+    kostum, aksesuar = giy
     tur = p["tur"]
     konusan = p.get("kim") if p.get("metin") else None
     zarf = p.get("zarf")
@@ -375,7 +395,12 @@ def _kare(img, d, p, k, t, n, kostum):
               agiz=agiz if konusan == "bilge" else 0.0, kirp=kirp_bilge,
               bakis=(-0.9, 0.0) if konusan == "bidik" else (-0.3, 0.1),
               kanat=(0.5 + 0.5 * math.sin(t * 5)) * (0.6 if konusan == "bilge" else 0.0),
-              ziplama=(6 + 5 * math.sin(t * 6)) if konusan == "bilge" else 2 * math.sin(t * 2))
+              ziplama=(6 + 5 * math.sin(t * 6)) if konusan == "bilge" else 2 * math.sin(t * 2), aksesuar=aksesuar)
+    if duman > 0:   # kisim degisince kiyafet degisimi: "puf" dumani
+        from girisler import _duman
+        for cx in (BIDIK_X, BILGE_X):
+            _duman(img, cx * SS, (AYAK_Y - 260) * SS, 150 * SS * OLCEK, duman)
+        d = ImageDraw.Draw(img, "RGBA")
     # ust katman
     if tur == "kapak":
         _serit(d, SERI_ADI, p["metin"].split("Bugün: ", 1)[-1], t / 0.6, min(1.0, (p["sure"] - t) / 0.4))
@@ -408,12 +433,12 @@ def bolum_listesi(zamanlar):
 
 def kapak_resmi(b, yol):
     """1280x720 YouTube kapak gorseli: ilk kismin arka plani, iki karakter, buyuk baslik."""
-    kostum = b.get("kostum") if b.get("kostum") in KOSTUMLER else kostum_sec(b.get("alan", ""), b.get("konu", ""))
+    kostum, aksesuar = giyim(b)[0]
     bo = b["bolumler"][0]
     tema = bo.get("tema") if bo.get("tema") in arka_planlar.TEMALAR else "genel"
     img = arka_planlar.ciz(tema, bo.get("arka_no", 0) or 0, W * SS, H * SS, k=SS)
     ciz_bidik(img, x=330 * SS, y=1060 * SS, olcek=1.45 * SS, ifade="saskin", kol="kollar_havada", kostum=kostum)
-    ciz_bilge(img, 1600 * SS, 1060 * SS, 1.35 * SS, ifade="mutlu", agiz=0.5, kanat=0.6)
+    ciz_bilge(img, 1600 * SS, 1060 * SS, 1.35 * SS, ifade="mutlu", agiz=0.5, kanat=0.6, aksesuar=aksesuar)
     d = ImageDraw.Draw(img)
     baslik = b.get("baslik", "")
     f = _font(96)

@@ -91,6 +91,9 @@ KURALLAR
 - BILGI KESINLIKLE DOGRU OLMALI. Supheli, tartismali, efsane bilgileri KULLANMA. Sayilar dogru ve yuvarlanmis olsun.
 - "kart": en onemli 3-5 bilgi icin (sayi ya da kisa kavram). "buyuk" en fazla 12 karakter, "alt" en fazla 26 karakter,
   EMOJI KULLANMA. "renk": mavi, kirmizi, yesil, mor, turuncu, pembe.
+- Her kismin "tema"si Bidik'in kiyafetini ve Bilge'nin aksesuarini da belirler (uzay: astronot, tarih: migfer, yemek: asci...).
+  Hikaye bir yerden baska yere gidiyorsa temayi ona gore sec; ayni yerde kalan kisimlarda ayni temayi kullan ki kiyafet
+  gereksiz yere degismesin. Istersen kisma "kostum" da yazabilirsin: {list(KOSTUMLER)}.
 - "ifade": bidik icin {IFADE_BIDIK}, bilge icin {IFADE_BILGE}. "kol" (sadece bidik): {KOLLAR}.
 - Sonunda "soru": konuyla ilgili 3 secenekli bir soru (tek dogru cevap, "dogru": 0-2).
 - "ozet": ogrenilen 3 ana bilgi, her biri en fazla 60 karakter.
