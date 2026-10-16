@@ -784,6 +784,114 @@ def eski_islem(v):
     is_baslat("Eski videolar " + ("gizleniyor" if islem == "gizle" else "geri aciliyor"), is_)
 
 
+# --- Bidik Hikayeleri (2-3 dk yatay bolumler) -------------------------------------------------
+def _hikaye(id_):
+    import hikaye_motoru as hm
+    if not re.match(r"^[\w-]+$", id_ or ""):
+        raise ValueError("gecersiz bolum")
+    yol = os.path.join(hm.KLASOR, id_, "bolum.json")
+    if not os.path.exists(yol):
+        raise ValueError("Bolum bulunamadi")
+    b = oku(yol)
+    b["id"] = id_
+    return b, os.path.join(hm.KLASOR, id_)
+
+
+def hikaye_liste(_):
+    import hikaye_motoru as hm
+    sonuc = []
+    for b in hm.liste():
+        kl = os.path.join(hm.KLASOR, b["id"])
+        mp4, kapak = os.path.join(kl, "bolum.mp4"), os.path.join(kl, "kapak.png")
+        sonuc.append({k: b.get(k) for k in ("id", "baslik", "konu", "alan", "durum", "yazildi", "bolumler", "soru", "ozet",
+                                            "aciklama", "youtube_url", "yayin_zamani", "_video_sure", "dogrulama_notu")}
+                     | {"video": rel(mp4) if os.path.exists(mp4) else "", "kapak": rel(kapak) if os.path.exists(kapak) else "",
+                        "denetim_ok": hm.denetim_gecerli(b)})
+    a = ayarlar()
+    return {"hikayeler": sonuc, "gun": a.get("hikaye_gunu", 6), "saat": a.get("hikaye_saati", "12:00")}
+
+
+def hikaye_yaz(v):
+    import hikaye_motoru as hm
+    konu = (v.get("konu") or "").strip()[:120] or None
+
+    def f(ilerle):
+        b = hm.yaz(konu, ilerle)
+        return f"Yeni bölüm hazır: {b.get('baslik')}"
+    is_baslat("Hikâye yazılıyor", f)
+
+
+def hikaye_sil(v):
+    b, kl = _hikaye(v.get("id"))
+    hedef = os.path.join(KOK, "silinenler", "hikayeler", b["id"] + f"_{time.time():.0f}")
+    os.makedirs(os.path.dirname(hedef), exist_ok=True)
+    shutil.move(kl, hedef)
+
+
+def hikaye_video(v):
+    import hikaye_motoru as hm
+    import hikaye_uret as hu
+    b, kl = _hikaye(v.get("id"))
+
+    def f(ilerle):
+        if not hm.denetim_gecerli(b):
+            ilerle(2, "Yazım ve bilgi denetimi")
+            from senaryo_motoru import model_sec
+            dogru, sorun, duz = hm.denetle(model_sec(ayarlar().get("model")), b, ilerle)
+            if not dogru:
+                raise Durdu("Bilgi denetimi bu bölümde sorun buldu, video üretilmedi: " + sorun)
+            b["denetim"] = {"imza": hm.imza(b), "tarih": datetime.date.today().isoformat(), "duzeltmeler": duz}
+            hm.kaydet(b)
+        mp4 = os.path.join(kl, "bolum.mp4")
+        _, sure, zamanlar = hu.uret(os.path.join(kl, "bolum.json"), mp4, sesli=True, ilerleme=ilerle)
+        hu.kapak_resmi(b, os.path.join(kl, "kapak.png"))
+        taze = oku(os.path.join(kl, "bolum.json"))
+        taze.update(durum="video", _video_sure=round(sure, 1), _zamanlar=zamanlar)
+        taze["id"] = b["id"]
+        hm.kaydet(taze)
+        return f"Hikâye videosu hazır ({int(sure) // 60}:{int(sure) % 60:02d})"
+    is_baslat(f"Hikâye videosu: {b.get('baslik', '')}", f)
+
+
+def hikaye_paylas(v):
+    import hikaye_motoru as hm
+    import hikaye_uret as hu
+    from ortak import KANAL_SATIRI, hashtagler
+    b, kl = _hikaye(v.get("id"))
+    mp4 = os.path.join(kl, "bolum.mp4")
+    if b.get("youtube_url"):
+        raise ValueError("Bu bölüm zaten paylaşıldı: " + b["youtube_url"])
+    if not os.path.exists(mp4):
+        raise ValueError("Önce videoyu üret.")
+    if not yt.bagli_mi():
+        raise ValueError("Önce YouTube sekmesinden hesabını bağla.")
+    try:
+        zaman = datetime.datetime.strptime(f"{v['tarih']} {v['saat']}", "%Y-%m-%d %H:%M").astimezone()
+    except (KeyError, ValueError):
+        raise ValueError("Tarih ve saati seç.")
+    if zaman < datetime.datetime.now().astimezone() - datetime.timedelta(minutes=5):
+        raise ValueError("Geçmiş bir saat seçildi.")
+    bolumler = hu.bolum_listesi([tuple(z) for z in (b.get("_zamanlar") or [])])
+    aciklama = (b.get("aciklama") or "").strip()
+    if bolumler:
+        aciklama += "\n\nBölümler:\n" + "\n".join(bolumler)
+    aciklama += f"\n\n{KANAL_SATIRI}\n\n{' '.join(hashtagler(b))}"
+
+    def f(ilerle):
+        sonuc = yt.yukle(mp4, b.get("baslik", "Bıdık Hikâyeleri"), aciklama, etiket_listesi(b), yayin_zamani=zaman,
+                         ilerleme=ilerle, shorts=False, kapak=os.path.join(kl, "kapak.png"))
+        taze = oku(os.path.join(kl, "bolum.json"))
+        taze.update(durum="paylasildi", youtube_url=sonuc["url"], youtube_id=sonuc["id"], yayin_zamani=zaman.isoformat(),
+                    kisitli=sonuc["kisitli"], kapak_sonuc=sonuc.get("kapak", ""))
+        taze["id"] = b["id"]
+        hm.kaydet(taze)
+        ek = "" if sonuc.get("kapak") in ("", "yuklendi") else " (Kapak görseli yüklenemedi; YouTube kendisi seçecek.)"
+        if sonuc["kisitli"]:
+            return "Yüklendi ama YouTube videoyu ÖZEL olarak kısıtladı (Google denetimi)." + ek
+        return (f"Zamanlandı: {zaman:%d.%m.%Y %H:%M}" if sonuc["zamanli"] else f"Yayınlandı: {sonuc['url']}") + ek
+    is_baslat(f"Hikâye paylaşılıyor: {b.get('baslik', '')}", f)
+
+
 def analiz_rapor(v):
     return {"rapor": analiz.rapor(v.get("donem", "haftalik"))}
 
@@ -860,7 +968,7 @@ ISLEMLER = {"/api/senaryo-uret": senaryo_uret, "/api/kaydet": kaydet, "/api/onay
             "/api/reddet": reddet, "/api/ayar": ayar, "/api/klasor": klasor_ac,
             "/api/guncelle": guncelle, "/api/nabiz": nabiz,
             "/api/paylas": paylas, "/api/video-sil": video_sil, "/api/youtube-istemci": youtube_istemci,
-            "/api/youtube-bagla": youtube_bagla, "/api/youtube-kes": youtube_kes, "/api/destek": destek, "/api/github-kontrol": github_kontrol, "/api/sohbet": sohbet_et, "/api/eski-liste": eski_liste, "/api/eski-islem": eski_islem, "/api/sifre": sifre_ayarla, "/api/telefon": telefon_islem, "/api/kapat": kapat, "/api/ertele": ertele, "/api/geri-getir": geri_getir, "/api/analiz": analiz_rapor, "/api/analiz-guncelle": analiz_guncelle, "/api/yeniden-uret": yeniden_uret}
+            "/api/youtube-bagla": youtube_bagla, "/api/youtube-kes": youtube_kes, "/api/destek": destek, "/api/github-kontrol": github_kontrol, "/api/sohbet": sohbet_et, "/api/eski-liste": eski_liste, "/api/eski-islem": eski_islem, "/api/hikaye-liste": hikaye_liste, "/api/hikaye-yaz": hikaye_yaz, "/api/hikaye-sil": hikaye_sil, "/api/hikaye-video": hikaye_video, "/api/hikaye-paylas": hikaye_paylas, "/api/sifre": sifre_ayarla, "/api/telefon": telefon_islem, "/api/kapat": kapat, "/api/ertele": ertele, "/api/geri-getir": geri_getir, "/api/analiz": analiz_rapor, "/api/analiz-guncelle": analiz_guncelle, "/api/yeniden-uret": yeniden_uret}
 
 
 # --- sunucu -------------------------------------------------------------------

@@ -332,6 +332,7 @@ body:not(.uzak) .sadece-uzak{display:none !important}
     <button data-sekme="anasayfa" onclick="sekme('anasayfa')"><span class="ikon">🏠</span> Ana sayfa</button>
     <button data-sekme="senaryolar" onclick="sekme('senaryolar')"><span class="ikon">📝</span> Senaryolar<span class="sayi" id="bSayi"></span></button>
     <button data-sekme="videolar" onclick="sekme('videolar')"><span class="ikon">🎬</span> Videolar<span class="sayi" id="vSayi"></span></button>
+    <button data-sekme="hikayeler" onclick="sekme('hikayeler')"><span class="ikon">📖</span> Hikâyeler</button>
     <button data-sekme="analiz" onclick="sekme('analiz')"><span class="ikon">📊</span> Analiz</button>
     <button data-sekme="youtube" onclick="sekme('youtube')"><span class="ikon">▶️</span> YouTube</button>
     <button data-sekme="ayarlar" onclick="sekme('ayarlar')"><span class="ikon">⚙️</span> Ayarlar</button>
@@ -406,6 +407,17 @@ body:not(.uzak) .sadece-uzak{display:none !important}
     <div id="videolar"></div>
     <h2>Paylaşılanlar</h2>
     <div id="paylasilanlar"></div>
+  </section>
+
+  <section class="sekme" id="s-hikayeler">
+    <h2>📖 Bıdık Hikâyeleri</h2>
+    <p class="kucuk" style="max-width:860px;margin-top:0">Bıdık ve Bilge'nin 2-3 dakikalık, yatay (normal YouTube videosu) öğretici çizgi film bölümleri.
+      Haftada bir bölüm önerilir. Konu yazmazsan Bıdık kendisi seçer. Her bölüm yayından önce yazım ve bilgi denetiminden geçer.</p>
+    <div class="kart" style="max-width:860px;display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:16px">
+      <input id="hkKonu" type="text" maxlength="120" placeholder="Konu (isteğe bağlı), ör. Arılar bal nasıl yapar?" style="flex:1;min-width:220px">
+      <button class="ana" data-is onclick="hikayeYaz()">✨ Yeni hikâye yaz</button>
+    </div>
+    <div id="hkListe"></div>
   </section>
 
   <section class="sekme" id="s-analiz">
@@ -534,7 +546,7 @@ async function post(url, veri){
 }
 
 /* --- sekmeler ve tema --- */
-const SEKME_ADI = {anasayfa:"🏠 Ana sayfa", senaryolar:"📝 Senaryolar", videolar:"🎬 Videolar", analiz:"📊 Analiz", youtube:"▶️ YouTube", ayarlar:"⚙️ Ayarlar"};
+const SEKME_ADI = {anasayfa:"🏠 Ana sayfa", hikayeler:"📖 Bıdık Hikâyeleri", senaryolar:"📝 Senaryolar", videolar:"🎬 Videolar", analiz:"📊 Analiz", youtube:"▶️ YouTube", ayarlar:"⚙️ Ayarlar"};
 function sekme(ad){
   aktifSekme = ad;
   $("sayfaBaslik").textContent = SEKME_ADI[ad] || "";
@@ -543,6 +555,7 @@ function sekme(ad){
   if(location.hash !== "#"+ad) history.replaceState(null, "", "#"+ad);
   if(ad === "ayarlar" && !UZAK) telefonYenile("durum");
   if(ad === "analiz") analizYukle();
+  if(ad === "hikayeler") hikayeYukle();
   if(ad === "youtube" && D && D.ayar && D.ayar.youtube_bagli) eskiYukle();
   bidikDurum(ad === "anasayfa");
   if(ad === "anasayfa") anaOzetYukle();
@@ -567,7 +580,8 @@ async function yenile(tam){
   // is bittiyse (cok hizli bitip hic "calisiyor" gorulmemis olsa bile) ekrani yenile ve haber ver
   const yeniBitti = !is.calisiyor && is.no !== sonIsNo && sonIsNo !== null;
   if((isVardi && !is.calisiyor) || yeniBitti){ is.hata ? bildir(is.hata,true) : is.uyari ? bildir(is.uyari,"uyari") : bildir(is.bitti||"Tamamlandı"); tam = true;
-    if(aktifSekme === "analiz") analizYukle(); }
+    if(aktifSekme === "analiz") analizYukle();
+    if(aktifSekme === "hikayeler") hikayeYukle(); }
   isVardi = is.calisiyor; if(!is.calisiyor) sonIsNo = is.no;
   if(tam || !D){ D = d; ciz(); }
   else if(JSON.stringify(d.guncelleme) !== JSON.stringify(D.guncelleme)){ D.guncelleme = d.guncelleme; guncelBant(d); }
@@ -686,6 +700,50 @@ function gunlereBol(liste){
       <div class="icerik"><div class="kgrid">${gruplar[k].map(kucukKart).join("")}</div></div></details>`;
   }).join("");
 }
+
+/* --- Bidik Hikayeleri --- */
+let HK = {liste:[], gun:6, saat:"12:00"};
+function sonrakiGun(gun){   // gun: 0=Pazar ... 6=Cumartesi; bugunden sonraki ilk o gun
+  const d = new Date(); d.setHours(0,0,0,0);
+  let fark = (gun - d.getDay() + 7) % 7; if(fark === 0) fark = 7;
+  d.setDate(d.getDate() + fark);
+  return d.getFullYear() + "-" + String(d.getMonth()+1).padStart(2,"0") + "-" + String(d.getDate()).padStart(2,"0");
+}
+async function hikayeYukle(){
+  let r; try{ r = await post("/api/hikaye-liste", {}); }catch(e){ return; }
+  HK = {liste:r.hikayeler, gun:r.gun, saat:r.saat};
+  const durumAd = {taslak:"📝 Taslak", video:"🎬 Video hazır", paylasildi:"✅ Paylaşıldı"};
+  $("hkListe").innerHTML = !HK.liste.length ? `<div class="bos">Henüz hikâye yok. Yukarıdan ilk bölümü yazdır.</div>` : HK.liste.map(b => {
+    const satirSay = (b.bolumler||[]).reduce((t,x)=>t+(x.satirlar||[]).length, 0);
+    const metin = (b.bolumler||[]).map((bo,i)=>`<div style="margin:10px 0 4px"><b>${i+1}. ${esc(bo.ad)}</b> <span class="kucuk">(${esc(bo.tema||"")})</span></div>` +
+      (bo.satirlar||[]).map(s=>`<div style="margin:2px 0 2px 10px"><b style="color:${s.kim==="bidik"?"#e0a800":"#7862b2"}">${s.kim==="bidik"?"Bıdık":"Bilge"}:</b> ${esc(s.metin)}${s.kart?` <span class="cip" style="display:inline-block;padding:1px 8px;border-radius:8px;background:var(--cip);font-size:12px">${esc(s.kart.buyuk)} · ${esc(s.kart.alt||"")}</span>`:""}</div>`).join("")).join("") +
+      (b.soru?`<div style="margin-top:10px"><b>Soru:</b> ${esc(b.soru.metin)} — ${(b.soru.secenekler||[]).map((x,i)=>i===b.soru.dogru?`<b>✓ ${esc(x)}</b>`:esc(x)).join(" / ")}</div>`:"") +
+      (b.ozet?`<div style="margin-top:6px"><b>Özet:</b> ${b.ozet.map(esc).join(" · ")}</div>`:"") +
+      (b.dogrulama_notu?`<div class="kucuk" style="margin-top:6px">Dayanak: ${esc(b.dogrulama_notu)}</div>`:"");
+    const sure = b._video_sure ? ` · ${Math.floor(b._video_sure/60)}:${String(Math.round(b._video_sure%60)).padStart(2,"0")}` : "";
+    return `<div class="kart" style="max-width:860px;margin-bottom:14px">
+      <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap"><b style="font-size:16px">${esc(b.baslik||b.konu)}</b>
+        <span class="kucuk">${durumAd[b.durum]||esc(b.durum||"")} · ${satirSay} satır${sure}</span>
+        ${b.denetim_ok?`<span class="kucuk" title="Yazım ve bilgi denetiminden geçti">✔ denetlendi</span>`:`<span class="kucuk">⚠ video üretilirken yeniden denetlenecek</span>`}</div>
+      ${b.video?`<video src="/dosya/${esc(b.video)}" ${b.kapak?`poster="/dosya/${esc(b.kapak)}"`:""} controls preload="none" style="width:100%;max-width:640px;border-radius:12px;margin-top:10px;background:#000"></video>`:""}
+      <details style="margin-top:8px"><summary style="cursor:pointer">Metni oku</summary>${metin}</details>
+      <div class="dugmeler" style="flex-wrap:wrap">
+        ${!b.youtube_url?`<button ${b.video?"":'class="ana"'} data-is onclick="hikayeVideo('${esc(b.id)}')">🎬 ${b.video?"Videoyu yeniden üret":"Videoyu üret"}</button>`:""}
+        ${b.video && !b.youtube_url?`<span style="display:inline-flex;gap:6px;align-items:center;flex-wrap:wrap">
+            <input type="date" id="hkT_${esc(b.id)}" value="${sonrakiGun(HK.gun)}" style="width:auto">
+            <input type="time" id="hkS_${esc(b.id)}" value="${esc(HK.saat)}" style="width:auto">
+            <button class="ana" data-is onclick="hikayePaylas('${esc(b.id)}')">🚀 Paylaş</button></span>`:""}
+        ${b.youtube_url?`<a class="btn" href="${esc(b.youtube_url)}" target="_blank">▶️ YouTube'da aç</a> <span class="kucuk">${b.yayin_zamani?tarihYaz(b.yayin_zamani):""}</span>`:""}
+        ${!b.youtube_url?`<button class="kirmizi" onclick="hikayeSil('${esc(b.id)}')">🗑 Sil</button>`:""}
+      </div></div>`; }).join("");
+}
+async function hikayeYaz(){ const k = $("hkKonu").value.trim(); await post("/api/hikaye-yaz", {konu:k}); $("hkKonu").value = ""; bildir("Hikâye yazılıyor…"); yenile(false); }
+async function hikayeVideo(id){ if(!confirm("Video üretilsin mi? 2-3 dakikalık bölüm birkaç dakika sürer; bu sırada başka video üretilemez.")) return;
+  await post("/api/hikaye-video", {id}); bildir("Hikâye videosu üretiliyor…"); yenile(false); }
+async function hikayePaylas(id){ const t = $("hkT_"+id).value, s = $("hkS_"+id).value;
+  if(!confirm(`Bölüm ${t} ${s} için YouTube'a normal (yatay) video olarak zamanlansın mı?`)) return;
+  await post("/api/hikaye-paylas", {id, tarih:t, saat:s}); bildir("Paylaşılıyor…"); yenile(false); }
+async function hikayeSil(id){ if(!confirm("Bu bölüm silinsin mi? (silinenler klasörüne taşınır)")) return; await post("/api/hikaye-sil", {id}); hikayeYukle(); }
 
 /* --- Bidik ile sohbet --- */
 const SOHBET = {gecmis:[], bekliyor:false};
@@ -1173,7 +1231,7 @@ async function guncelle(){
 document.addEventListener("keydown", e => { if(e.key === "Escape"){ paylasKapat(); silKapat(); } });
 setInterval(()=>fetch("/api/nabiz",{method:"POST",body:"{}"}).catch(()=>{}), 5000);
 fetch("/api/nabiz",{method:"POST",body:"{}"}).catch(()=>{});
-sekme(["anasayfa","senaryolar","videolar","analiz","youtube","ayarlar"].includes(location.hash.slice(1)) ? location.hash.slice(1) : "anasayfa");
+sekme(["anasayfa","hikayeler","senaryolar","videolar","analiz","youtube","ayarlar"].includes(location.hash.slice(1)) ? location.hash.slice(1) : "anasayfa");
 kalpleriBaslat();
 yenile(true);
 </script>

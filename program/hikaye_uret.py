@@ -293,8 +293,13 @@ def uret(bolum_yolu, cikti=None, sesli=None, ilerleme=None):
                                "-s", f"{W}x{H}", "-r", str(FPS), "-i", "-", "-c:v", "libx264", "-preset", "veryfast",
                                "-crf", "20", "-pix_fmt", "yuv420p", sessiz_mp4], stdin=subprocess.PIPE)
         n, onceki_bolum = 0, 0
+        zamanlar = [(0.0, "Giriş")]
         for pi, p in enumerate(parcalar):
             kare_sayisi = int(round(p["sure"] * FPS))
+            if p["tur"] == "bolum":
+                zamanlar.append((n / FPS, p["ad"]))
+            elif p["tur"] == "soru":
+                zamanlar.append((n / FPS, "Soru zamanı"))
             bolum = p.get("bolum", 0)
             for k in range(kare_sayisi):
                 t = k / FPS
@@ -323,7 +328,7 @@ def uret(bolum_yolu, cikti=None, sesli=None, ilerleme=None):
         else:
             shutil.copyfile(sessiz_mp4, cikti)
         ilerle(100, "Hikâye videosu hazır")
-        return cikti, n / FPS
+        return cikti, n / FPS, zamanlar
     finally:
         shutil.rmtree(gecici, ignore_errors=True)
 
@@ -388,6 +393,45 @@ def _kare(img, d, p, k, t, n, kostum):
         _abone(d, t)
     if p.get("metin") and tur not in ("kapak",):
         _altyazi(d, p["metin"] if tur != "ozet" else "Bugün öğrendiklerimiz…", konusan, t / 0.25)
+
+
+def bolum_listesi(zamanlar):
+    """YouTube aciklamasi icin bolum (chapter) satirlari: ilk 0:00, her biri en az 10 sn."""
+    satirlar, son = [], -100.0
+    for t, ad in zamanlar:
+        if t - son < 10 and satirlar:
+            continue
+        satirlar.append(f"{int(t) // 60}:{int(t) % 60:02d} {ad}")
+        son = t
+    return satirlar if len(satirlar) >= 3 else []
+
+
+def kapak_resmi(b, yol):
+    """1280x720 YouTube kapak gorseli: ilk kismin arka plani, iki karakter, buyuk baslik."""
+    kostum = b.get("kostum") if b.get("kostum") in KOSTUMLER else kostum_sec(b.get("alan", ""), b.get("konu", ""))
+    bo = b["bolumler"][0]
+    tema = bo.get("tema") if bo.get("tema") in arka_planlar.TEMALAR else "genel"
+    img = arka_planlar.ciz(tema, bo.get("arka_no", 0) or 0, W * SS, H * SS, k=SS)
+    ciz_bidik(img, x=330 * SS, y=1060 * SS, olcek=1.45 * SS, ifade="saskin", kol="kollar_havada", kostum=kostum)
+    ciz_bilge(img, 1600 * SS, 1060 * SS, 1.35 * SS, ifade="mutlu", agiz=0.5, kanat=0.6)
+    d = ImageDraw.Draw(img)
+    baslik = b.get("baslik", "")
+    f = _font(96)
+    sat = _satirlar(d, baslik, f, 1150 * SS)[:3]
+    while len(_satirlar(d, baslik, f, 1150 * SS)) > 3 and f.size > 50 * SS:
+        f = ImageFont.truetype(FONT, f.size - 6 * SS)
+        sat = _satirlar(d, baslik, f, 1150 * SS)[:3]
+    sh = f.size * 1.18
+    ust = 420 * SS - len(sat) * sh / 2
+    for i, s in enumerate(sat):
+        d.text((W / 2 * SS, ust + sh * (i + 0.5)), s, font=f, fill=(255, 255, 255), anchor="mm",
+               stroke_width=12 * SS, stroke_fill=LACI)
+    fs = _font(40)
+    tw = d.textlength(SERI_ADI, font=fs)
+    d.rounded_rectangle([W / 2 * SS - tw / 2 - 30 * SS, 70 * SS, W / 2 * SS + tw / 2 + 30 * SS, 140 * SS], radius=35 * SS,
+                        fill=SARI, outline=LACI, width=6 * SS)
+    d.text((W / 2 * SS, 105 * SS), SERI_ADI, font=fs, fill=LACI, anchor="mm")
+    img.resize((1280, 720), Image.LANCZOS).save(yol, "PNG")
 
 
 if __name__ == "__main__":

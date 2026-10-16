@@ -180,7 +180,7 @@ def baglantiyi_kes():
     ayar_kaydet({"youtube_kanal": ""})
 
 
-def yukle(video_yolu, baslik, aciklama, etiketler, yayin_zamani=None, ilerleme=None):
+def yukle(video_yolu, baslik, aciklama, etiketler, yayin_zamani=None, ilerleme=None, shorts=True, kapak=None):
     """
     yayin_zamani: saat dilimli datetime. 15 dakikadan ileriyse video o an otomatik
     yayina girecek sekilde zamanlanir; degilse hemen herkese acik yuklenir.
@@ -196,7 +196,8 @@ def yukle(video_yolu, baslik, aciklama, etiketler, yayin_zamani=None, ilerleme=N
         durum["publishAt"] = yayin_zamani.astimezone(datetime.timezone.utc).strftime("%Y-%m-%dT%H:%M:%S.000Z")
     else:
         durum["privacyStatus"] = "public"
-    baslik = baslik if "#shorts" in baslik.lower() else f"{baslik} #shorts"
+    if shorts:
+        baslik = baslik if "#shorts" in baslik.lower() else f"{baslik} #shorts"
     govde = {
         "snippet": {"title": baslik[:100], "description": aciklama[:4900], "tags": etiketler[:15],
                     "categoryId": "27",   # Egitim
@@ -221,6 +222,14 @@ def yukle(video_yolu, baslik, aciklama, etiketler, yayin_zamani=None, ilerleme=N
             raise YuklemeHatasi("Kanalin gunluk yukleme siniri doldu. Yarin tekrar dene.")
         raise YuklemeHatasi(f"YouTube hatasi: {metin[:300]}")
     vid = cevap["id"]
+    kapak_sonuc = ""
+    if kapak and os.path.exists(kapak):
+        ilerle(92, "Kapak gorseli yukleniyor")
+        try:   # ozel kapak icin kanalin telefonla dogrulanmis olmasi gerekir; olmazsa YouTube kendisi secer
+            yt.thumbnails().set(videoId=vid, media_body=MediaFileUpload(kapak, mimetype="image/png")).execute()
+            kapak_sonuc = "yuklendi"
+        except Exception as e:
+            kapak_sonuc = f"yuklenemedi: {str(e)[:120]}"
     ilerle(95, "Yayin durumu kontrol ediliyor")
     gercek = {}
     try:
@@ -228,6 +237,7 @@ def yukle(video_yolu, baslik, aciklama, etiketler, yayin_zamani=None, ilerleme=N
     except Exception:
         pass
     kisitli = (not zamanli and gercek.get("privacyStatus") == "private")
-    return {"id": vid, "url": f"https://youtube.com/shorts/{vid}", "zamanli": zamanli,
+    return {"id": vid, "url": f"https://youtube.com/shorts/{vid}" if shorts else f"https://youtu.be/{vid}",
+            "kapak": kapak_sonuc, "zamanli": zamanli,
             "yayin_zamani": yayin_zamani.isoformat() if yayin_zamani else simdi.isoformat(),
             "kisitli": kisitli, "durum": gercek}
