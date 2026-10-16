@@ -72,7 +72,9 @@ def is_baslat(baslik, fonk):
         IS.update(calisiyor=True, baslik=baslik, yuzde=0, mesaj="Basliyor", hata="", uyari="", bitti="", no=IS["no"] + 1)
 
     def ilerle(y, m):
-        IS.update(yuzde=int(y), mesaj=m)
+        if y is not None:          # None: yuzde ayni kalir, sadece mesaj degisir
+            IS["yuzde"] = int(y)
+        IS["mesaj"] = m
 
     def kos():
         try:

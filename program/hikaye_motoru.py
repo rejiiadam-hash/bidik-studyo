@@ -3,7 +3,7 @@ Bidik Hikayeleri motoru: Gemini ile 2-3 dakikalik bolum yazar, yazim + bilgi den
 BIDIK\\hikayeler\\<id>\\bolum.json olarak kaydeder. Video: hikaye_uret.uret().
 Senaryo motorunun Gemini baglantisini (ana anahtar) kullanir; haftada bir bolum oldugu icin kota yuku kucuktur.
 """
-import datetime, hashlib, json, os, re
+import datetime, hashlib, json, os, re, time
 
 import arka_planlar
 from hikaye_uret import dogrula
@@ -245,11 +245,25 @@ def yaz(konu=None, ilerle=None):
             print("Hikaye formati gecersiz:", son_hata)
             continue
         ilerle(35 + deneme * 25, "Yazım ve bilgi denetimi")
-        try:
-            dogru, sorun, duz = denetle(modeller, b, ilerle)
-        except MotorHatasi as e:
-            son_hata = str(e)
-            continue
+        sonuc = None
+        for dd in range(2):   # Gemini mesgulse bolumu bastan yazmak yerine sadece denetimi tekrar dene
+            try:
+                sonuc = denetle(modeller, b, ilerle)
+                break
+            except MotorHatasi as e:
+                son_hata = str(e)
+                if dd == 0:
+                    ilerle(None, "Gemini meşgul, denetim 20 sn sonra tekrar denenecek")
+                    time.sleep(20)
+        if sonuc is None:
+            # yazilan bolum bosa gitmesin: denetimsiz taslak olarak kaydedilir; video uretilirken denetim yapilir
+            b["durum"] = "taslak"
+            b["yazildi"] = datetime.datetime.now().isoformat(timespec="minutes")
+            b["id"] = f"{datetime.date.today():%Y-%m-%d}-{_slug(b.get('baslik') or konu)}"
+            kaydet(b)
+            ilerle(100, "Bölüm yazıldı, denetim videodan önce yapılacak")
+            return b
+        dogru, sorun, duz = sonuc
         if not dogru:
             son_hata = "bilgi şüpheli: " + sorun
             print("Hikaye elendi:", sorun)

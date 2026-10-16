@@ -1,8 +1,8 @@
 {
-  "surum": "1.18.2",
+  "surum": "1.18.3",
   "tarih": "2026-10-16",
   "notlar": [
-    "Hikayeler: kisim basina kiyafet, Bilge'ye 12 konu aksesuari, puf gecisi"
+    "Duzeltme: Gemini mesgulken hikaye yazimi hata veriyordu; denetim tekrar denenir, bolum bosa gitmez"
   ],
   "dosyalar": {
     "program/GELISTIRICI.txt": "24e10b02892addbc87b87d078143cb77a09521d86239fe3b78d2a0628b03d138",
@@ -16,14 +16,14 @@
     "program/gereksinimler.txt": "ea75906866e55afdfe66e5eb98a011d93e5e7eea72949ec672fdf817265f0a3a",
     "program/girisler.py": "8522b21bebe3f327202845e39f27062748c8d97456585246e9b809bf85d391cf",
     "program/github_kanal.py": "073f7240c08dac6bbc105da3062ad0fe2ce688747cee9fb72621aab0a54cce3f",
-    "program/hikaye_motoru.py": "b08ca153e2890c0ad72917f37fff52d4092f06465709584a81007a1944c3e425",
+    "program/hikaye_motoru.py": "0a8d97dc27b8eb9e544abc7d3a0ec0d7c4da38c94e94df3547f1ab2683475509",
     "program/hikaye_uret.py": "383050f46b2ce78f7054b4813ab3fe494cccaba2f6048fce5e628ea1872b70b2",
     "program/karakter.py": "b3f0eb8d661cde885545ef64059514bbdea1de710fc9bf1628eedf9b8458f6a9",
     "program/kisayol.ps1": "8b01102bef0e33a74e1a10756c1d030ef45381b8a3bcd2bd0cfd16252d872a5b",
     "program/kostumler.py": "a041a730f8753887c1cdc180c8b906ed9791b7539e5c55fe26f669e63717aa33",
     "program/ortak.py": "e27b5fa5d4b976cfa50c13330fc58d43657322976fd7a596b869f2821d0b4ba6",
     "program/panel.html": "2020a59b90270eac3f7a39b8d578c6524934f2b73dccc8a2a028e334dd2936f6",
-    "program/panel.py": "6833fb488ae12ea13f07dd84159fc41771642208c2f81e57a59e773f6a690121",
+    "program/panel.py": "612db3239815cb978fdd7ba8b86b7ce67d71eebd17964a61b604aa38b9a0bf98",
     "program/senaryo_motoru.py": "9388cc80f9db576e3c3d68471a8b6bde1bad2977cf56b9abbf82012bdd29abc3",
     "program/sohbet.py": "a0f17d44f0e7acdbf873549467eba8bc428bb5ee1d11b0820cd145cddd4f52bd",
     "program/telefon.py": "5d2d8793c6184446d809ef0f4b73342a9eb0fdab559f7c51ce8ab07e7af29892",
