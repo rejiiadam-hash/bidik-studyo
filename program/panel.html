@@ -347,7 +347,6 @@ body:not(.uzak) .sadece-uzak{display:none !important}
     <span class="sevgi-mini"><span>❤️</span> Karımı çok seviyorum</span>
     <div class="bosluk"></div>
     <button class="ikonbtn" id="temaBtn" onclick="temaDegis()" title="Açık / koyu tema">☀️</button>
-    <button class="ana" id="uretBtn" onclick="senaryoUret()">✨ Yeni senaryolar yaz</button>
   </div>
   <div class="is" id="is">
     <div style="display:flex;gap:10px;align-items:center">
@@ -400,7 +399,11 @@ body:not(.uzak) .sadece-uzak{display:none !important}
 
   <section class="sekme" id="s-senaryolar">
     <div id="ilkKurulum"></div>
-    <h2>Onay bekleyen senaryolar</h2>
+    <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin:4px 0 10px">
+      <h2 style="margin:0">Onay bekleyen senaryolar</h2>
+      <div style="flex:1"></div>
+      <button class="ana" id="uretBtn" onclick="senaryoUret()">✨ Yeni senaryolar yaz</button>
+    </div>
     <div id="bekleyen"></div>
     <div id="ertelenenBolum"></div>
   </section>

@@ -1,8 +1,8 @@
 {
-  "surum": "1.20.0",
+  "surum": "1.20.1",
   "tarih": "2026-10-16",
   "notlar": [
-    "Durdur dugmesi: calisan uretim aninda durdurulur, yarim kalan gecici dosyalar ve video silinir"
+    "Yeni senaryolar yaz dugmesi ust cubuktan Senaryolar sekmesine tasindi"
   ],
   "dosyalar": {
     "program/GELISTIRICI.txt": "24e10b02892addbc87b87d078143cb77a09521d86239fe3b78d2a0628b03d138",
@@ -22,7 +22,7 @@
     "program/kisayol.ps1": "8b01102bef0e33a74e1a10756c1d030ef45381b8a3bcd2bd0cfd16252d872a5b",
     "program/kostumler.py": "a041a730f8753887c1cdc180c8b906ed9791b7539e5c55fe26f669e63717aa33",
     "program/ortak.py": "863b4f36f9e10c0adb7053e716f51b77003831adb8fe3e6bb905336be3e78555",
-    "program/panel.html": "6141018fdee88934338fb16f03285f9bb9346abf15a4825aabbe84365bd9a09c",
+    "program/panel.html": "94ccea895ded78d516a1ebebc5905608089bbce53e4ab7a59402aa6615b3642f",
     "program/panel.py": "cfb93452f9772b39098b927928e63a05d9587a176762f6d40c87cd3bf176464e",
     "program/senaryo_motoru.py": "ef209ebe5f378ff46b4c089be17c656d5aca39ec9002fda639b5b1a229c3af4b",
     "program/sohbet.py": "a0f17d44f0e7acdbf873549467eba8bc428bb5ee1d11b0820cd145cddd4f52bd",
