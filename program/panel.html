@@ -85,6 +85,18 @@ main{width:100%;max-width:1240px;margin:0 auto;padding:18px 24px 60px}
 .anaHizli{display:flex;flex-wrap:wrap;gap:10px;margin-top:14px}
 @media (max-width:860px){.sahne{height:380px}#bidikKutu{width:160px;height:209px;bottom:20px}#konusma{bottom:210px}.sahne .gunes{right:24px;top:18px;width:56px;height:56px}}
 @media (prefers-reduced-motion:reduce){.sahne .bulut,.sahne .gunes,.sahne .cicek{animation:none}}
+/* --- sohbet --- */
+.sohbet{margin-top:14px;background:var(--kart);border:2px solid var(--cizgi);border-radius:18px;padding:12px 14px}
+.sohbet h3{margin:0 0 8px;font-size:15px}
+#sohbetGunluk{max-height:230px;overflow-y:auto;display:flex;flex-direction:column;gap:7px;padding:2px 2px 6px}
+.sb{max-width:82%;padding:8px 12px;border-radius:14px;line-height:1.4;font-size:14.5px;white-space:pre-wrap;word-break:break-word}
+.sb.ben{align-self:flex-end;background:var(--sari);color:#23253a;border-bottom-right-radius:4px}
+.sb.bidik{align-self:flex-start;background:var(--cip);border-bottom-left-radius:4px}
+.sb.dus{opacity:.7;font-style:italic}
+.sb.hata{align-self:center;background:var(--uyari);font-size:13px}
+.sohbetSatir{display:flex;gap:8px;margin-top:6px}
+.sohbetSatir input{flex:1;min-width:0}
+.sohbetIpucu{font-size:12.5px;color:var(--soluk);margin-bottom:6px}
 /* --- sevgi kosesi --- */
 .sevgi{position:relative;border-radius:16px;padding:16px 12px 14px;text-align:center;overflow:hidden;
   background:linear-gradient(160deg,rgba(255,77,109,.20),rgba(255,77,109,.06));border:1.5px solid rgba(255,77,109,.35)}
@@ -362,6 +374,15 @@ body:not(.uzak) .sadece-uzak{display:none !important}
         <div id="konusma"></div><div id="bidikGolge"></div><div id="bidikKare"></div>
       </div>
     </div>
+    <div class="sohbet">
+      <h3>💬 Bıdık ile sohbet</h3>
+      <div id="sohbetKurulum" class="sohbetIpucu" style="display:none">Sohbet için ayrı bir Gemini anahtarı lazım (senaryoları etkilemesin diye). <a href="#" onclick="sekme('ayarlar');return false">Ayarlar'dan ekle</a></div>
+      <div id="sohbetGunluk"></div>
+      <form class="sohbetSatir" onsubmit="sohbetGonder(event)">
+        <input id="sohbetGiris" type="text" maxlength="500" placeholder="Bıdık'a bir şey yaz…" autocomplete="off">
+        <button class="ana" id="sohbetBtn" type="submit">Gönder</button>
+      </form>
+    </div>
     <div class="anaKarsi" id="anaSelam">Merhaba Deniz!</div>
     <p class="anaAlt">Bıdık seni bekliyordu. Üzerine tıklarsan dans eder. 💛</p>
     <div class="anaHizli">
@@ -412,6 +433,11 @@ body:not(.uzak) .sadece-uzak{display:none !important}
         <label>Gemini API anahtarı <span id="gDurum"></span></label>
         <input id="gKey" type="password" placeholder="Yeni anahtar yapıştır (boş = değişmez)">
         <div class="kucuk">aistudio.google.com/apikey (ücretsiz)</div>
+      </div>
+      <div>
+        <label>Bıdık sohbet anahtarı <span id="sDurum"></span></label>
+        <input id="sKey" type="password" placeholder="Ayrı Gmail'den alınan anahtar (boş = değişmez)">
+        <div class="kucuk">Senaryolar etkilenmesin diye ayrı hesaptan: aistudio.google.com/apikey (ücretsiz)</div>
       </div>
       <div>
         <label>Her seferde yazılacak senaryo sayısı</label>
@@ -657,6 +683,36 @@ function gunlereBol(liste){
   }).join("");
 }
 
+/* --- Bidik ile sohbet --- */
+const SOHBET = {gecmis:[], bekliyor:false};
+function sohbetEkle(rol, metin, ek=""){
+  const g = $("sohbetGunluk"), e = document.createElement("div");
+  e.className = "sb " + rol + (ek ? " " + ek : ""); e.textContent = metin; g.appendChild(e); g.scrollTop = g.scrollHeight; return e;
+}
+async function sohbetGonder(ev){
+  ev.preventDefault();
+  const kutu = $("sohbetGiris"), m = kutu.value.trim();
+  if(!m || SOHBET.bekliyor) return;
+  kutu.value = ""; SOHBET.bekliyor = true; $("sohbetBtn").disabled = true;
+  sohbetEkle("ben", m);
+  const dus = sohbetEkle("bidik", "Bıdık düşünüyor…", "dus");
+  bidikSoyle("Hmm, düşünüyorum… 🤔", 30);
+  try{
+    const r = await post("/api/sohbet", {mesaj:m, gecmis:SOHBET.gecmis});
+    dus.remove();
+    if(r.cevap){
+      SOHBET.gecmis.push({rol:"ben", metin:m}, {rol:"bidik", metin:r.cevap});
+      if(SOHBET.gecmis.length > 24) SOHBET.gecmis.splice(0, SOHBET.gecmis.length - 24);
+      sohbetEkle("bidik", r.cevap);
+      bidikSoyle(r.cevap.length > 130 ? r.cevap.slice(0, 127).replace(/\s+\S*$/, "") + "…" : r.cevap, 4 + Math.min(6, r.cevap.length / 25));
+      BIDIK.mod = "dans"; BIDIK.modBitis = performance.now() + 1800;
+    }else{
+      sohbetEkle("bidik", r.hata_metni || "Bıdık şu an cevap veremiyor.", "hata");
+      $("konusma").classList.remove("acik");
+    }
+  }catch(e){ dus.remove(); sohbetEkle("bidik", "Bağlantı sorunu, tekrar dene.", "hata"); $("konusma").classList.remove("acik"); }
+  SOHBET.bekliyor = false; $("sohbetBtn").disabled = false; kutu.focus();
+}
 /* --- ana sayfa: kendi kendine hareket eden Bidik --- */
 const KOSTUM_SIRASI = ["yok","astronot","kaptan","bilimci","safari","dedektif","buyucu","asci","doktor","pervane","migfer","kulaklik"];
 const BIDIK = {acik:false, kostum:"yok", x:40, yon:1, mod:"sallan", modBitis:0, kare:0, sonKare:0, hop:0, konusmaBitis:0, kostumBitis:0, raf:0};
@@ -820,6 +876,8 @@ function ciz(){
     `<div class="bos">Paylaşılmayı bekleyen video yok. Senaryolar sekmesinde bir senaryoyu onaylayınca burada görünür.</div>`;
   $("paylasilanlar").innerHTML = paylasilan.length ? gunlereBol(paylasilan) : `<div class="bos">Henüz paylaşılan video yok.</div>`;
   ytCiz(a);
+  $("sDurum").innerHTML = `<span class="nokta ${a.sohbet_var?"tamam":""}"></span>${a.sohbet_var?"kayıtlı":"girilmedi"}`;
+  $("sohbetKurulum").style.display = a.sohbet_var ? "none" : "block";
   $("gDurum").innerHTML = `<span class="nokta ${a.gemini_var?"tamam":""}"></span>${a.gemini_var?"kayıtlı":"girilmedi"}`;
   $("gunluk").value = a.gunluk_video; $("alanlar").value = a.alanlar.join(", ");
   $("sonCagri").checked = a.son_cagri; $("temaSec").value = a.tema; $("saatler").value = a.paylasim_saatleri.join(", ");
@@ -1050,8 +1108,8 @@ async function cikis(){ await fetch("/api/cikis",{method:"POST"}); location.relo
 
 async function destekKopyala(){ const r = await post("/api/destek",{});
   await navigator.clipboard.writeText(r.metin); bildir("Destek bilgisi kopyalandı. Claude'a yapıştırabilirsin."); }
-async function ayarKaydet(){ await post("/api/ayar",{gemini_api_key:$("gKey").value, gunluk_video:$("gunluk").value,
-  alanlar:$("alanlar").value, son_cagri:$("sonCagri").checked, tema:$("temaSec").value, paylasim_saatleri:$("saatler").value}); $("gKey").value=""; bildir("Ayarlar kaydedildi"); yenile(true); }
+async function ayarKaydet(){ await post("/api/ayar",{gemini_api_key:$("gKey").value, gemini_sohbet_anahtari:$("sKey").value, gunluk_video:$("gunluk").value,
+  alanlar:$("alanlar").value, son_cagri:$("sonCagri").checked, tema:$("temaSec").value, paylasim_saatleri:$("saatler").value}); $("gKey").value=""; $("sKey").value=""; bildir("Ayarlar kaydedildi"); yenile(true); }
 async function guncelKontrol(){
   const b = $("gkBtn"), s = $("gkSonuc"); b.disabled = true; s.textContent = "Kontrol ediliyor…";
   try{

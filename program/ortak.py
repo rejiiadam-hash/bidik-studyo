@@ -11,6 +11,7 @@ FONT = os.path.join(PROGRAM, "font", "DejaVuSans-Bold.ttf")
 
 VARSAYILAN_AYAR = {
     "gemini_api_key": "",
+    "gemini_sohbet_anahtari": "",   # Bidik sohbeti icin AYRI anahtar (baska Google hesabi); senaryolari etkilemez
     "gunluk_video": 3,
     "aday_sayisi": 9,
     "model": "",

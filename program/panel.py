@@ -11,6 +11,7 @@ from karakter import IFADELER, KOL_POZLARI
 from video_uret import uret, dogrula, IKONLAR, RENKLER
 import senaryo_motoru as motor
 import youtube_yukle as yt
+import sohbet
 import github_kanal
 import telefon
 import kostumler
@@ -114,7 +115,7 @@ def durum():
         "bekleyen": bekleyen,
         "ertelenen": ertelenenler(),
         "videolar": videolar[:30],
-        "ayar": {"gemini_var": bool(a.get("gemini_api_key")), "gunluk_video": a["gunluk_video"],
+        "ayar": {"gemini_var": bool(a.get("gemini_api_key")), "sohbet_var": bool(a.get("gemini_sohbet_anahtari")), "gunluk_video": a["gunluk_video"],
                  "alanlar": a["alanlar"], "son_cagri": a.get("son_cagri", True), "tema": a.get("tema", "koyu"),
                  "paylasim_saatleri": a.get("paylasim_saatleri") or ["11:00", "15:00", "19:00"],
                  "youtube_hazir": yt.hazir_mi(), "youtube_bagli": yt.bagli_mi(),
@@ -716,6 +717,13 @@ def kare_sayfasi(ad):
     return _KARE_RESIM[ad]
 
 
+def sohbet_et(v):
+    try:
+        return {"cevap": sohbet.cevapla(v.get("mesaj", ""), v.get("gecmis"))}
+    except sohbet.SohbetHatasi as e:
+        return {"cevap": "", "tur": e.args[0], "hata_metni": e.args[1]}
+
+
 def analiz_rapor(v):
     return {"rapor": analiz.rapor(v.get("donem", "haftalik"))}
 
@@ -746,6 +754,9 @@ def ayar(v):
     yeni = {}
     if v.get("gemini_api_key"):
         yeni["gemini_api_key"] = v["gemini_api_key"].strip()
+    if v.get("gemini_sohbet_anahtari"):
+        yeni["gemini_sohbet_anahtari"] = v["gemini_sohbet_anahtari"].strip()
+        yeni["sohbet_model"] = ""
     if v.get("gunluk_video"):
         yeni["gunluk_video"] = max(1, min(10, int(v["gunluk_video"])))
         yeni["aday_sayisi"] = max(6, yeni["gunluk_video"] * 3)
@@ -789,7 +800,7 @@ ISLEMLER = {"/api/senaryo-uret": senaryo_uret, "/api/kaydet": kaydet, "/api/onay
             "/api/reddet": reddet, "/api/ayar": ayar, "/api/klasor": klasor_ac,
             "/api/guncelle": guncelle, "/api/nabiz": nabiz,
             "/api/paylas": paylas, "/api/video-sil": video_sil, "/api/youtube-istemci": youtube_istemci,
-            "/api/youtube-bagla": youtube_bagla, "/api/youtube-kes": youtube_kes, "/api/destek": destek, "/api/github-kontrol": github_kontrol, "/api/sifre": sifre_ayarla, "/api/telefon": telefon_islem, "/api/kapat": kapat, "/api/ertele": ertele, "/api/geri-getir": geri_getir, "/api/analiz": analiz_rapor, "/api/analiz-guncelle": analiz_guncelle, "/api/yeniden-uret": yeniden_uret}
+            "/api/youtube-bagla": youtube_bagla, "/api/youtube-kes": youtube_kes, "/api/destek": destek, "/api/github-kontrol": github_kontrol, "/api/sohbet": sohbet_et, "/api/sifre": sifre_ayarla, "/api/telefon": telefon_islem, "/api/kapat": kapat, "/api/ertele": ertele, "/api/geri-getir": geri_getir, "/api/analiz": analiz_rapor, "/api/analiz-guncelle": analiz_guncelle, "/api/yeniden-uret": yeniden_uret}
 
 
 # --- sunucu -------------------------------------------------------------------
