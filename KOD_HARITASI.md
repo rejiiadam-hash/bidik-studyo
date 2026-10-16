@@ -32,12 +32,12 @@ senaryo_motoru.alan_sec ağırlık olarak kullanır. github_kanal.py güncelleme
 - **github_kanal.py** (144): kontrol_et(71, surum.json+sha256), baslat(137), 30 dk döngü.
 - **telefon.py** (142): Tailscale (tailscale_ac 69), otomatik_baslat, uyku_engelle.
 - **uygulama.py** (196): pencere/başlatıcı (pywebview/Edge), --arka modu.
-- **panel.py** (964): HTTP sunucu. Yardımcılar 30-90; durum 91; oturum/şifre 142-237; güncelleme 238-335;
+- **panel.py** (~1030; kare_sayfasi = ana sayfa Bidik sprite sayfasi, /bidik-kareler/<kostum>.png): HTTP sunucu. Yardımcılar 30-90; durum 91; oturum/şifre 142-237; güncelleme 238-335;
   senaryo işlemleri kaydet 348, _video_yap 371, yeniden_uret 384, _yazim_kapisi 416, onayla 455,
   ertelenenler/ertele/geri_getir 481-512, reddet 513, paylas 525, video_sil 561, destek 595,
   telefon_islem 627, kostum_resmi 648, analiz_* 666, ayar 692, **ISLEMLER dict 735** (yeni endpoint buraya),
   Isleyici 743 (GET/POST, kapı), hazirla 914, main 951.
-- **panel.html** (967): CSS üstte; JS ~460'tan: sekme 473, yenile 488, senaryoKarti 514, videoKarti 557,
+- **panel.html** (~1090): Ana sayfa sahnesi: #s-anasayfa + bidikDongu/BIDIK (JS), .sahne CSS. CSS üstte; JS ~460'tan: sekme 473, yenile 488, senaryoKarti 514, videoKarti 557,
   gunlereBol 608, admin 623, kalpler 640, ytCiz 647, ciz 700, formdanSenaryo 725, kaydet/onayla/ertele 735-745,
   ertelenenCiz 747, yenidenUret 767, paylasAc 825, analizYukle 864, telCiz 913, ayarKaydet 947.
 
