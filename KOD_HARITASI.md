@@ -48,6 +48,13 @@ senaryo_motoru.alan_sec ağırlık olarak kullanır. github_kanal.py güncelleme
 ## PC tarafı (C:\Users\PC1\Desktop\BIDIK)
 ayarlar.json, senaryolar/{bekleyen,ertelenen,...}, videolar/<gün>/, analiz.json, guncelleme/ (GitHub'dan gelir), PROJE_OZETI.md.
 
+## 16 Ekim akşamı eklenenler (v1.19-1.20)
+- Kontrol et: panel.kontrol (senaryo/hikaye) -> denetim + video_uret.sesleri_hazirla (onbellek_yolu, tts_metni, _parcala).
+- Durdur: ortak.IPTAL/Iptal(BaseException)/uyu; panel.is_baslat(durdurulabilir), /api/durdur; video_uret.uret sarmalayici gecicileri siler.
+- Arka plan uyumu: arka_planlar.SAHNE_ADLARI, OZEL_SAHNE, uygun_sahneler/secim(tema, metin); hikaye_uret.sahne_no.
+- Gemini yedek anahtar: senaryo_motoru._anahtarlar/_istek (ana -> sohbet anahtari).
+- GitHub kanali commit SHA'ya sabitlenir (raw onbellek gecikmesi yok).
+
 ## Sık işler → nereye bak
 - Yeni konu alanı: ortak.py (alanlar) + panel.py hazirla (alanlar_v2) + kostumler.kostum_sec + arka_planlar.tema_bul + analiz.ALAN_ADI + senaryo_motoru.yazar_istemi.
 - Yeni kostüm: kostumler.py (fonksiyon + KOSTUMLER) + kostum_sec.

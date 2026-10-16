@@ -122,7 +122,7 @@ import threading as _threading
 IPTAL = _threading.Event()
 
 
-class Iptal(Exception):
+class Iptal(BaseException):   # BaseException: genel "except Exception" bloklari durdurmayi yutmasin
     """Kullanici 'Durdur'a basti."""
 
 
