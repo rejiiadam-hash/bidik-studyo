@@ -77,7 +77,19 @@ def kontrol_et():
         return "kapali (github_depo ayari bos)"
     if not re.match(r"^[\w.-]+/[\w.-]+$", depo):
         raise ValueError(f"github_depo gecersiz: {depo}")
-    taban = f"https://raw.githubusercontent.com/{depo}/{dal}/"
+    # raw.githubusercontent.com dal adresini ~5 dk onbellekte tutar (yeni surum gec gorunur).
+    # Dalin en son commit'ini GitHub API'den alip o commit'e sabitlenmis adresten indiririz: hep en guncel.
+    ref = dal
+    try:
+        istek = urllib.request.Request(f"https://api.github.com/repos/{depo}/commits/{dal}",
+                                       headers={"User-Agent": "BidikStudyo", "Accept": "application/vnd.github.sha"})
+        with urllib.request.urlopen(istek, timeout=20) as r:
+            sha = r.read().decode().strip()
+        if re.fullmatch(r"[0-9a-f]{40}", sha):
+            ref = sha
+    except Exception as e:   # API sinirina takilirsa dal adresiyle devam
+        print("GitHub API'den son commit alinamadi:", str(e)[:120])
+    taban = f"https://raw.githubusercontent.com/{depo}/{ref}/"
     with _KILIT:
         man = json.loads(_indir(taban + "surum.json").decode("utf-8"))
         uzak = str(man.get("surum", "0"))

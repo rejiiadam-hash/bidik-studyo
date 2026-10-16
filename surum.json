@@ -1,8 +1,8 @@
 {
-  "surum": "1.19.1",
+  "surum": "1.19.2",
   "tarih": "2026-10-16",
   "notlar": [
-    "Uzun cumleler parca parca seslendirilir (ses servisi uzun metinlerde daha sik takiliyor)"
+    "Guncelleme kontrolu GitHub onbellegine takilmaz (yeni surum aninda gorunur)"
   ],
   "dosyalar": {
     "program/GELISTIRICI.txt": "24e10b02892addbc87b87d078143cb77a09521d86239fe3b78d2a0628b03d138",
@@ -15,7 +15,7 @@
     "program/font/LICENSE.txt": "63d3ba759d12804c5b31a9d5940d855c1820d1f5999e6b0872eb1c7ff045fbc9",
     "program/gereksinimler.txt": "ea75906866e55afdfe66e5eb98a011d93e5e7eea72949ec672fdf817265f0a3a",
     "program/girisler.py": "8522b21bebe3f327202845e39f27062748c8d97456585246e9b809bf85d391cf",
-    "program/github_kanal.py": "073f7240c08dac6bbc105da3062ad0fe2ce688747cee9fb72621aab0a54cce3f",
+    "program/github_kanal.py": "c4bfc7199dd902a5d56c0514e3ff9affeef89c246e1b3691af9b054fa0db63a9",
     "program/hikaye_motoru.py": "0a8d97dc27b8eb9e544abc7d3a0ec0d7c4da38c94e94df3547f1ab2683475509",
     "program/hikaye_uret.py": "c053afdf12059e4964e78e4afc18b06f0ad5b90d722cd4fee628d4581841e933",
     "program/karakter.py": "b3f0eb8d661cde885545ef64059514bbdea1de710fc9bf1628eedf9b8458f6a9",
