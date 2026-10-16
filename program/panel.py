@@ -804,7 +804,7 @@ def hikaye_liste(_):
         kl = os.path.join(hm.KLASOR, b["id"])
         mp4, kapak = os.path.join(kl, "bolum.mp4"), os.path.join(kl, "kapak.png")
         sonuc.append({k: b.get(k) for k in ("id", "baslik", "konu", "alan", "durum", "yazildi", "bolumler", "soru", "ozet",
-                                            "aciklama", "youtube_url", "yayin_zamani", "_video_sure", "dogrulama_notu")}
+                                            "aciklama", "youtube_url", "yayin_zamani", "_video_sure", "dogrulama_notu", "ertelendi")}
                      | {"video": rel(mp4) if os.path.exists(mp4) else "", "kapak": rel(kapak) if os.path.exists(kapak) else "",
                         "denetim_ok": hm.denetim_gecerli(b)})
     a = ayarlar()
@@ -819,6 +819,19 @@ def hikaye_yaz(v):
         b = hm.yaz(konu, ilerle)
         return f"Yeni bölüm hazır: {b.get('baslik')}"
     is_baslat("Hikâye yazılıyor", f)
+
+
+def hikaye_ertele(v):
+    """Bolumu ertelenenlere alir (geri=True ise geri getirir). Silinmez, konusu tekrar yazilmaz."""
+    import hikaye_motoru as hm
+    b, _ = _hikaye(v.get("id"))
+    if b.get("youtube_url"):
+        raise ValueError("Paylasilmis bolum ertelenemez.")
+    if v.get("geri"):
+        b.pop("ertelendi", None)
+    else:
+        b["ertelendi"] = datetime.date.today().isoformat()
+    hm.kaydet(b)
 
 
 def hikaye_sil(v):
@@ -968,7 +981,7 @@ ISLEMLER = {"/api/senaryo-uret": senaryo_uret, "/api/kaydet": kaydet, "/api/onay
             "/api/reddet": reddet, "/api/ayar": ayar, "/api/klasor": klasor_ac,
             "/api/guncelle": guncelle, "/api/nabiz": nabiz,
             "/api/paylas": paylas, "/api/video-sil": video_sil, "/api/youtube-istemci": youtube_istemci,
-            "/api/youtube-bagla": youtube_bagla, "/api/youtube-kes": youtube_kes, "/api/destek": destek, "/api/github-kontrol": github_kontrol, "/api/sohbet": sohbet_et, "/api/eski-liste": eski_liste, "/api/eski-islem": eski_islem, "/api/hikaye-liste": hikaye_liste, "/api/hikaye-yaz": hikaye_yaz, "/api/hikaye-sil": hikaye_sil, "/api/hikaye-video": hikaye_video, "/api/hikaye-paylas": hikaye_paylas, "/api/sifre": sifre_ayarla, "/api/telefon": telefon_islem, "/api/kapat": kapat, "/api/ertele": ertele, "/api/geri-getir": geri_getir, "/api/analiz": analiz_rapor, "/api/analiz-guncelle": analiz_guncelle, "/api/yeniden-uret": yeniden_uret}
+            "/api/youtube-bagla": youtube_bagla, "/api/youtube-kes": youtube_kes, "/api/destek": destek, "/api/github-kontrol": github_kontrol, "/api/sohbet": sohbet_et, "/api/eski-liste": eski_liste, "/api/eski-islem": eski_islem, "/api/hikaye-liste": hikaye_liste, "/api/hikaye-yaz": hikaye_yaz, "/api/hikaye-sil": hikaye_sil, "/api/hikaye-ertele": hikaye_ertele, "/api/hikaye-video": hikaye_video, "/api/hikaye-paylas": hikaye_paylas, "/api/sifre": sifre_ayarla, "/api/telefon": telefon_islem, "/api/kapat": kapat, "/api/ertele": ertele, "/api/geri-getir": geri_getir, "/api/analiz": analiz_rapor, "/api/analiz-guncelle": analiz_guncelle, "/api/yeniden-uret": yeniden_uret}
 
 
 # --- sunucu -------------------------------------------------------------------
