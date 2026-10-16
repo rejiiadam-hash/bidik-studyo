@@ -46,10 +46,33 @@ def hafizaya_ekle(konu, alan, baslik, durum):
 
 
 # --- Gemini ------------------------------------------------------------------
+def _anahtarlar():
+    """Once ana anahtar; mesgul/limit durumunda yedek olarak sohbet (ikinci hesap) anahtari."""
+    a = ayarlar()
+    ana = a.get("gemini_api_key") or os.environ.get("GEMINI_API_KEY") or ""
+    yedek = (a.get("gemini_yedek_anahtari") or a.get("gemini_sohbet_anahtari") or "").strip()
+    return [k for k in (ana, yedek if yedek != ana else "") if k]
+
+
 def _istek(url, veri=None):
-    anahtar = ayarlar().get("gemini_api_key") or os.environ.get("GEMINI_API_KEY")
-    if not anahtar:
+    anahtarlar = _anahtarlar()
+    if not anahtarlar:
         raise MotorHatasi("Gemini API anahtari girilmemis. Paneldeki Ayarlar bolumune yapistir.")
+    son = None
+    for i, anahtar in enumerate(anahtarlar):
+        try:
+            return _istek_tek(url, veri, anahtar)
+        except (GeciciHata, MotorHatasi) as e:
+            son = e
+            # mesgul / limit / odeme sorunu: yedek anahtar varsa hemen onunla dene
+            if i + 1 < len(anahtarlar) and (isinstance(e, GeciciHata) or "402" in str(e) or "Prepay" in str(e)):
+                print("Gemini ana anahtar takildi, yedek anahtar deneniyor:", str(e)[:80])
+                continue
+            raise
+    raise son
+
+
+def _istek_tek(url, veri, anahtar):
     req = urllib.request.Request(url + ("&" if "?" in url else "?") + "key=" + anahtar,
                                  data=json.dumps(veri).encode() if veri else None,
                                  headers={"Content-Type": "application/json"})

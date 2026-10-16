@@ -1,8 +1,8 @@
 {
-  "surum": "1.19.2",
+  "surum": "1.19.3",
   "tarih": "2026-10-16",
   "notlar": [
-    "Guncelleme kontrolu GitHub onbellegine takilmaz (yeni surum aninda gorunur)"
+    "Gemini yedek anahtari: ana anahtar mesgul/limit doluyken ikinci (sohbet) anahtarla otomatik devam"
   ],
   "dosyalar": {
     "program/GELISTIRICI.txt": "24e10b02892addbc87b87d078143cb77a09521d86239fe3b78d2a0628b03d138",
@@ -22,9 +22,9 @@
     "program/kisayol.ps1": "8b01102bef0e33a74e1a10756c1d030ef45381b8a3bcd2bd0cfd16252d872a5b",
     "program/kostumler.py": "a041a730f8753887c1cdc180c8b906ed9791b7539e5c55fe26f669e63717aa33",
     "program/ortak.py": "e27b5fa5d4b976cfa50c13330fc58d43657322976fd7a596b869f2821d0b4ba6",
-    "program/panel.html": "f71d554f6d63fb64809ac4460d91656dc5298120f94e22904a5fe29de706e981",
+    "program/panel.html": "e0286fec1bf7f20dac5da8e15029f6dd3d6df5440967c91bb562d22c12de6fdd",
     "program/panel.py": "ed064829bc15ba51c8f1c057a8150a37e8f2add0853747e94a4a7c5a2cbef694",
-    "program/senaryo_motoru.py": "9388cc80f9db576e3c3d68471a8b6bde1bad2977cf56b9abbf82012bdd29abc3",
+    "program/senaryo_motoru.py": "4ef4d5d4146be7ce3e1abdf6fe1ab0768647ee39d5deb9ad0651beb317979eee",
     "program/sohbet.py": "a0f17d44f0e7acdbf873549467eba8bc428bb5ee1d11b0820cd145cddd4f52bd",
     "program/telefon.py": "5d2d8793c6184446d809ef0f4b73342a9eb0fdab559f7c51ce8ab07e7af29892",
     "program/uygulama.py": "d7965fa103804248cd0ddf13f66a2ddc5fb11b688eb3d8f361c1bc4a698a82b4",
