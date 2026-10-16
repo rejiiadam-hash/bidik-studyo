@@ -696,12 +696,12 @@ def tema_bul(alan="", konu="", kostum=""):
     return KOSTUM_TEMA.get(kostum_sec(alan, konu)) or KOSTUM_TEMA.get(kostum or "") or "genel"
 
 
-def ciz(tema, no, genislik, yukseklik):
+def ciz(tema, no, genislik, yukseklik, k=None):
     tema = tema if tema in TEMALAR else "genel"
     no = int(no) % SAHNE_SAYISI
     img = Image.new("RGB", (int(genislik), int(yukseklik)), (250, 244, 230))
     d = ImageDraw.Draw(img)
-    k = genislik / 1080
+    k = k or genislik / 1080      # yatay (hikaye) videolarda olcek disaridan verilir
     TEMALAR[tema][1](img, d, int(genislik), int(yukseklik), k, no, random.Random(f"{tema}-{no}"))
     return img
 

@@ -99,12 +99,17 @@ KIRP = ("silenceremove=start_periods=1:start_threshold=-45dB:start_silence=0.05,
         "silenceremove=start_periods=1:start_threshold=-45dB:start_silence=0.08,areverse")
 
 
-def _tts_mp3(metin, mp3, prosodi=True):
+# Hikayelerdeki diger sesler (Bidik'in sesi SES/PROSODI olarak sabit kalir)
+SES_PROSODI = {"tr-TR-EmelNeural": {"rate": "-2%", "pitch": "-4Hz"}}
+
+
+def _tts_mp3(metin, mp3, prosodi=True, ses=None):
     import edge_tts
     if os.path.exists(mp3):
         os.remove(mp3)
-    ayar = PROSODI if prosodi else {}
-    asyncio.run(edge_tts.Communicate(metin, SES, **ayar).save(mp3))
+    ses = ses or SES
+    ayar = (PROSODI if ses == SES else SES_PROSODI.get(ses, {})) if prosodi else {}
+    asyncio.run(edge_tts.Communicate(metin, ses, **ayar).save(mp3))
     if not os.path.exists(mp3) or os.path.getsize(mp3) < 1000:
         raise RuntimeError("bos ses dosyasi geldi")
 
@@ -120,7 +125,7 @@ def _cumleler(metin):
     return parca if len(parca) > 1 else [p.strip() for p in re.split(r"[,;:]\s*", metin) if p.strip()]
 
 
-def _ses_uret(metin, wav):
+def _ses_uret(metin, wav, ses=None):
     """
     Sirayla dener (her basarisizlikta biraz daha uzun bekleyerek):
       1-2: normal (Bidik'in sesi)
@@ -130,25 +135,26 @@ def _ses_uret(metin, wav):
     import time
     mp3 = wav + ".mp3"
     son_hata = None
+    duz_filtre = DUZ_SESE_FILTRE if (ses or SES) == SES else None   # Bidik'e benzetme filtresi sadece Bidik icin
     for deneme in range(6):
         try:
             if deneme < 2:
-                _tts_mp3(metin, mp3, prosodi=True)
+                _tts_mp3(metin, mp3, prosodi=True, ses=ses)
                 _wav_yap(mp3, wav)
             elif deneme < 4:
-                _tts_mp3(metin, mp3, prosodi=False)
-                _wav_yap(mp3, wav, DUZ_SESE_FILTRE)
+                _tts_mp3(metin, mp3, prosodi=False, ses=ses)
+                _wav_yap(mp3, wav, duz_filtre)
             else:
                 parcalar = _cumleler(metin)
                 if len(parcalar) < 2:
-                    _tts_mp3(metin, mp3, prosodi=(deneme == 4))
-                    _wav_yap(mp3, wav, None if deneme == 4 else DUZ_SESE_FILTRE)
+                    _tts_mp3(metin, mp3, prosodi=(deneme == 4), ses=ses)
+                    _wav_yap(mp3, wav, None if deneme == 4 else duz_filtre)
                 else:
                     liste = wav + ".liste.txt"
                     yollar = []
                     for k, p in enumerate(parcalar):
                         pm, pw = f"{wav}.{k}.mp3", f"{wav}.{k}.wav"
-                        _tts_mp3(p, pm, prosodi=True)
+                        _tts_mp3(p, pm, prosodi=True, ses=ses)
                         _wav_yap(pm, pw)
                         os.remove(pm)
                         yollar.append(pw)
@@ -169,16 +175,19 @@ def _ses_uret(metin, wav):
     raise SesHatasi(f"'{metin[:40]}' 6 denemede seslendirilemedi: {son_hata}")
 
 
-def seslendir(metin, hedef_wav):
+def seslendir(metin, hedef_wav, ses=None):
     """Onbellekte varsa oradan alir (tekrar istek yok); yoksa uretip onbellege koyar."""
     import hashlib
     os.makedirs(SES_ONBELLEK, exist_ok=True)
-    anahtar = hashlib.sha1(f"{SES}|{PROSODI}|{KIRP}|{metin}".encode("utf-8")).hexdigest()[:20]
+    if ses and ses != SES:
+        anahtar = hashlib.sha1(f"{ses}|{SES_PROSODI.get(ses)}|{KIRP}|{metin}".encode("utf-8")).hexdigest()[:20]
+    else:   # Bidik: eski anahtar aynen (onbellekteki sesler bosa gitmesin)
+        anahtar = hashlib.sha1(f"{SES}|{PROSODI}|{KIRP}|{metin}".encode("utf-8")).hexdigest()[:20]
     onb = os.path.join(SES_ONBELLEK, anahtar + ".wav")
     if os.path.exists(onb) and os.path.getsize(onb) > 2000:
         shutil.copyfile(onb, hedef_wav)
         return
-    _ses_uret(metin, hedef_wav)
+    _ses_uret(metin, hedef_wav, ses)
     shutil.copyfile(hedef_wav, onb)
 
 
