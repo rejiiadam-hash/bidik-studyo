@@ -350,7 +350,10 @@ body:not(.uzak) .sadece-uzak{display:none !important}
     <button class="ana" id="uretBtn" onclick="senaryoUret()">✨ Yeni senaryolar yaz</button>
   </div>
   <div class="is" id="is">
-    <div class="cubuk"><div id="isCubuk"></div></div>
+    <div style="display:flex;gap:10px;align-items:center">
+      <div class="cubuk" style="flex:1"><div id="isCubuk"></div></div>
+      <button id="durdurBtn" class="kirmizi" onclick="durdur()" style="display:none;padding:4px 12px;font-size:13px">⏹ Durdur</button>
+    </div>
     <p id="isMesaj"></p>
   </div>
 </header>
@@ -576,6 +579,7 @@ async function yenile(tam){
   $("isCubuk").style.width = (is.calisiyor ? is.yuzde : 100) + "%";
   $("isMesaj").textContent = is.calisiyor ? `${is.baslik} · ${is.mesaj} (%${is.yuzde})` : (is.hata ? "Hata: "+is.hata : is.uyari ? "⚠ "+is.uyari : "");
   $("uretBtn").disabled = is.calisiyor;
+  $("durdurBtn").style.display = (is.calisiyor && is.durdurulabilir !== false) ? "inline-flex" : "none";
   document.querySelectorAll("[data-is]").forEach(b => b.disabled = is.calisiyor || b.hasAttribute("data-kapali"));
   // is bittiyse (cok hizli bitip hic "calisiyor" gorulmemis olsa bile) ekrani yenile ve haber ver
   const yeniBitti = !is.calisiyor && is.no !== sonIsNo && sonIsNo !== null;
@@ -1232,6 +1236,11 @@ async function destekKopyala(){ const r = await post("/api/destek",{});
   await navigator.clipboard.writeText(r.metin); bildir("Destek bilgisi kopyalandı. Claude'a yapıştırabilirsin."); }
 async function ayarKaydet(){ await post("/api/ayar",{gemini_api_key:$("gKey").value, gemini_sohbet_anahtari:$("sKey").value, gunluk_video:$("gunluk").value,
   alanlar:$("alanlar").value, son_cagri:$("sonCagri").checked, tema:$("temaSec").value, paylasim_saatleri:$("saatler").value}); $("gKey").value=""; $("sKey").value=""; bildir("Ayarlar kaydedildi"); yenile(true); }
+async function durdur(){
+  if(!confirm("Çalışan iş durdurulsun mu? Yarım kalan video ve geçici dosyalar silinir; hazırlanmış sesler saklanır.")) return;
+  try{ await post("/api/durdur", {}); bildir("Durduruluyor…"); }catch(e){}
+  yenile(false);
+}
 async function guncelKontrol(){
   const b = $("gkBtn"), s = $("gkSonuc"); b.disabled = true; s.textContent = "Kontrol ediliyor…";
   try{

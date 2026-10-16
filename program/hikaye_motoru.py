@@ -8,7 +8,7 @@ import datetime, hashlib, json, os, re, time
 import arka_planlar
 from hikaye_uret import dogrula
 from kostumler import KOSTUMLER
-from ortak import KOK, ayarlar
+from ortak import KOK, ayarlar, uyu
 from senaryo_motoru import MotorHatasi, gemini_json, model_sec
 
 KLASOR = os.path.join(KOK, "hikayeler")
@@ -257,7 +257,7 @@ def yaz(konu=None, ilerle=None):
                 son_hata = str(e)
                 if dd == 0:
                     ilerle(None, "Gemini meşgul, denetim 20 sn sonra tekrar denenecek")
-                    time.sleep(20)
+                    uyu(20)
         if sonuc is None:
             # yazilan bolum bosa gitmesin: denetimsiz taslak olarak kaydedilir; video uretilirken denetim yapilir
             b["durum"] = "taslak"

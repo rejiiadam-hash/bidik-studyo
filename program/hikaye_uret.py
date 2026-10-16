@@ -25,7 +25,7 @@ import arka_planlar
 from bilge import ciz_bilge, TEMA_AKSESUAR
 from karakter import ciz_bidik, IFADELER, KOL_POZLARI
 from kostumler import KOSTUMLER, kostum_sec
-from ortak import FONT, ffmpeg, PENCERESIZ
+from ortak import FONT, ffmpeg, PENCERESIZ, uyu
 
 W, H, SS, FPS = 1920, 1080, 2, 24
 LACI = (35, 37, 58)
@@ -298,6 +298,7 @@ def uret(bolum_yolu, cikti=None, sesli=None, ilerleme=None):
     kostum = b.get("kostum") if b.get("kostum") in KOSTUMLER else kostum_sec(b.get("alan", ""), b.get("konu", ""))
     parcalar = cizelge(b)
     gecici = tempfile.mkdtemp(prefix="hikaye_")
+    ff = None
     try:
         # 1) sesler: basarisiz olanlar icin bekleyip tekrar turlari (ses servisi bazen gecici olarak cevap vermez)
         konusan = [p for p in parcalar if p.get("metin") and p.get("kim")]
@@ -313,7 +314,7 @@ def uret(bolum_yolu, cikti=None, sesli=None, ilerleme=None):
                     break
                 if bekle:
                     ilerle(None, f"Ses servisi cevap vermiyor; {bekle} sn sonra eksik {len(bekleyen)} satır tekrar denenecek")
-                    time.sleep(bekle)
+                    uyu(bekle)
                 kalan, ust_uste = [], 0
                 for sira, n in enumerate(bekleyen):
                     p = konusan[n]
@@ -325,7 +326,7 @@ def uret(bolum_yolu, cikti=None, sesli=None, ilerleme=None):
                     wav = os.path.join(gecici, f"s{n}.wav")
                     try:
                         if seslendir(p["metin"], wav, ses=SES_BIDIK if p["kim"] == "bidik" else SES_BILGE) == "yeni":
-                            time.sleep(1.5)   # ses servisini art arda istekle bogmamak icin kisa ara
+                            uyu(1.5)   # ses servisini art arda istekle bogmamak icin kisa ara
                     except SesHatasi as e:
                         print("Hikaye seslendirme basarisiz:", e)
                         kalan.append(n)
@@ -400,6 +401,13 @@ def uret(bolum_yolu, cikti=None, sesli=None, ilerleme=None):
         ilerle(100, "Hikâye videosu hazır")
         return cikti, n / FPS, zamanlar
     finally:
+        if ff is not None and ff.poll() is None:   # durdurulduysa ffmpeg'i de kapat
+            try:
+                ff.stdin.close()
+            except Exception:
+                pass
+            ff.kill()
+            ff.wait()
         shutil.rmtree(gecici, ignore_errors=True)
 
 

@@ -6,7 +6,7 @@ import datetime, glob, json, os, re, shutil, subprocess, sys, threading, time, t
 from http.server import ThreadingHTTPServer, BaseHTTPRequestHandler
 from urllib.parse import urlparse, unquote
 
-from ortak import KOK, PROGRAM, SENARYO, VIDEO, ayarlar, ayar_kaydet, aciklama_tam, etiket_listesi
+from ortak import KOK, PROGRAM, SENARYO, VIDEO, ayarlar, ayar_kaydet, aciklama_tam, etiket_listesi, Iptal, iptal_kontrol
 from karakter import IFADELER, KOL_POZLARI
 from video_uret import uret, dogrula, IKONLAR, RENKLER
 import senaryo_motoru as motor
@@ -65,13 +65,18 @@ class Durdu(Exception):
     pass
 
 
-def is_baslat(baslik, fonk):
+def is_baslat(baslik, fonk, durdurulabilir=True):
+    from ortak import IPTAL
     with KILIT:
         if IS["calisiyor"]:
             raise RuntimeError("Zaten bir islem suruyor: " + IS["baslik"])
-        IS.update(calisiyor=True, baslik=baslik, yuzde=0, mesaj="Basliyor", hata="", uyari="", bitti="", no=IS["no"] + 1)
+        IPTAL.clear()
+        IS.update(calisiyor=True, baslik=baslik, yuzde=0, mesaj="Basliyor", hata="", uyari="", bitti="", no=IS["no"] + 1,
+                  durdurulabilir=durdurulabilir)
 
     def ilerle(y, m):
+        if durdurulabilir:
+            iptal_kontrol()
         if y is not None:          # None: yuzde ayni kalir, sadece mesaj degisir
             IS["yuzde"] = int(y)
         IS["mesaj"] = m
@@ -83,6 +88,9 @@ def is_baslat(baslik, fonk):
         except Durdu as e:          # beklenen durma (or. yazim duzeltildi): hata degil, uyari
             print("Durdu:", e)
             IS.update(uyari=str(e))
+        except Iptal:
+            print("Is durduruldu:", IS["baslik"])
+            IS.update(uyari="Durduruldu. Yarım kalan geçici dosyalar silindi; hazırlanmış sesler saklandı.")
         except Exception as e:
             traceback.print_exc()
             IS.update(hata=str(e))
@@ -335,7 +343,18 @@ def yeniden_baslat():
 
 
 def guncelle(_):
-    is_baslat("Guncelleniyor", guncelleme_uygula)
+    is_baslat("Guncelleniyor", guncelleme_uygula, durdurulabilir=False)   # kurulum yarida kesilmemeli
+
+
+def durdur(_):
+    from ortak import IPTAL
+    if not IS["calisiyor"]:
+        return {"mesaj": "Çalışan bir iş yok."}
+    if not IS.get("durdurulabilir", True):
+        raise ValueError("Bu işlem (güncelleme kurulumu) yarıda durdurulamaz.")
+    IPTAL.set()
+    IS["mesaj"] = "Durduruluyor…"
+    return {"mesaj": "Durduruluyor"}
 
 
 def nabiz(_):
@@ -1065,7 +1084,7 @@ ISLEMLER = {"/api/senaryo-uret": senaryo_uret, "/api/kaydet": kaydet, "/api/onay
             "/api/reddet": reddet, "/api/ayar": ayar, "/api/klasor": klasor_ac,
             "/api/guncelle": guncelle, "/api/nabiz": nabiz,
             "/api/paylas": paylas, "/api/video-sil": video_sil, "/api/youtube-istemci": youtube_istemci,
-            "/api/youtube-bagla": youtube_bagla, "/api/youtube-kes": youtube_kes, "/api/destek": destek, "/api/github-kontrol": github_kontrol, "/api/sohbet": sohbet_et, "/api/eski-liste": eski_liste, "/api/eski-islem": eski_islem, "/api/hikaye-liste": hikaye_liste, "/api/hikaye-yaz": hikaye_yaz, "/api/hikaye-sil": hikaye_sil, "/api/hikaye-ertele": hikaye_ertele, "/api/kontrol": kontrol, "/api/hikaye-video": hikaye_video, "/api/hikaye-paylas": hikaye_paylas, "/api/sifre": sifre_ayarla, "/api/telefon": telefon_islem, "/api/kapat": kapat, "/api/ertele": ertele, "/api/geri-getir": geri_getir, "/api/analiz": analiz_rapor, "/api/analiz-guncelle": analiz_guncelle, "/api/yeniden-uret": yeniden_uret}
+            "/api/youtube-bagla": youtube_bagla, "/api/youtube-kes": youtube_kes, "/api/destek": destek, "/api/github-kontrol": github_kontrol, "/api/sohbet": sohbet_et, "/api/eski-liste": eski_liste, "/api/eski-islem": eski_islem, "/api/hikaye-liste": hikaye_liste, "/api/hikaye-yaz": hikaye_yaz, "/api/hikaye-sil": hikaye_sil, "/api/hikaye-ertele": hikaye_ertele, "/api/kontrol": kontrol, "/api/durdur": durdur, "/api/hikaye-video": hikaye_video, "/api/hikaye-paylas": hikaye_paylas, "/api/sifre": sifre_ayarla, "/api/telefon": telefon_islem, "/api/kapat": kapat, "/api/ertele": ertele, "/api/geri-getir": geri_getir, "/api/analiz": analiz_rapor, "/api/analiz-guncelle": analiz_guncelle, "/api/yeniden-uret": yeniden_uret}
 
 
 # --- sunucu -------------------------------------------------------------------

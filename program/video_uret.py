@@ -27,7 +27,7 @@ from kostumler import KOSTUMLER, ust_boy
 import arka_planlar
 import girisler
 SON_URETIM = {}   # son uretilen videonun secimleri (panel meta'ya yazar)
-from ortak import FONT, ffmpeg, komut, KOK
+from ortak import FONT, ffmpeg, komut, KOK, uyu as _uyu, iptal_kontrol as _iptal_kontrol
 
 FPS = 30
 W, H, SS = 1080, 1920, 2
@@ -167,11 +167,11 @@ def _parca_parca(metin, wav, ses, duz_filtre):
                 except Exception:
                     if deneme == 2:
                         raise
-                    time.sleep(2 + deneme * 3)
+                    _uyu(2 + deneme * 3)
             if os.path.exists(pm):
                 os.remove(pm)
             yollar.append(pw)
-            time.sleep(0.5)
+            _uyu(0.5)
         liste = wav + ".liste.txt"
         with open(liste, "w", encoding="utf-8") as f:
             f.writelines("file '" + y.replace(os.sep, "/") + "'\n" for y in yollar)
@@ -223,7 +223,7 @@ def _ses_uret(metin, wav, ses=None):
                         _wav_yap(pm, pw)
                         os.remove(pm)
                         yollar.append(pw)
-                        time.sleep(0.6)
+                        _uyu(0.6)
                     with open(liste, "w", encoding="utf-8") as f:
                         f.writelines("file '" + y.replace(os.sep, "/") + "'\n" for y in yollar)
                     komut([ffmpeg(), "-y", "-loglevel", "error", "-f", "concat", "-safe", "0", "-i", liste, wav])
@@ -236,7 +236,7 @@ def _ses_uret(metin, wav, ses=None):
             son_hata = e
             bekle = (2, 4, 6, 8, 10, 0)[deneme]
             print(f"Seslendirme denemesi {deneme + 1}/6 basarisiz ({e}); {bekle} sn sonra tekrar")
-            time.sleep(bekle)
+            _uyu(bekle)
     raise SesHatasi(f"'{metin[:40]}' 6 denemede seslendirilemedi: {son_hata}")
 
 
@@ -281,7 +281,7 @@ def sesleri_hazirla(liste, ilerle=None, beklemeler=(45, 90, 150)):
                 break
             if bekle:
                 ilerle(None, f"Ses servisi cevap vermiyor; {bekle} sn sonra eksik {len(eksik)} ses tekrar denenecek")
-                time.sleep(bekle)
+                _uyu(bekle)
             kalan, ust_uste = [], 0
             for i, (m, s) in enumerate(eksik):
                 if ust_uste >= 2:
@@ -292,7 +292,7 @@ def sesleri_hazirla(liste, ilerle=None, beklemeler=(45, 90, 150)):
                 try:
                     seslendir(m, os.path.join(gecici, "s.wav"), ses=s)
                     ust_uste = 0
-                    time.sleep(1.0)
+                    _uyu(1.0)
                 except SesHatasi as e:
                     print("Ses hazirlanamadi:", e)
                     kalan.append((m, s))
@@ -560,6 +560,25 @@ def seri_etiketi(d, k, ad):
 
 # --- uretim -------------------------------------------------------------------
 def uret(senaryo_yolu, cikti=None, sesli=None, ilerleme=None, izin_sessiz=False):
+    """Uretim yarida kesilirse (Durdur ya da hata) gecici kareler ve yarim video silinir."""
+    import glob as _glob
+    oncekiler = set(_glob.glob(os.path.join(tempfile.gettempdir(), "bidik_*")))
+    hedef = cikti or os.path.splitext(senaryo_yolu)[0] + ".mp4"
+    vardi = os.path.exists(hedef)
+    try:
+        return _uret(senaryo_yolu, cikti, sesli, ilerleme, izin_sessiz)
+    except BaseException:
+        for d in set(_glob.glob(os.path.join(tempfile.gettempdir(), "bidik_*"))) - oncekiler:
+            shutil.rmtree(d, ignore_errors=True)
+        if not vardi and os.path.exists(hedef):
+            try:
+                os.remove(hedef)
+            except OSError:
+                pass
+        raise
+
+
+def _uret(senaryo_yolu, cikti=None, sesli=None, ilerleme=None, izin_sessiz=False):
     """ilerleme: istege bagli fonksiyon(yuzde:int, mesaj:str)"""
     ilerle = ilerleme or (lambda y, m: None)
     with open(senaryo_yolu, encoding="utf-8") as f:

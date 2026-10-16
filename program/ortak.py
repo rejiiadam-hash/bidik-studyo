@@ -115,3 +115,27 @@ def ffmpeg():
         return imageio_ffmpeg.get_ffmpeg_exe()
     except ImportError:
         raise RuntimeError("ffmpeg bulunamadi. BASLAT.bat'i tekrar calistir (gerekenleri kurar).")
+
+
+# --- uretimi durdurma ------------------------------------------------------------------------
+import threading as _threading
+IPTAL = _threading.Event()
+
+
+class Iptal(Exception):
+    """Kullanici 'Durdur'a basti."""
+
+
+def iptal_kontrol():
+    if IPTAL.is_set():
+        raise Iptal("Durduruldu")
+
+
+def uyu(sn):
+    """Durdur'a basilirsa hemen uyanan bekleme."""
+    import time
+    son = time.time() + sn
+    while time.time() < son:
+        iptal_kontrol()
+        time.sleep(min(0.5, max(0.0, son - time.time())))
+    iptal_kontrol()

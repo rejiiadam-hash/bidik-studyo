@@ -15,7 +15,7 @@ Sadece Python standart kutuphanesi kullanir.
 import json, os, random, re, sys, datetime, urllib.request, urllib.error
 from video_uret import dogrula, IKONLAR, RENKLER
 from karakter import IFADELER, KOL_POZLARI
-from ortak import ayarlar, HAFIZA, SENARYO
+from ortak import ayarlar, HAFIZA, SENARYO, uyu
 from kostumler import KOSTUMLER, kostum_sec
 
 API = "https://generativelanguage.googleapis.com/v1beta"
@@ -136,7 +136,7 @@ def gemini_json(modeller, istem, sicaklik=1.0, ilerle=None):
     for tur, bekle in enumerate((0, 6, 15)):
         if bekle:
             ilerle(None, f"Tum modeller mesgul, {bekle} sn sonra tekrar deneniyor ({tur + 1}/3)")
-            time.sleep(bekle)
+            uyu(bekle)
         for model in modeller:
             if model in olu:
                 continue

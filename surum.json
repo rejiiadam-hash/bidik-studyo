@@ -1,8 +1,8 @@
 {
-  "surum": "1.19.5",
+  "surum": "1.20.0",
   "tarih": "2026-10-16",
   "notlar": [
-    "Arka plan konuya uyar: kopek konusunda deniz alti, Osmanli konusunda Roma sutunlari gibi uyumsuz sahneler secilmez (kisa video + hikaye)"
+    "Durdur dugmesi: calisan uretim aninda durdurulur, yarim kalan gecici dosyalar ve video silinir"
   ],
   "dosyalar": {
     "program/GELISTIRICI.txt": "24e10b02892addbc87b87d078143cb77a09521d86239fe3b78d2a0628b03d138",
@@ -16,19 +16,19 @@
     "program/gereksinimler.txt": "ea75906866e55afdfe66e5eb98a011d93e5e7eea72949ec672fdf817265f0a3a",
     "program/girisler.py": "8522b21bebe3f327202845e39f27062748c8d97456585246e9b809bf85d391cf",
     "program/github_kanal.py": "c4bfc7199dd902a5d56c0514e3ff9affeef89c246e1b3691af9b054fa0db63a9",
-    "program/hikaye_motoru.py": "4761e6f52c4c45b525ed98b1f79c0d98ec6fde413c146b56b7aad9b16352235c",
-    "program/hikaye_uret.py": "466ce36aaa0dcaa741fc2972f78abffabdb66e7e5227078e884c2f289c0f3a89",
+    "program/hikaye_motoru.py": "f63da62fe3bd442419d1ca4b8d57378be77638c6391d3e6d2e67827fede678be",
+    "program/hikaye_uret.py": "824edb2e2f922d3f6e1005316735669b1412e8e8be65c294c460cef7608a73b6",
     "program/karakter.py": "b3f0eb8d661cde885545ef64059514bbdea1de710fc9bf1628eedf9b8458f6a9",
     "program/kisayol.ps1": "8b01102bef0e33a74e1a10756c1d030ef45381b8a3bcd2bd0cfd16252d872a5b",
     "program/kostumler.py": "a041a730f8753887c1cdc180c8b906ed9791b7539e5c55fe26f669e63717aa33",
-    "program/ortak.py": "e27b5fa5d4b976cfa50c13330fc58d43657322976fd7a596b869f2821d0b4ba6",
-    "program/panel.html": "e0286fec1bf7f20dac5da8e15029f6dd3d6df5440967c91bb562d22c12de6fdd",
-    "program/panel.py": "ed064829bc15ba51c8f1c057a8150a37e8f2add0853747e94a4a7c5a2cbef694",
-    "program/senaryo_motoru.py": "4ef4d5d4146be7ce3e1abdf6fe1ab0768647ee39d5deb9ad0651beb317979eee",
+    "program/ortak.py": "863b4f36f9e10c0adb7053e716f51b77003831adb8fe3e6bb905336be3e78555",
+    "program/panel.html": "6141018fdee88934338fb16f03285f9bb9346abf15a4825aabbe84365bd9a09c",
+    "program/panel.py": "cfb93452f9772b39098b927928e63a05d9587a176762f6d40c87cd3bf176464e",
+    "program/senaryo_motoru.py": "ef209ebe5f378ff46b4c089be17c656d5aca39ec9002fda639b5b1a229c3af4b",
     "program/sohbet.py": "a0f17d44f0e7acdbf873549467eba8bc428bb5ee1d11b0820cd145cddd4f52bd",
     "program/telefon.py": "5d2d8793c6184446d809ef0f4b73342a9eb0fdab559f7c51ce8ab07e7af29892",
     "program/uygulama.py": "d7965fa103804248cd0ddf13f66a2ddc5fb11b688eb3d8f361c1bc4a698a82b4",
-    "program/video_uret.py": "ba10b85cde64b7eff365d3989fa340fde43dfa235a21ce1ed2a1adc49cf202aa",
+    "program/video_uret.py": "2c5943c87b78708d6cdb8bc3e1e319c10502c3d939c16eb1ce52381ee84b93a1",
     "program/youtube_yukle.py": "5e47cb296a9222bef5c2cfc7204f6825b32476775649d9706082275c10378494"
   }
 }
