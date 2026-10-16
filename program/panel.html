@@ -443,6 +443,17 @@ body:not(.uzak) .sadece-uzak{display:none !important}
         <span class="toplam" id="islenen"></span>
       </div>
     </div>
+    <h2>🔄 Güncelleme</h2>
+    <div class="kart" style="padding:14px 16px">
+      <div>Kurulu sürüm: <b id="gkSurum"></b></div>
+      <div class="kucuk" id="gkSon" style="margin:4px 0 10px"></div>
+      <div class="dugmeler" style="margin:0">
+        <button class="ana" id="gkBtn" onclick="guncelKontrol()">🔄 Son güncellemeyi kontrol et</button>
+        <span id="gkYeni"></span>
+      </div>
+      <div id="gkSonuc" style="margin-top:10px;font-weight:600"></div>
+      <div class="kucuk" style="margin-top:6px">Uygulama zaten 30 dakikada bir kendisi bakar. Bu düğme anında bakar ve yeni sürüm varsa indirir.</div>
+    </div>
     <div class="yerel">
       <h2>📱 Telefondan erişim</h2>
       <div class="tel" id="telKart"><div class="kucuk">Yükleniyor…</div></div>
@@ -795,6 +806,8 @@ function ciz(){
   temaUygula(a.tema);
   $("surum").textContent = "v" + d.surum;
   guncelBant(d);
+  $("gkSurum").textContent = "v" + d.surum;
+  $("gkYeni").innerHTML = d.guncelleme ? `<b>🎉 v${esc(d.guncelleme.surum)} hazır</b> <button class="ana" data-is onclick="guncelle()">Şimdi güncelle</button>` : "";
   const bekleyenVideo = d.videolar.filter(v=>!v.youtube_url), paylasilan = d.videolar.filter(v=>v.youtube_url);
   $("bSayi").textContent = d.bekleyen.length || ""; $("vSayi").textContent = bekleyenVideo.length || "";
   $("ilkKurulum").innerHTML = a.gemini_var ? "" :
@@ -1039,6 +1052,18 @@ async function destekKopyala(){ const r = await post("/api/destek",{});
   await navigator.clipboard.writeText(r.metin); bildir("Destek bilgisi kopyalandı. Claude'a yapıştırabilirsin."); }
 async function ayarKaydet(){ await post("/api/ayar",{gemini_api_key:$("gKey").value, gunluk_video:$("gunluk").value,
   alanlar:$("alanlar").value, son_cagri:$("sonCagri").checked, tema:$("temaSec").value, paylasim_saatleri:$("saatler").value}); $("gKey").value=""; bildir("Ayarlar kaydedildi"); yenile(true); }
+async function guncelKontrol(){
+  const b = $("gkBtn"), s = $("gkSonuc"); b.disabled = true; s.textContent = "Kontrol ediliyor…";
+  try{
+    const r = await post("/api/github-kontrol", {});
+    if(!r.hata_metni) $("gkSon").textContent = "Son kontrol: şimdi";
+    if(r.hata_metni) s.textContent = "⚠ GitHub'a ulaşılamadı: " + r.hata_metni + " (internetini kontrol edip tekrar dene)";
+    else if(/indirildi/.test(r.sonuc)) s.textContent = "🎉 Yeni sürüm indirildi! 'Şimdi güncelle' düğmesine basabilirsin.";
+    else { const m = /v[\d.]+/.exec(r.sonuc); s.textContent = "✅ Zaten en son sürümdesin" + (m ? " (" + m[0] + ")" : "") + "."; }
+    await yenile(true);
+  }catch(e){ s.textContent = "⚠ Kontrol yapılamadı."; }
+  b.disabled = false;
+}
 async function guncelle(){
   if(!confirm("Güncelleme kurulsun mu? Uygulama birkaç saniyeliğine kapanıp yeniden açılacak.")) return;
   eskiSurum = D.surum; guncelleniyor = true; $("perde").style.display = "flex";

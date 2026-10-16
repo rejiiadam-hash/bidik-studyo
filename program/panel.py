@@ -619,9 +619,10 @@ def github_kontrol(_):
     try:
         github_kanal.DURUM["sonuc"] = github_kanal.kontrol_et()
         github_kanal.DURUM["hata"] = ""
+        github_kanal.DURUM["son_kontrol"] = time.strftime("%Y-%m-%d %H:%M")
     except Exception as e:
         github_kanal.DURUM["hata"] = str(e)[:200]
-    return {"metin": github_kanal.durum_metni()}
+    return {"metin": github_kanal.durum_metni(), "sonuc": github_kanal.DURUM["sonuc"], "hata_metni": github_kanal.DURUM["hata"]}
 
 
 def telefon_islem(v):
