@@ -175,9 +175,18 @@ def _ses_uret(metin, wav, ses=None):
     raise SesHatasi(f"'{metin[:40]}' 6 denemede seslendirilemedi: {son_hata}")
 
 
+def tts_metni(metin):
+    """Ses servisine gidecek metinden emoji ve simgeleri cikarir (emoji 'No audio was received' hatasina yol acar)."""
+    import unicodedata, re
+    temiz = "".join(ch for ch in metin if not (unicodedata.category(ch)[0] in "SC" and not ch.isspace())
+                    and ch not in "\u200d\ufe0f")
+    return re.sub(r"\s+", " ", temiz).strip()
+
+
 def seslendir(metin, hedef_wav, ses=None):
     """Onbellekte varsa oradan alir (tekrar istek yok); yoksa uretip onbellege koyar."""
     import hashlib
+    metin = tts_metni(metin) or metin
     os.makedirs(SES_ONBELLEK, exist_ok=True)
     if ses and ses != SES:
         anahtar = hashlib.sha1(f"{ses}|{SES_PROSODI.get(ses)}|{KIRP}|{metin}".encode("utf-8")).hexdigest()[:20]

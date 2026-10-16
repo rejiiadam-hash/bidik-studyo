@@ -278,18 +278,45 @@ def uret(bolum_yolu, cikti=None, sesli=None, ilerleme=None):
     parcalar = cizelge(b)
     gecici = tempfile.mkdtemp(prefix="hikaye_")
     try:
-        # 1) sesler
+        # 1) sesler: basarisiz olanlar icin bekleyip tekrar turlari (ses servisi bazen gecici olarak cevap vermez)
         konusan = [p for p in parcalar if p.get("metin") and p.get("kim")]
-        for n, p in enumerate(konusan):
-            if not sesli:
+        if not sesli:
+            for p in konusan:
                 p["sure"] = p.get("sure") or max(2.2, len(p["metin"]) / 14 + 0.8)
-                continue
-            ilerle(2 + int(28 * n / max(1, len(konusan))), f"Seslendirme {n + 1}/{len(konusan)}")
-            wav = os.path.join(gecici, f"s{n}.wav")
-            seslendir(p["metin"], wav, ses=SES_BIDIK if p["kim"] == "bidik" else SES_BILGE)
-            p["wav"] = wav
-            p["zarf"], uzunluk = _zarf(wav)
-            p["sure"] = max(p.get("sure") or 0, uzunluk + 0.45)
+        else:
+            import time
+            from ortak import ayarlar as _ayar
+            bekleyen = list(range(len(konusan)))
+            for tur, bekle in enumerate([0] + [45, 90, 150][:max(0, int(_ayar().get("ses_ek_tur", 2)))]):
+                if not bekleyen:
+                    break
+                if bekle:
+                    ilerle(None, f"Ses servisi cevap vermiyor; {bekle} sn sonra eksik {len(bekleyen)} satır tekrar denenecek")
+                    time.sleep(bekle)
+                kalan, ust_uste = [], 0
+                for sira, n in enumerate(bekleyen):
+                    p = konusan[n]
+                    if ust_uste >= 2:          # servis kapali gorunuyor: bu turu bitir, sonra tekrar dene
+                        kalan += bekleyen[sira:]
+                        break
+                    ilerle(2 + int(28 * (len(konusan) - len(bekleyen) + sira) / max(1, len(konusan))),
+                           f"Seslendirme {n + 1}/{len(konusan)}" + (f" (tekrar turu {tur})" if tur else ""))
+                    wav = os.path.join(gecici, f"s{n}.wav")
+                    try:
+                        seslendir(p["metin"], wav, ses=SES_BIDIK if p["kim"] == "bidik" else SES_BILGE)
+                    except SesHatasi as e:
+                        print("Hikaye seslendirme basarisiz:", e)
+                        kalan.append(n)
+                        ust_uste += 1
+                        continue
+                    ust_uste = 0
+                    p["wav"] = wav
+                    p["zarf"], uzunluk = _zarf(wav)
+                    p["sure"] = max(p.get("sure") or 0, uzunluk + 0.45)
+                bekleyen = kalan
+            if bekleyen:
+                raise SesHatasi(f"Ses servisi {len(bekleyen)} satıra cevap vermedi. Başarılı sesler kaydedildi; "
+                                "birkaç dakika sonra 'Videoyu üret'e tekrar basınca sadece eksikler istenecek.")
         for p in parcalar:
             if p["tur"] == "ozet":
                 p["sure"] = max(p["sure"], 0.9 * len(p["ozet"]) + 2.2)
