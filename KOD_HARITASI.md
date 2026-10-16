@@ -20,15 +20,15 @@ senaryo_motoru.alan_sec ağırlık olarak kullanır. github_kanal.py güncelleme
 - **senaryo_motoru.py** (511): model_sec, gemini_json (istek+yeniden deneme), alan_sec(194, analiz ağırlıklı),
   yazar_istemi(216, KONU/ÜSLUP KURALLARI BURADA), editor_istemi(271), denetle/denetim_isle (yazım+bilgi kapısı, 295-394),
   calistir(394, ana akış), bekleyen_dosyalar/ertelenen_dosyalar(495-500), hafiza.
-- **video_uret.py** (601): dogrula(45), _ses_uret(123, edge-tts tekrar turları), seslendir(172), altyazi(220),
+- **video_uret.py** (marka_imzasi, seri_etiketi) (601): dogrula(45), _ses_uret(123, edge-tts tekrar turları), seslendir(172), altyazi(220),
   bilgi_karti(258), son_cagri(332), **uret(377)** = sahne döngüsü; arka plan/giriş/kostüm burada bağlanır.
 - **karakter.py** (295): ciz_bidik(72, ifade/ağız/kostum parametreleri), kare(286).
 - **kostumler.py** (352): 11 kostüm fonksiyonu (asci…doktor), KOSTUMLER, ust_boy(321), **kostum_sec(343)** alan→kostüm.
 - **arka_planlar.py** (731): 12 tema fonksiyonu (uzay, burclar, hayvanlar, yemek, bilim, insan, tarih, psikoloji,
   teknoloji, cografya, cocuk, genel), tema_bul(693), ciz(699), secim(715, tekrar önleme: arka_gecmis.json).
 - **girisler.py** (239): 15 açılış; durum(66, hareket), arka(111)/on(121, çizim), secim(224), TEMA_GIRIS/ADLAR üstte.
-- **analiz.py** (220): cek(51, YouTube Data API), rapor(144), alan_agirliklari(199), en_iyi_basliklar(217), baslat/_dongu.
-- **youtube_yukle.py** (203): OAuth(_servis 67, bagla 133), yukle(153), sil(113).
+- **analiz.py** (benzer_mi, eski_adaylar, kanal_basliklari, _yorumlar) (220): cek(51, YouTube Data API), rapor(144), alan_agirliklari(199), en_iyi_basliklar(217), baslat/_dongu.
+- **youtube_yukle.py** (gizlilik_ayarla; panel: eski_liste/eski_islem) (203): OAuth(_servis 67, bagla 133), yukle(153), sil(113).
 - **github_kanal.py** (144): kontrol_et(71, surum.json+sha256), baslat(137), 30 dk döngü.
 - **telefon.py** (142): Tailscale (tailscale_ac 69), otomatik_baslat, uyku_engelle.
 - **uygulama.py** (196): pencere/başlatıcı (pywebview/Edge), --arka modu.
