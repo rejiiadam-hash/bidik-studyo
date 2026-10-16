@@ -1,8 +1,8 @@
 {
-  "surum": "1.15.0",
+  "surum": "1.16.0",
   "tarih": "2026-10-16",
   "notlar": [
-    "Ayarlar'a 'Son guncellemeyi kontrol et' dugmesi"
+    "Ana sayfada Bidik ile sohbet (ayri Gemini anahtariyla)"
   ],
   "dosyalar": {
     "program/GELISTIRICI.txt": "24e10b02892addbc87b87d078143cb77a09521d86239fe3b78d2a0628b03d138",
@@ -18,10 +18,11 @@
     "program/karakter.py": "b3f0eb8d661cde885545ef64059514bbdea1de710fc9bf1628eedf9b8458f6a9",
     "program/kisayol.ps1": "8b01102bef0e33a74e1a10756c1d030ef45381b8a3bcd2bd0cfd16252d872a5b",
     "program/kostumler.py": "a041a730f8753887c1cdc180c8b906ed9791b7539e5c55fe26f669e63717aa33",
-    "program/ortak.py": "7bdf52ba89a5347a913cca7bfa4d28109b49967940594a822e0d156eb1877b2b",
-    "program/panel.html": "b621bfef3c47ee741726508cda62d7e00f7b2eb0cfb95037cbccc3950c3ab672",
-    "program/panel.py": "3791af83a4636ef6afdcb41f1cfc92d6949ce8600d5c2e398f245b0c57632658",
+    "program/ortak.py": "62d2e0b9a0acc7ca1e6091e851d2e35cb45e1937b7e3db44c21b3acfe808ff88",
+    "program/panel.html": "1844f0d1215b8c1f3823220971b5b1719cd2945e7fa2613a1288ccdce732a0b7",
+    "program/panel.py": "a08e1997929d916149199937104f47048272e60cd4e77c7900991330c42a0316",
     "program/senaryo_motoru.py": "4013b6482aa0a6e5d2733b32aba74ddd40a1cfc36433603d496531f1bb83b5a9",
+    "program/sohbet.py": "a0f17d44f0e7acdbf873549467eba8bc428bb5ee1d11b0820cd145cddd4f52bd",
     "program/telefon.py": "5d2d8793c6184446d809ef0f4b73342a9eb0fdab559f7c51ce8ab07e7af29892",
     "program/uygulama.py": "d7965fa103804248cd0ddf13f66a2ddc5fb11b688eb3d8f361c1bc4a698a82b4",
     "program/video_uret.py": "8dc94b3732d345951a159b5b577804d1d42e5562e902b6c045809c1206d33557",
