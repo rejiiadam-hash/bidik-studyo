@@ -1,8 +1,8 @@
 {
-  "surum": "1.18.0",
+  "surum": "1.18.1",
   "tarih": "2026-10-16",
   "notlar": [
-    "Bidik Hikayeleri: Bidik ve Bilge'nin 2-3 dakikalik yatay egitici cizgi film bolumleri (yazim, denetim, video, kapak, bolumlu paylasim)"
+    "Hikayeler de ertelenebilir (Ertelenenler bolumu, Geri getir)"
   ],
   "dosyalar": {
     "program/GELISTIRICI.txt": "24e10b02892addbc87b87d078143cb77a09521d86239fe3b78d2a0628b03d138",
@@ -22,8 +22,8 @@
     "program/kisayol.ps1": "8b01102bef0e33a74e1a10756c1d030ef45381b8a3bcd2bd0cfd16252d872a5b",
     "program/kostumler.py": "a041a730f8753887c1cdc180c8b906ed9791b7539e5c55fe26f669e63717aa33",
     "program/ortak.py": "e27b5fa5d4b976cfa50c13330fc58d43657322976fd7a596b869f2821d0b4ba6",
-    "program/panel.html": "da42f3972d3e068ab823700befb59b3863d69dd01a87c8cf47920e847f0dc094",
-    "program/panel.py": "ca3debaa2c8fb10d5d35ac7b07c3d47de42b265f51b335cb703643dcdc5aa6a6",
+    "program/panel.html": "2020a59b90270eac3f7a39b8d578c6524934f2b73dccc8a2a028e334dd2936f6",
+    "program/panel.py": "6833fb488ae12ea13f07dd84159fc41771642208c2f81e57a59e773f6a690121",
     "program/senaryo_motoru.py": "9388cc80f9db576e3c3d68471a8b6bde1bad2977cf56b9abbf82012bdd29abc3",
     "program/sohbet.py": "a0f17d44f0e7acdbf873549467eba8bc428bb5ee1d11b0820cd145cddd4f52bd",
     "program/telefon.py": "5d2d8793c6184446d809ef0f4b73342a9eb0fdab559f7c51ce8ab07e7af29892",
