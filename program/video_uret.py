@@ -195,9 +195,10 @@ def seslendir(metin, hedef_wav, ses=None):
     onb = os.path.join(SES_ONBELLEK, anahtar + ".wav")
     if os.path.exists(onb) and os.path.getsize(onb) > 2000:
         shutil.copyfile(onb, hedef_wav)
-        return
+        return "onbellek"
     _ses_uret(metin, hedef_wav, ses)
     shutil.copyfile(hedef_wav, onb)
+    return "yeni"
 
 
 def wav_zarf(yol):

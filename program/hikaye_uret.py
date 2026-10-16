@@ -303,7 +303,8 @@ def uret(bolum_yolu, cikti=None, sesli=None, ilerleme=None):
                            f"Seslendirme {n + 1}/{len(konusan)}" + (f" (tekrar turu {tur})" if tur else ""))
                     wav = os.path.join(gecici, f"s{n}.wav")
                     try:
-                        seslendir(p["metin"], wav, ses=SES_BIDIK if p["kim"] == "bidik" else SES_BILGE)
+                        if seslendir(p["metin"], wav, ses=SES_BIDIK if p["kim"] == "bidik" else SES_BILGE) == "yeni":
+                            time.sleep(1.5)   # ses servisini art arda istekle bogmamak icin kisa ara
                     except SesHatasi as e:
                         print("Hikaye seslendirme basarisiz:", e)
                         kalan.append(n)
