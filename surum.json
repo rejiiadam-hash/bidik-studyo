@@ -1,13 +1,13 @@
 {
-  "surum": "1.19.4",
+  "surum": "1.19.5",
   "tarih": "2026-10-16",
   "notlar": [
-    "Hikaye videosu uretilirken siyah komut penceresi acilmaz"
+    "Arka plan konuya uyar: kopek konusunda deniz alti, Osmanli konusunda Roma sutunlari gibi uyumsuz sahneler secilmez (kisa video + hikaye)"
   ],
   "dosyalar": {
     "program/GELISTIRICI.txt": "24e10b02892addbc87b87d078143cb77a09521d86239fe3b78d2a0628b03d138",
     "program/analiz.py": "df386b766f5b1b93eebe51c1bb15b91d7513bd8ab1d5bd358120c26f05a58f62",
-    "program/arka_planlar.py": "0ecf769526b13b4f54823e2bbe474ff855351027d429b3625e841fda47c949e6",
+    "program/arka_planlar.py": "9e9c360d51374e64447137ef51eb94da7f4324166eca7342fe81ace784e41134",
     "program/bidik.ico": "28def8b8467f59bfad08aa6ae749258f23e47fa9aaa0c100cef59c8b2d8c16a3",
     "program/bidik.png": "eaefa6925920f2927db821cfcd582a98b21786cce794bd3f3ef3f7e68f5018a0",
     "program/bilge.py": "3113ff4f3a20cdb50bf1e06d213a7893be10c4de2c7e6d3e0b70c8e3747e8dff",
@@ -16,8 +16,8 @@
     "program/gereksinimler.txt": "ea75906866e55afdfe66e5eb98a011d93e5e7eea72949ec672fdf817265f0a3a",
     "program/girisler.py": "8522b21bebe3f327202845e39f27062748c8d97456585246e9b809bf85d391cf",
     "program/github_kanal.py": "c4bfc7199dd902a5d56c0514e3ff9affeef89c246e1b3691af9b054fa0db63a9",
-    "program/hikaye_motoru.py": "0a8d97dc27b8eb9e544abc7d3a0ec0d7c4da38c94e94df3547f1ab2683475509",
-    "program/hikaye_uret.py": "d1a09a32147f6466d856173395a81d5284e4311ed0616aaf6ec8bd7c011d3a2f",
+    "program/hikaye_motoru.py": "4761e6f52c4c45b525ed98b1f79c0d98ec6fde413c146b56b7aad9b16352235c",
+    "program/hikaye_uret.py": "466ce36aaa0dcaa741fc2972f78abffabdb66e7e5227078e884c2f289c0f3a89",
     "program/karakter.py": "b3f0eb8d661cde885545ef64059514bbdea1de710fc9bf1628eedf9b8458f6a9",
     "program/kisayol.ps1": "8b01102bef0e33a74e1a10756c1d030ef45381b8a3bcd2bd0cfd16252d872a5b",
     "program/kostumler.py": "a041a730f8753887c1cdc180c8b906ed9791b7539e5c55fe26f669e63717aa33",
@@ -28,7 +28,7 @@
     "program/sohbet.py": "a0f17d44f0e7acdbf873549467eba8bc428bb5ee1d11b0820cd145cddd4f52bd",
     "program/telefon.py": "5d2d8793c6184446d809ef0f4b73342a9eb0fdab559f7c51ce8ab07e7af29892",
     "program/uygulama.py": "d7965fa103804248cd0ddf13f66a2ddc5fb11b688eb3d8f361c1bc4a698a82b4",
-    "program/video_uret.py": "a7705f536ad94d23dea8c6ee96392401834f8bff19d0d956ef637be3ef2137f8",
+    "program/video_uret.py": "ba10b85cde64b7eff365d3989fa340fde43dfa235a21ce1ed2a1adc49cf202aa",
     "program/youtube_yukle.py": "5e47cb296a9222bef5c2cfc7204f6825b32476775649d9706082275c10378494"
   }
 }

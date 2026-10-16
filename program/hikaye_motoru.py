@@ -74,6 +74,8 @@ def denetim_gecerli(b):
 # --- istemler ------------------------------------------------------------------------------
 def yazar_istemi(konu, alan, onceki):
     temalar = ", ".join(arka_planlar.TEMALAR)
+    sahneler = "\n".join(f"    {t}: " + ", ".join(f"{i}={ad}" for i, ad in enumerate(adlar))
+                         for t, adlar in arka_planlar.SAHNE_ADLARI.items() if t != "genel")
     return f"""Sen Turkce cocuk ve aile egitim cizgi filmi yazarisin. Dizinin adi "BIDIK HIKAYELERI".
 Karakterler:
 - BIDIK: sari, yumurta seklinde, merakli, biraz sakar, komik ve sevimli. Sorular sorar, yanlis tahminler yapar, saskinlikla ogrenir.
@@ -85,7 +87,8 @@ konunun gectigi yerlere goturur, olaylar adim adim anlatilir).
 
 KURALLAR
 - 4 veya 5 bolum (kisim). Her kismin kisa bir adi ve konusuna uyan bir arka plan temasi olsun. Temalar: {temalar}.
-  "arka_no": 0-4 (ayni temayi tekrar kullanirsan farkli numara sec).
+  "arka_no": temanin sahnesi (0-4), ICERIGE UYGUN olani sec (kopek anlatilirken deniz alti SECME):
+{sahneler}
 - Her kisimda 5-7 satir; toplam 24-32 satir. Her satir en fazla 140 karakter, gunluk konusma dili, dogal diyalog.
 - Ilk satirlar merak uyandiran bir sorun/soru ile baslasin. Bidik espri yapsin ama bilgi her zaman one ciksin.
 - BILGI KESINLIKLE DOGRU OLMALI. Supheli, tartismali, efsane bilgileri KULLANMA. Sayilar dogru ve yuvarlanmis olsun.

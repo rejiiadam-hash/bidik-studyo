@@ -107,6 +107,21 @@ def _parca(tur, **k):
 TEMA_KOSTUM = {v: k for k, v in arka_planlar.KOSTUM_TEMA.items()}   # uzay -> astronot ...
 
 
+def _bolum_metni(b, bo):
+    return " ".join([b.get("konu", ""), b.get("baslik", ""), bo.get("ad", "")] + [s.get("metin", "") for s in bo.get("satirlar", [])])
+
+
+def sahne_no(b, bo, tema, i=0):
+    """Kismin arka plan sahnesi; secilen sahne konuya uymuyorsa (kopek konusunda deniz alti gibi) uygun olanla degisir."""
+    metin = _bolum_metni(b, bo)
+    no = bo.get("arka_no") if isinstance(bo.get("arka_no"), int) else i
+    no = int(no) % arka_planlar.SAHNE_SAYISI
+    if arka_planlar.sahne_uygun_mu(tema, no, metin):
+        return no
+    uygun = arka_planlar.uygun_sahneler(tema, metin) or [0]
+    return uygun[i % len(uygun)]
+
+
 def giyim(b):
     """Her kisim icin (Bidik'in kostumu, Bilge'nin aksesuari): kismin arka plan temasina gore degisir.
     Kisimda "kostum" yazilmissa o kullanilir; 'genel' temada bolumun konusuna uygun kostum."""
@@ -333,7 +348,7 @@ def uret(bolum_yolu, cikti=None, sesli=None, ilerleme=None):
         arkalar = {}
         for i, bo in enumerate(b["bolumler"]):
             tema = bo.get("tema") if bo.get("tema") in arka_planlar.TEMALAR else arka_planlar.tema_bul(b.get("alan", ""), b.get("konu", ""), kostum)
-            no = bo.get("arka_no") if isinstance(bo.get("arka_no"), int) else i
+            no = sahne_no(b, bo, tema, i)
             arkalar[i] = arka_planlar.ciz(tema, no, W * SS, H * SS, k=SS)
         # 3) kareler -> ffmpeg (ara dosya yok)
         toplam = sum(int(round(p["sure"] * FPS)) for p in parcalar)
@@ -472,7 +487,7 @@ def kapak_resmi(b, yol):
     kostum, aksesuar = giyim(b)[0]
     bo = b["bolumler"][0]
     tema = bo.get("tema") if bo.get("tema") in arka_planlar.TEMALAR else "genel"
-    img = arka_planlar.ciz(tema, bo.get("arka_no", 0) or 0, W * SS, H * SS, k=SS)
+    img = arka_planlar.ciz(tema, sahne_no(b, bo, tema, 0), W * SS, H * SS, k=SS)
     ciz_bidik(img, x=330 * SS, y=1060 * SS, olcek=1.45 * SS, ifade="saskin", kol="kollar_havada", kostum=kostum)
     ciz_bilge(img, 1600 * SS, 1060 * SS, 1.35 * SS, ifade="mutlu", agiz=0.5, kanat=0.6, aksesuar=aksesuar)
     d = ImageDraw.Draw(img)

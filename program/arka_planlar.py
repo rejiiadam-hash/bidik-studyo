@@ -707,20 +707,76 @@ def ciz(tema, no, genislik, yukseklik, k=None):
 
 
 # --- tekrar etmeyen secim ----------------------------------------------------------------------------
+# --- sahne katalogu: her sahnenin adi; bazilari sadece konusu uyunca kullanilir (kopek konusunda balik olmasin) ---
+SAHNE_ADLARI = {
+    "uzay": ["halkali gezegen", "uzaktan Dunya", "renkli bulutsu", "buyuk Ay", "kayan yildizlar"],
+    "burclar": ["takimyildizlar ve hilal", "burc cemberi", "gece gokyuzu ve hilal", "burc cemberi (mavi)", "takimyildizlar"],
+    "hayvanlar": ["savana (Afrika)", "orman", "deniz alti", "ciftlik", "kutup / kar"],
+    "yemek": ["mutfak rafi", "mutfak (lambali)", "mutfak rafi (pembe)", "mutfak (mavi)", "mutfak rafi (sari)"],
+    "bilim": ["kara tahta", "laboratuvar rafi", "DNA ve hucre", "kara tahta (krem)", "laboratuvar (mor)"],
+    "insan": ["kalp ritmi", "kalpler", "beyin/kitap panosu", "hucreler", "DNA"],
+    "tarih": ["antik tapinak (sutunlar)", "piramitler (Misir)", "eski harita", "kale surlari", "muze"],
+    "psikoloji": ["bulutlar ve soru isaretleri", "hipnoz sarmali", "pembe bulutlar", "dedektif panosu", "dalgalar"],
+    "teknoloji": ["devre karti (yesil)", "piksel yagmuru", "kod ekrani", "devre karti (mavi)", "retro gun batimi"],
+    "cografya": ["karli daglar", "deniz feneri ve kiyi", "dunya haritasi", "col", "tropik plaj"],
+    "cocuk": ["gokkusagi", "balonlar", "harf kupleri", "konfeti", "gunesli cayir"],
+    "genel": ["renkli isiltilar"] * 5,
+}
+# yalnizca konu/metin bu kelimelerden birini icerirse secilebilen sahneler
+OZEL_SAHNE = {
+    ("hayvanlar", 0): ["savan", "afrika", "aslan", "zürafa", "zurafa", "fil ", "filler", "zebra", "çita", "cita", "gergedan", "sırtlan"],
+    ("hayvanlar", 2): ["deniz", "okyanus", "balık", "balik", "ahtapot", "köpekbalı", "kopekbali", "balina", "yunus", "mercan",
+                       "denizanası", "denizanasi", "kaplumbağa", "su alt", "mürekkep", "istakoz", "yengeç", "fok"],
+    ("hayvanlar", 4): ["kutup", "penguen", "kar ", "karlı", "buz", "fok", "antarktika", "arktik", "kutup ayısı", "mors", "eskimo"],
+    ("bilim", 2): ["dna", "gen ", "genetik", "hücre", "hucre", "kalıtım", "kalitim"],
+    ("tarih", 0): ["antik", "yunan", "roma", "tapınak", "tapinak", "olimpos", "sokrat", "atina"],
+    ("tarih", 1): ["mısır", "misir", "piramit", "firavun", "mumya", "nil ", "kleopatra"],
+    ("cografya", 3): ["çöl", "col ", "sahra", "kum ", "kumul", "deve", "vaha", "kurak"],
+    ("cografya", 4): ["ada ", "adası", "adalar", "plaj", "tropik", "okyanus", "mercan", "palmiye", "hawaii", "kumsal"],
+}
+
+
+def _kucuk(metin):
+    return " " + (metin or "").replace("İ", "i").replace("I", "ı").lower() + " "
+
+
+def _eslesir(m, kelimeler):
+    """Kelime BASINDAN eslesme ('fil' -> 'filler' evet, 'film' hayir icin 'fil ' yazilir)."""
+    import re
+    m = re.sub(r"[^\w\s]", " ", m)
+    return any((" " + k) in m for k in kelimeler)
+
+
+def uygun_sahneler(tema, metin=""):
+    """Bu metne uyan sahneler. Metin ozel bir sahneyle eslesiyorsa SADECE onlar (or. penguen -> kutup)."""
+    m = _kucuk(metin)
+    eslesen = [no for no in range(SAHNE_SAYISI)
+               if (tema, no) in OZEL_SAHNE and _eslesir(m, OZEL_SAHNE[(tema, no)])]
+    if eslesen:
+        return eslesen
+    return [no for no in range(SAHNE_SAYISI) if (tema, no) not in OZEL_SAHNE]
+
+
+def sahne_uygun_mu(tema, no, metin=""):
+    return no in uygun_sahneler(tema, metin) or (
+        (tema, no) in OZEL_SAHNE and _eslesir(_kucuk(metin), OZEL_SAHNE[(tema, no)]))
+
+
 def _gecmis_yolu():
     from ortak import KOK
     return os.path.join(KOK, "arka_gecmis.json")
 
 
-def secim(tema):
-    """Bu temanin son 2 kullanilan sahnesini atlayarak rastgele sahne secer ve kaydeder."""
+def secim(tema, metin=""):
+    """Konuya uyan sahneler arasindan, son 2 kullanilani atlayarak rastgele secer ve kaydeder."""
     try:
         with open(_gecmis_yolu(), encoding="utf-8") as f:
             gecmis = json.load(f)
     except (OSError, ValueError):
         gecmis = {}
     son = gecmis.get(tema, [])
-    adaylar = [i for i in range(SAHNE_SAYISI) if i not in son[-2:]] or list(range(SAHNE_SAYISI))
+    uygun = uygun_sahneler(tema, metin) or list(range(SAHNE_SAYISI))
+    adaylar = [i for i in uygun if i not in son[-2:]] or uygun
     no = random.choice(adaylar)
     gecmis[tema] = (son + [no])[-4:]
     try:

@@ -671,7 +671,8 @@ def uret(senaryo_yolu, cikti=None, sesli=None, ilerleme=None, izin_sessiz=False)
     if _ay().get("arka_plan", True) and sen.get("arka_tema") != "sade":
         tema = sen.get("arka_tema") if sen.get("arka_tema") in arka_planlar.TEMALAR else \
             arka_planlar.tema_bul(sen.get("alan", ""), sen.get("konu", ""), kostum or "")
-        no = sen["arka_no"] if isinstance(sen.get("arka_no"), int) else arka_planlar.secim(tema)
+        metin_konu = " ".join([sen.get("konu", ""), sen.get("baslik", "")] + [s.get("replik", "") for s in sen["sahneler"]])
+        no = sen["arka_no"] if isinstance(sen.get("arka_no"), int) else arka_planlar.secim(tema, metin_konu)
         arka = arka_planlar.ciz(tema, no, W * SS, H * SS)
         SON_URETIM["arka_plan"] = f"{tema}-{no}"
     else:
