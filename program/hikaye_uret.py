@@ -25,7 +25,7 @@ import arka_planlar
 from bilge import ciz_bilge, TEMA_AKSESUAR
 from karakter import ciz_bidik, IFADELER, KOL_POZLARI
 from kostumler import KOSTUMLER, kostum_sec
-from ortak import FONT, ffmpeg
+from ortak import FONT, ffmpeg, PENCERESIZ
 
 W, H, SS, FPS = 1920, 1080, 2, 24
 LACI = (35, 37, 58)
@@ -340,7 +340,8 @@ def uret(bolum_yolu, cikti=None, sesli=None, ilerleme=None):
         sessiz_mp4 = os.path.join(gecici, "goruntu.mp4")
         ff = subprocess.Popen([ffmpeg(), "-y", "-loglevel", "error", "-f", "rawvideo", "-pix_fmt", "rgb24",
                                "-s", f"{W}x{H}", "-r", str(FPS), "-i", "-", "-c:v", "libx264", "-preset", "veryfast",
-                               "-crf", "20", "-pix_fmt", "yuv420p", sessiz_mp4], stdin=subprocess.PIPE)
+                               "-crf", "20", "-pix_fmt", "yuv420p", sessiz_mp4], stdin=subprocess.PIPE,
+                              creationflags=PENCERESIZ)
         giy = giyim(b)
         n, onceki_bolum = 0, 0
         zamanlar = [(0.0, "Giriş")]
@@ -377,7 +378,8 @@ def uret(bolum_yolu, cikti=None, sesli=None, ilerleme=None):
             ses_wav = os.path.join(gecici, "ses.wav")
             _ses_izi(parcalar, ses_wav)
             subprocess.run([ffmpeg(), "-y", "-loglevel", "error", "-i", sessiz_mp4, "-i", ses_wav, "-c:v", "copy",
-                            "-c:a", "aac", "-b:a", "160k", "-shortest", cikti], check=True)
+                            "-c:a", "aac", "-b:a", "160k", "-shortest", cikti], check=True,
+                           creationflags=PENCERESIZ)
         else:
             shutil.copyfile(sessiz_mp4, cikti)
         ilerle(100, "Hikâye videosu hazır")
