@@ -33,6 +33,9 @@ senaryo_motoru.alan_sec ağırlık olarak kullanır. github_kanal.py güncelleme
 - **telefon.py** (142): Tailscale (tailscale_ac 69), otomatik_baslat, uyku_engelle.
 - **uygulama.py** (196): pencere/başlatıcı (pywebview/Edge), --arka modu.
 - **sohbet.py**: Bidik sohbeti (ayri anahtar gemini_sohbet_anahtari, cevapla()); endpoint /api/sohbet, UI: panel.html "Bidik ile sohbet".
+- **hikaye_motoru.py**: Bidik Hikayeleri yazimi (Gemini, yazar_istemi/denetle/imza), BIDIK\hikayeler\<id>\bolum.json.
+- **hikaye_uret.py**: 1920x1080 bolum cizici (cizelge, _kare, kapak_resmi, bolum_listesi); FPS 24, ffmpeg'e pipe.
+- **bilge.py**: yardimci karakter baykus Bilge (ciz_bilge), sesi tr-TR-EmelNeural (video_uret.seslendir(ses=...)).
 - **panel.py** (~1030; kare_sayfasi = ana sayfa Bidik sprite sayfasi, /bidik-kareler/<kostum>.png): HTTP sunucu. Yardımcılar 30-90; durum 91; oturum/şifre 142-237; güncelleme 238-335;
   senaryo işlemleri kaydet 348, _video_yap 371, yeniden_uret 384, _yazim_kapisi 416, onayla 455,
   ertelenenler/ertele/geri_getir 481-512, reddet 513, paylas 525, video_sil 561, destek 595,
