@@ -178,21 +178,79 @@ def _ses_uret(metin, wav, ses=None):
 def tts_metni(metin):
     """Ses servisine gidecek metinden emoji ve simgeleri cikarir (emoji 'No audio was received' hatasina yol acar)."""
     import unicodedata, re
+    metin = metin.replace("%", " yüzde ").replace("&", " ve ")
     temiz = "".join(ch for ch in metin if not (unicodedata.category(ch)[0] in "SC" and not ch.isspace())
-                    and ch not in "\u200d\ufe0f")
+                    and ch not in "\u200d\ufe0f#*_<>|~^\\")
     return re.sub(r"\s+", " ", temiz).strip()
 
 
-def seslendir(metin, hedef_wav, ses=None):
-    """Onbellekte varsa oradan alir (tekrar istek yok); yoksa uretip onbellege koyar."""
+def onbellek_yolu(metin, ses=None):
     import hashlib
     metin = tts_metni(metin) or metin
-    os.makedirs(SES_ONBELLEK, exist_ok=True)
     if ses and ses != SES:
         anahtar = hashlib.sha1(f"{ses}|{SES_PROSODI.get(ses)}|{KIRP}|{metin}".encode("utf-8")).hexdigest()[:20]
     else:   # Bidik: eski anahtar aynen (onbellekteki sesler bosa gitmesin)
         anahtar = hashlib.sha1(f"{SES}|{PROSODI}|{KIRP}|{metin}".encode("utf-8")).hexdigest()[:20]
-    onb = os.path.join(SES_ONBELLEK, anahtar + ".wav")
+    return os.path.join(SES_ONBELLEK, anahtar + ".wav")
+
+
+def ses_hazir_mi(metin, ses=None):
+    yol = onbellek_yolu(metin, ses)
+    return os.path.exists(yol) and os.path.getsize(yol) > 2000
+
+
+def sesleri_hazirla(liste, ilerle=None, beklemeler=(45, 90, 150)):
+    """liste: [(metin, ses)]. Onbellekte olmayanlari onceden seslendirir; ses servisi takilirsa bekleyip
+    sadece eksikleri tekrar ister. Donus: hala eksik kalan metinler (bos liste = hepsi hazir)."""
+    import time
+    ilerle = ilerle or (lambda y, m: None)
+    tekil = []
+    for m, s in liste:
+        if m and (m, s) not in tekil:
+            tekil.append((m, s))
+    eksik = [x for x in tekil if not ses_hazir_mi(*x)]
+    gecici = tempfile.mkdtemp(prefix="bidik_ses_")
+    try:
+        for tur, bekle in enumerate((0,) + tuple(beklemeler)):
+            if not eksik:
+                break
+            if bekle:
+                ilerle(None, f"Ses servisi cevap vermiyor; {bekle} sn sonra eksik {len(eksik)} ses tekrar denenecek")
+                time.sleep(bekle)
+            kalan, ust_uste = [], 0
+            for i, (m, s) in enumerate(eksik):
+                if ust_uste >= 2:
+                    kalan += eksik[i:]
+                    break
+                ilerle(None, f"Ses hazırlanıyor {len(tekil) - len(eksik) + i + 1}/{len(tekil)}"
+                       + (f" (tekrar turu {tur})" if tur else ""))
+                try:
+                    seslendir(m, os.path.join(gecici, "s.wav"), ses=s)
+                    ust_uste = 0
+                    time.sleep(1.0)
+                except SesHatasi as e:
+                    print("Ses hazirlanamadi:", e)
+                    kalan.append((m, s))
+                    ust_uste += 1
+            eksik = kalan
+    finally:
+        shutil.rmtree(gecici, ignore_errors=True)
+    return [m for m, _ in eksik]
+
+
+def senaryo_ses_listesi(sen):
+    """Kisa videoda seslendirilecek tum replikler (kapanis imzasi dahil)."""
+    import copy
+    k = copy.deepcopy(sen)
+    marka_imzasi(k)
+    return [(s["replik"], None) for s in k.get("sahneler", []) if s.get("replik") and s.get("konusuyor", True)]
+
+
+def seslendir(metin, hedef_wav, ses=None):
+    """Onbellekte varsa oradan alir (tekrar istek yok); yoksa uretip onbellege koyar."""
+    metin = tts_metni(metin) or metin
+    os.makedirs(SES_ONBELLEK, exist_ok=True)
+    onb = onbellek_yolu(metin, ses)
     if os.path.exists(onb) and os.path.getsize(onb) > 2000:
         shutil.copyfile(onb, hedef_wav)
         return "onbellek"

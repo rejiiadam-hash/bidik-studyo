@@ -620,7 +620,9 @@ function senaryoKarti(s, i){
       </select></div></div>
     <table><tr><th></th><th>sn</th><th>ifade</th><th class="kol">kol</th><th>replik</th></tr>${satirlar}</table>
     ${s._hatalar.length?`<div class="hatalar">⚠ ${esc(s._hatalar.join("; "))}</div>`:""}
+    ${kontrolRozeti(s._kontrol, (s.kontrol||{}).bilgi_sorunu)}
     <div class="dugmeler">
+      <button ${s._kontrol==="tamam"?"":'class="ana"'} data-is onclick="kontrolEt('senaryo', ${i})" title="Yazım hatalarını düzeltir, bilgiyi denetler ve tüm sesleri şimdiden hazırlar">🔍 Kontrol et</button>
       <button class="yesil" data-is onclick="onayla(${i})">✓ Onayla ve videoyu üret</button>
       <button onclick="kaydet(${i})">Kaydet</button>
       <button onclick="ertele(${i})" title="Onay listesinden kalksın, sonra geri getirebilirsin">⏸ Ertele</button>
@@ -701,6 +703,19 @@ function gunlereBol(liste){
   }).join("");
 }
 
+/* --- Kontrol et (yazim + bilgi + sesler) --- */
+function kontrolRozeti(durum, bilgi){
+  if(bilgi && durum !== "tamam") return `<div class="hatalar" style="margin-top:8px">⚠ Bilgi şüpheli: ${esc(bilgi)}</div>`;
+  if(durum === "tamam") return `<div class="kucuk" style="margin-top:8px;color:#3aa860;font-weight:700">✔ Kontrol edildi: yazım ve bilgi denetlendi, tüm sesler hazır</div>`;
+  if(durum === "ses_eksik") return `<div class="kucuk" style="margin-top:8px;color:#d48a00;font-weight:700">⚠ Yazım tamam ama bazı sesler hazırlanamadı. Tekrar 'Kontrol et'e bas.</div>`;
+  return `<div class="kucuk" style="margin-top:8px">🔍 Üretmeden önce 'Kontrol et'e bas: yazım düzeltilir ve sesler hazırlanır, üretim yarıda kalmaz.</div>`;
+}
+async function kontrolEt(tur, x){
+  let id = x;
+  if(tur === "senaryo"){ const r = await kaydet(x, true); if(r.hatalar.length){ bildir(r.hatalar.join("; "), true); return; } id = D.bekleyen[x]._id; }
+  await post("/api/kontrol", {tur, id}); bildir("Kontrol başladı: yazım, bilgi ve sesler…"); yenile(false);
+}
+
 /* --- Bidik Hikayeleri --- */
 let HK = {liste:[], gun:6, saat:"12:00"};
 function sonrakiGun(gun){   // gun: 0=Pazar ... 6=Cumartesi; bugunden sonraki ilk o gun
@@ -727,9 +742,11 @@ async function hikayeYukle(){
         <span class="kucuk">${durumAd[b.durum]||esc(b.durum||"")} · ${satirSay} satır${sure}</span>
         ${b.denetim_ok?`<span class="kucuk" title="Yazım ve bilgi denetiminden geçti">✔ denetlendi</span>`:`<span class="kucuk">⚠ video üretilirken yeniden denetlenecek</span>`}</div>
       ${b.video?`<video src="/dosya/${esc(b.video)}" ${b.kapak?`poster="/dosya/${esc(b.kapak)}"`:""} controls preload="none" style="width:100%;max-width:640px;border-radius:12px;margin-top:10px;background:#000"></video>`:""}
+      ${!b.youtube_url ? kontrolRozeti(b.kontrol, b.kontrol_bilgi) : ""}
       <details style="margin-top:8px"><summary style="cursor:pointer">Metni oku</summary>${metin}</details>
       <div class="dugmeler" style="flex-wrap:wrap">
-        ${!b.youtube_url?`<button ${b.video?"":'class="ana"'} data-is onclick="hikayeVideo('${esc(b.id)}')">🎬 ${b.video?"Videoyu yeniden üret":"Videoyu üret"}</button>`:""}
+        ${!b.youtube_url?`<button ${b.kontrol==="tamam"?"":'class="ana"'} data-is onclick="kontrolEt('hikaye', '${esc(b.id)}')" title="Yazım hatalarını düzeltir, bilgiyi denetler ve tüm sesleri şimdiden hazırlar">🔍 Kontrol et</button>`:""}
+        ${!b.youtube_url?`<button ${b.video||b.kontrol!=="tamam"?"":'class="ana"'} data-is onclick="hikayeVideo('${esc(b.id)}')">🎬 ${b.video?"Videoyu yeniden üret":"Videoyu üret"}</button>`:""}
         ${b.video && !b.youtube_url?`<span style="display:inline-flex;gap:6px;align-items:center;flex-wrap:wrap">
             <input type="date" id="hkT_${esc(b.id)}" value="${sonrakiGun(HK.gun)}" style="width:auto">
             <input type="time" id="hkS_${esc(b.id)}" value="${esc(HK.saat)}" style="width:auto">

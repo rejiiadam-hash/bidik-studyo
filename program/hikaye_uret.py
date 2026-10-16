@@ -140,6 +140,12 @@ def cizelge(b):
     return p
 
 
+def ses_listesi(b):
+    """Bolumde seslendirilecek tum satirlar: [(metin, ses)]."""
+    return [(p["metin"], SES_BIDIK if p["kim"] == "bidik" else SES_BILGE)
+            for p in cizelge(b) if p.get("metin") and p.get("kim")]
+
+
 def _zarf(yol):
     with wave.open(yol) as w:
         sr, n = w.getframerate(), w.getnframes()

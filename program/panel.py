@@ -100,6 +100,8 @@ def durum():
         if "kostum" not in s:   # eski senaryolar: konuya gore oneri (kaydedince dosyaya yazilir)
             s["kostum"] = kostumler.kostum_sec(s.get("alan"), s.get("konu"))
         s["_hatalar"] = dogrula(s)
+        k = s.get("kontrol") or {}
+        s["_kontrol"] = ("tamam" if k.get("ses") else "ses_eksik") if k.get("imza") == motor.imza(s) else ""
         bekleyen.append(s)
     videolar = []
     for mp4 in sorted(glob.glob(os.path.join(VIDEO, "*", "*.mp4")), reverse=True):
@@ -441,18 +443,15 @@ def _yazim_kapisi(yol, ilerle):
                          "denetlenmemis metin yayina girmez.")
     if not r["tamam"]:
         raise ValueError("Yazim denetimi cevabi okunamadi. Tekrar onayla; denetlenmemis metin yayina girmez.")
-    motor.denetim_isle(s, r)
-    if r["duzeltmeler"] or not r["bilgi_dogru"]:
+    if not r["bilgi_dogru"]:
+        s.pop("denetim", None)
         yaz(yol, s)
-        mesaj = []
-        if not r["bilgi_dogru"]:
-            mesaj.append("BILGI SUPHELI: " + (r["bilgi_sorunu"] or "denetim bu bilgiye guvenmedi")
-                         + " Metni duzenle ya da reddet.")
-        if r["duzeltmeler"]:
-            mesaj.append(f"{len(r['duzeltmeler'])} yazim hatasi duzeltildi. Senaryoyu kontrol edip tekrar onayla. ("
-                         + " | ".join(r["duzeltmeler"]) + ")")
-        raise Durdu(" ".join(mesaj))
-    yaz(yol, s)   # imza kaydedildi
+        raise Durdu("BILGI SUPHELI: " + (r["bilgi_sorunu"] or "denetim bu bilgiye guvenmedi") + " Metni duzenle ya da reddet.")
+    # yazim duzeltmeleri dosyaya uygulandi; ekstra onay istemeden devam edilir
+    if r["duzeltmeler"]:
+        print("Yazim duzeltildi:", " | ".join(r["duzeltmeler"]))
+    s["denetim"] = {"imza": motor.imza(s), "tarih": datetime.date.today().isoformat(), "duzeltmeler": r["duzeltmeler"]}
+    yaz(yol, s)
 
 
 def onayla(v):
@@ -808,7 +807,10 @@ def hikaye_liste(_):
         sonuc.append({k: b.get(k) for k in ("id", "baslik", "konu", "alan", "durum", "yazildi", "bolumler", "soru", "ozet",
                                             "aciklama", "youtube_url", "yayin_zamani", "_video_sure", "dogrulama_notu", "ertelendi")}
                      | {"video": rel(mp4) if os.path.exists(mp4) else "", "kapak": rel(kapak) if os.path.exists(kapak) else "",
-                        "denetim_ok": hm.denetim_gecerli(b)})
+                        "denetim_ok": hm.denetim_gecerli(b),
+                        "kontrol": (("tamam" if (b.get("kontrol") or {}).get("ses") else "ses_eksik")
+                                    if (b.get("kontrol") or {}).get("imza") == hm.imza(b) else ""),
+                        "kontrol_bilgi": (b.get("kontrol") or {}).get("bilgi_sorunu", "")})
     a = ayarlar()
     return {"hikayeler": sonuc, "gun": a.get("hikaye_gunu", 6), "saat": a.get("hikaye_saati", "12:00")}
 
@@ -907,6 +909,86 @@ def hikaye_paylas(v):
     is_baslat(f"Hikâye paylaşılıyor: {b.get('baslik', '')}", f)
 
 
+# --- Kontrol et: yazim + bilgi denetimi ve tum seslerin onceden hazirlanmasi ----------------------
+def kontrol(v):
+    """Senaryo ya da hikaye icin: yazim hatalarini duzeltir (onay istemeden), bilgiyi denetler, tum sesleri
+    simdiden uretip onbellege koyar. Boylece 'uret' denince yazi/ses yuzunden yarida kalmaz."""
+    import video_uret
+    tur = v.get("tur")
+    if tur == "senaryo":
+        yol = guvenli(v["id"])
+        oku_ = lambda: oku(yol)
+        yaz_ = lambda s: yaz(yol, s)
+        imza_ = motor.imza
+
+        def denetle_(s, ilerle):
+            r = motor.denetle(motor.model_sec(ayarlar()["model"]), [s], ilerle)[0]
+            if not r["tamam"]:
+                raise motor.MotorHatasi("denetim cevabi okunamadi")
+            return r["bilgi_dogru"], r["bilgi_sorunu"], r["duzeltmeler"]
+        sesler = video_uret.senaryo_ses_listesi
+        baslik = oku(yol).get("baslik", "")
+    elif tur == "hikaye":
+        import hikaye_motoru as hm, hikaye_uret as hu
+        b0, kl = _hikaye(v.get("id"))
+        jy = os.path.join(kl, "bolum.json")
+        oku_ = lambda: oku(jy)
+        yaz_ = lambda s: yaz(jy, s)
+        imza_ = hm.imza
+
+        def denetle_(s, ilerle):
+            return hm.denetle(motor.model_sec(ayarlar()["model"]), s, ilerle)
+        sesler = hu.ses_listesi
+        baslik = b0.get("baslik", "")
+    else:
+        raise ValueError("gecersiz tur")
+
+    def f(ilerle):
+        son = {"y": 2}
+
+        def ilerle2(y, m):
+            if y is not None:
+                son["y"] = y
+            ilerle(son["y"], m)
+        s = oku_()
+        if tur == "senaryo":
+            h = dogrula(s)
+            if h:
+                raise ValueError("Önce düzelt: " + "; ".join(h))
+        toplam_duz = []
+        if not (s.get("denetim") or {}).get("imza") == imza_(s):
+            for tur_no in range(2):        # duzeltmeden sonra bir kez daha bakilir
+                ilerle2(5 + tur_no * 15, "Yazım ve bilgi denetimi" + (" (ikinci bakış)" if tur_no else ""))
+                try:
+                    dogru, sorun, duz = denetle_(s, ilerle2)
+                except motor.MotorHatasi as e:
+                    raise ValueError(f"Gemini şu an cevap vermiyor ({str(e)[:120]}). Birkaç dakika sonra tekrar 'Kontrol et'e bas.")
+                if not dogru:
+                    s.pop("denetim", None)
+                    s["kontrol"] = {"tarih": datetime.datetime.now().isoformat(timespec="minutes"), "bilgi_sorunu": sorun}
+                    yaz_(s)
+                    raise Durdu("BİLGİ ŞÜPHELİ: " + (sorun or "denetim bu bilgiye güvenmedi")
+                                + " Bu metni düzenle ya da reddet; yazım düzeltmeleri kaydedildi.")
+                toplam_duz += duz
+                if not duz:
+                    break
+            s["denetim"] = {"imza": imza_(s), "tarih": datetime.date.today().isoformat(), "duzeltmeler": toplam_duz}
+            yaz_(s)
+        ilerle2(40, "Sesler hazırlanıyor")
+        liste = sesler(s)
+        eksik = video_uret.sesleri_hazirla(liste, ilerle2)
+        s = oku_()
+        s["kontrol"] = {"tarih": datetime.datetime.now().isoformat(timespec="minutes"), "imza": imza_(s),
+                        "ses": not eksik, "ses_sayisi": len(liste), "eksik": len(eksik), "duzeltme": len(toplam_duz)}
+        yaz_(s)
+        duz_m = f"{len(toplam_duz)} yazım hatası düzeltildi, " if toplam_duz else "Yazım temiz, "
+        if eksik:
+            return (duz_m + f"{len(liste) - len(eksik)}/{len(liste)} ses hazır. Ses servisi {len(eksik)} satıra cevap "
+                    "vermedi; birkaç dakika sonra tekrar 'Kontrol et'e bas (hazır sesler saklandı).")
+        return duz_m + f"tüm sesler ({len(liste)}) hazır. Artık üretim yazı/ses yüzünden yarıda kalmaz."
+    is_baslat(f"Kontrol: {baslik}", f)
+
+
 def analiz_rapor(v):
     return {"rapor": analiz.rapor(v.get("donem", "haftalik"))}
 
@@ -983,7 +1065,7 @@ ISLEMLER = {"/api/senaryo-uret": senaryo_uret, "/api/kaydet": kaydet, "/api/onay
             "/api/reddet": reddet, "/api/ayar": ayar, "/api/klasor": klasor_ac,
             "/api/guncelle": guncelle, "/api/nabiz": nabiz,
             "/api/paylas": paylas, "/api/video-sil": video_sil, "/api/youtube-istemci": youtube_istemci,
-            "/api/youtube-bagla": youtube_bagla, "/api/youtube-kes": youtube_kes, "/api/destek": destek, "/api/github-kontrol": github_kontrol, "/api/sohbet": sohbet_et, "/api/eski-liste": eski_liste, "/api/eski-islem": eski_islem, "/api/hikaye-liste": hikaye_liste, "/api/hikaye-yaz": hikaye_yaz, "/api/hikaye-sil": hikaye_sil, "/api/hikaye-ertele": hikaye_ertele, "/api/hikaye-video": hikaye_video, "/api/hikaye-paylas": hikaye_paylas, "/api/sifre": sifre_ayarla, "/api/telefon": telefon_islem, "/api/kapat": kapat, "/api/ertele": ertele, "/api/geri-getir": geri_getir, "/api/analiz": analiz_rapor, "/api/analiz-guncelle": analiz_guncelle, "/api/yeniden-uret": yeniden_uret}
+            "/api/youtube-bagla": youtube_bagla, "/api/youtube-kes": youtube_kes, "/api/destek": destek, "/api/github-kontrol": github_kontrol, "/api/sohbet": sohbet_et, "/api/eski-liste": eski_liste, "/api/eski-islem": eski_islem, "/api/hikaye-liste": hikaye_liste, "/api/hikaye-yaz": hikaye_yaz, "/api/hikaye-sil": hikaye_sil, "/api/hikaye-ertele": hikaye_ertele, "/api/kontrol": kontrol, "/api/hikaye-video": hikaye_video, "/api/hikaye-paylas": hikaye_paylas, "/api/sifre": sifre_ayarla, "/api/telefon": telefon_islem, "/api/kapat": kapat, "/api/ertele": ertele, "/api/geri-getir": geri_getir, "/api/analiz": analiz_rapor, "/api/analiz-guncelle": analiz_guncelle, "/api/yeniden-uret": yeniden_uret}
 
 
 # --- sunucu -------------------------------------------------------------------
