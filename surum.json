@@ -1,8 +1,8 @@
 {
-  "surum": "1.18.1",
+  "surum": "1.18.2",
   "tarih": "2026-10-16",
   "notlar": [
-    "Hikayeler de ertelenebilir (Ertelenenler bolumu, Geri getir)"
+    "Hikayeler: kisim basina kiyafet, Bilge'ye 12 konu aksesuari, puf gecisi"
   ],
   "dosyalar": {
     "program/GELISTIRICI.txt": "24e10b02892addbc87b87d078143cb77a09521d86239fe3b78d2a0628b03d138",
@@ -10,14 +10,14 @@
     "program/arka_planlar.py": "0ecf769526b13b4f54823e2bbe474ff855351027d429b3625e841fda47c949e6",
     "program/bidik.ico": "28def8b8467f59bfad08aa6ae749258f23e47fa9aaa0c100cef59c8b2d8c16a3",
     "program/bidik.png": "eaefa6925920f2927db821cfcd582a98b21786cce794bd3f3ef3f7e68f5018a0",
-    "program/bilge.py": "adf7d5e050ed376fce27b3ab5f12b1a73bd4a8c6437562876fd5c9d79f3ee9e5",
+    "program/bilge.py": "3113ff4f3a20cdb50bf1e06d213a7893be10c4de2c7e6d3e0b70c8e3747e8dff",
     "program/font/DejaVuSans-Bold.ttf": "5c1247acef7f2b8522a31742c76d6adcb5569bacc0be7ceaa4dc39dd252ce895",
     "program/font/LICENSE.txt": "63d3ba759d12804c5b31a9d5940d855c1820d1f5999e6b0872eb1c7ff045fbc9",
     "program/gereksinimler.txt": "ea75906866e55afdfe66e5eb98a011d93e5e7eea72949ec672fdf817265f0a3a",
     "program/girisler.py": "8522b21bebe3f327202845e39f27062748c8d97456585246e9b809bf85d391cf",
     "program/github_kanal.py": "073f7240c08dac6bbc105da3062ad0fe2ce688747cee9fb72621aab0a54cce3f",
-    "program/hikaye_motoru.py": "55ec1a1a6a5934a1a001fbccd07a1a761516f25f628ddabb92e521aaaba82539",
-    "program/hikaye_uret.py": "068a3445604261fde1175e42ce534d8858debec55258fd80a568f196c1fd867e",
+    "program/hikaye_motoru.py": "b08ca153e2890c0ad72917f37fff52d4092f06465709584a81007a1944c3e425",
+    "program/hikaye_uret.py": "383050f46b2ce78f7054b4813ab3fe494cccaba2f6048fce5e628ea1872b70b2",
     "program/karakter.py": "b3f0eb8d661cde885545ef64059514bbdea1de710fc9bf1628eedf9b8458f6a9",
     "program/kisayol.ps1": "8b01102bef0e33a74e1a10756c1d030ef45381b8a3bcd2bd0cfd16252d872a5b",
     "program/kostumler.py": "a041a730f8753887c1cdc180c8b906ed9791b7539e5c55fe26f669e63717aa33",
