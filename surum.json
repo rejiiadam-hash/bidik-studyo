@@ -1,8 +1,8 @@
 {
-  "surum": "1.21.0",
+  "surum": "1.21.1",
   "tarih": "2026-10-16",
   "notlar": [
-    "Kontrol iki dugmeye ayrildi: Yazimi kontrol et (her basista yeniden denetler, duzeltir) ve Sesleri hazirla (sadece yazimi kontrol edilmis metin icin)"
+    "Hikaye kartinda iki ayri kontrol dugmesi (duzen duzeltmesi)"
   ],
   "dosyalar": {
     "program/GELISTIRICI.txt": "24e10b02892addbc87b87d078143cb77a09521d86239fe3b78d2a0628b03d138",
@@ -22,7 +22,7 @@
     "program/kisayol.ps1": "8b01102bef0e33a74e1a10756c1d030ef45381b8a3bcd2bd0cfd16252d872a5b",
     "program/kostumler.py": "a041a730f8753887c1cdc180c8b906ed9791b7539e5c55fe26f669e63717aa33",
     "program/ortak.py": "66e8d455d36befe3417edc1594260b464dd84a38293938f139ef06d0d95f69fd",
-    "program/panel.html": "501fc547e8892594cd22e06d3f6b8645fbcf03b49c54847b9c1c4224b535dae0",
+    "program/panel.html": "ea5a4a1bbc0dcd865baab30b96e4c41bed72442c091893c9c06fdbaa4de0122e",
     "program/panel.py": "ac3546cb2c9031c4cf78c2432212aa2c4d90f2c6e800c774226acbb9bc366704",
     "program/senaryo_motoru.py": "ef209ebe5f378ff46b4c089be17c656d5aca39ec9002fda639b5b1a229c3af4b",
     "program/sohbet.py": "a0f17d44f0e7acdbf873549467eba8bc428bb5ee1d11b0820cd145cddd4f52bd",

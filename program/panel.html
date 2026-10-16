@@ -755,6 +755,7 @@ async function hikayeYukle(){
     return `<div class="kart" style="max-width:860px;margin-bottom:14px">
       <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap"><b style="font-size:16px">${esc(b.baslik||b.konu)}</b>
         <span class="kucuk">${durumAd[b.durum]||esc(b.durum||"")} · ${satirSay} satır${sure}</span>
+      </div>
       ${b.video?`<video src="/dosya/${esc(b.video)}" ${b.kapak?`poster="/dosya/${esc(b.kapak)}"`:""} controls preload="none" style="width:100%;max-width:640px;border-radius:12px;margin-top:10px;background:#000"></video>`:""}
       ${!b.youtube_url ? kontrolRozeti(b.yazim_ok, b.ses_durum, b.kontrol_bilgi) : ""}
       <details style="margin-top:8px"><summary style="cursor:pointer">Metni oku</summary>${metin}</details>
