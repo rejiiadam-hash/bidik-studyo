@@ -1,8 +1,8 @@
 {
-  "surum": "1.13.0",
+  "surum": "1.14.0",
   "tarih": "2026-10-16",
   "notlar": [
-    "Ana sayfa: kendi kendine hareket eden Bidik sahnesi (yuruyor, el sallıyor, dans ediyor, kiyafet degistiriyor)"
+    "Acilistaki admin ekrani kaldirildi"
   ],
   "dosyalar": {
     "program/GELISTIRICI.txt": "24e10b02892addbc87b87d078143cb77a09521d86239fe3b78d2a0628b03d138",
@@ -19,7 +19,7 @@
     "program/kisayol.ps1": "8b01102bef0e33a74e1a10756c1d030ef45381b8a3bcd2bd0cfd16252d872a5b",
     "program/kostumler.py": "a041a730f8753887c1cdc180c8b906ed9791b7539e5c55fe26f669e63717aa33",
     "program/ortak.py": "7bdf52ba89a5347a913cca7bfa4d28109b49967940594a822e0d156eb1877b2b",
-    "program/panel.html": "89bea1c93e11e71b4900ffe0ec1703bfc1fe342d394f6f0fdade1e2c76863e37",
+    "program/panel.html": "c565d547971c144a36bf5b7955f7be89df98b39518148db0945200591fe37937",
     "program/panel.py": "97114dc1943d30b7d7bed6b99cb0a3a1f28ab657ab0e27587ef62126c4400f90",
     "program/senaryo_motoru.py": "4013b6482aa0a6e5d2733b32aba74ddd40a1cfc36433603d496531f1bb83b5a9",
     "program/telefon.py": "5d2d8793c6184446d809ef0f4b73342a9eb0fdab559f7c51ce8ab07e7af29892",

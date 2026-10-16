@@ -151,22 +151,6 @@ details.gun > .icerik{padding:0 14px 14px}
 .kkart .dugmeler{margin-top:auto}
 .kkart .dugmeler .btn,.kkart .dugmeler button{padding:6px 10px;font-size:13px}
 .kkart .sil{width:28px;height:28px;top:8px;right:8px;font-size:15px}
-/* --- admin karsilama ekrani --- */
-#giris{position:fixed;inset:0;z-index:100;display:flex;align-items:center;justify-content:center;
-  background:repeating-linear-gradient(90deg,#0d0d0f 0 64px,#f4f4f4 64px 128px);transition:opacity .45s,transform .45s}
-#giris.kapan{opacity:0;transform:scale(1.04);pointer-events:none}
-#giris .kutu{width:min(400px,92vw);background:#0b0b0d;color:#fff;border-radius:24px;padding:30px 28px 26px;text-align:center;
-  border:3px solid #fff;box-shadow:0 30px 80px rgba(0,0,0,.55)}
-#giris svg{width:150px;height:150px;display:block;margin:0 auto 6px}
-#giris h2{display:block;margin:4px 0 2px;font-size:24px;letter-spacing:4px}
-#giris .alt{color:#bdbdc4;font-size:13px;margin-bottom:20px;letter-spacing:1px}
-#giris label{display:block;text-align:left;font-size:12.5px;font-weight:700;color:#cfcfd6;margin-bottom:6px;letter-spacing:1px}
-#giris input{width:100%;font:inherit;font-size:17px;padding:13px 14px;border-radius:12px;border:2px solid #444;background:#151518;color:#fff;text-align:center;letter-spacing:2px}
-#giris input:focus{outline:none;border-color:#fff}
-#giris .ipucu{font-size:12px;color:#8d8d96;margin-top:10px;min-height:18px}
-#giris .ipucu.hata{color:#ff6b7a}
-#giris .salla{animation:salla .4s}
-@keyframes salla{20%,60%{transform:translateX(-9px)}40%,80%{transform:translateX(9px)}}
 .sekme{display:none}
 .sekme.acik{display:block}
 h2{font-size:17px;margin:22px 0 10px;display:flex;align-items:center;gap:10px}
@@ -329,28 +313,6 @@ body:not(.uzak) .sadece-uzak{display:none !important}
 </style>
 </head>
 <body>
-<div id="giris" style="display:none">
-  <form class="kutu" id="girisKutu" onsubmit="adminGir(event)" autocomplete="off">
-    <svg viewBox="0 0 200 200" aria-hidden="true">
-      <circle cx="100" cy="100" r="96" fill="#0d0d0f" stroke="#fff" stroke-width="6"/>
-      <circle cx="100" cy="100" r="84" fill="none" stroke="#fff" stroke-width="2" stroke-dasharray="3 6"/>
-      <!-- ozgun, sade kartal: acik kanatlar, govde, sola bakan bas -->
-      <g fill="#fff">
-        <path d="M100 82 C86 70 64 58 30 56 C44 64 52 70 58 78 C46 76 36 78 26 84 C42 86 54 90 62 96 C52 98 44 102 38 110 C56 106 72 106 86 110 Z"/>
-        <path d="M100 82 C114 70 136 58 170 56 C156 64 148 70 142 78 C154 76 164 78 174 84 C158 86 146 90 138 96 C148 98 156 102 162 110 C144 106 128 106 114 110 Z"/>
-        <path d="M86 108 C88 92 94 84 100 82 C106 84 112 92 114 108 C112 124 108 138 100 150 C92 138 88 124 86 108 Z"/>
-        <path d="M100 150 L88 166 L96 162 L100 172 L104 162 L112 166 Z"/>
-        <path d="M100 84 C94 78 92 70 96 64 C100 60 108 60 110 66 L120 70 L108 72 C108 78 106 82 100 84 Z"/>
-      </g>
-      <circle cx="102" cy="67" r="2.6" fill="#0d0d0f"/>
-    </svg>
-    <h2>BEŞİKTAŞ</h2>
-    <div class="alt">BIDIK STÜDYO · YÖNETİCİ GİRİŞİ</div>
-    <label for="adminAd">KULLANICI ADI</label>
-    <input id="adminAd" type="text" placeholder="kullanıcı adı" spellcheck="false" autocapitalize="off">
-    <div class="ipucu" id="adminIpucu">Yaz ve Enter'a bas</div>
-  </form>
-</div>
 <div class="duzen">
 <aside class="yan">
   <div class="marka"><img src="/bidik.png" alt=""><div><b>Bıdık Stüdyo</b><small>Eğlenceli Shorts · <span class="surum" id="surum"></span></small></div></div>
@@ -684,23 +646,6 @@ function gunlereBol(liste){
   }).join("");
 }
 
-/* --- admin karsilama ekrani (sadece bir karsilama; gercek koruma telefondaki sifredir) --- */
-function adminGoster(){
-  let gecti = false; try{ gecti = sessionStorage.getItem("adminGecti") === "1"; }catch(e){}
-  if(gecti) return;
-  $("giris").style.display = "flex"; setTimeout(()=>$("adminAd").focus(), 50);
-}
-function adminGir(e){
-  e.preventDefault();
-  const ad = $("adminAd").value.trim().toLocaleLowerCase("tr");
-  if(ad === "admin"){
-    try{ sessionStorage.setItem("adminGecti","1"); }catch(err){}
-    $("giris").classList.add("kapan"); setTimeout(()=>$("giris").style.display="none", 460);
-  } else {
-    const k = $("girisKutu"); k.classList.remove("salla"); void k.offsetWidth; k.classList.add("salla");
-    $("adminIpucu").textContent = "Kullanıcı adı hatalı"; $("adminIpucu").classList.add("hata"); $("adminAd").select();
-  }
-}
 /* --- ana sayfa: kendi kendine hareket eden Bidik --- */
 const KOSTUM_SIRASI = ["yok","astronot","kaptan","bilimci","safari","dedektif","buyucu","asci","doktor","pervane","migfer","kulaklik"];
 const BIDIK = {acik:false, kostum:"yok", x:40, yon:1, mod:"sallan", modBitis:0, kare:0, sonKare:0, hop:0, konusmaBitis:0, kostumBitis:0, raf:0};
@@ -1108,7 +1053,6 @@ setInterval(()=>fetch("/api/nabiz",{method:"POST",body:"{}"}).catch(()=>{}), 500
 fetch("/api/nabiz",{method:"POST",body:"{}"}).catch(()=>{});
 sekme(["anasayfa","senaryolar","videolar","analiz","youtube","ayarlar"].includes(location.hash.slice(1)) ? location.hash.slice(1) : "anasayfa");
 kalpleriBaslat();
-adminGoster();
 yenile(true);
 </script>
 </body>
