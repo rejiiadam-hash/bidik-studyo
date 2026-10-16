@@ -49,6 +49,42 @@ header{position:sticky;top:0;z-index:5;background:var(--ust);color:#fff;box-shad
 .ust{padding:10px 24px;display:flex;align-items:center;gap:14px}
 .ust .baslik{font-size:17px;font-weight:700}
 main{width:100%;max-width:1240px;margin:0 auto;padding:18px 24px 60px}
+/* --- ana sayfa: sahne --- */
+.sahne{position:relative;height:430px;border-radius:22px;overflow:hidden;border:2px solid var(--cizgi);
+  background:linear-gradient(180deg,#8fd3ff 0%,#d8f1ff 62%,#fff3cf 100%);box-shadow:0 6px 22px rgba(0,0,0,.08);user-select:none}
+:root[data-tema="koyu"] .sahne{background:linear-gradient(180deg,#141a3d 0%,#2a2f6b 60%,#4a3f6b 100%)}
+.sahne .gunes{position:absolute;top:26px;right:60px;width:74px;height:74px;border-radius:50%;background:#ffd23f;
+  box-shadow:0 0 0 14px rgba(255,210,63,.28),0 0 0 30px rgba(255,210,63,.14);animation:nabiz 4s ease-in-out infinite}
+:root[data-tema="koyu"] .sahne .gunes{background:#f4f1de;box-shadow:0 0 0 12px rgba(244,241,222,.16),0 0 0 26px rgba(244,241,222,.08)}
+@keyframes nabiz{50%{transform:scale(1.07)}}
+.sahne .bulut{position:absolute;height:34px;background:#fff;border-radius:99px;opacity:.9;animation:bulut linear infinite}
+.sahne .bulut::before,.sahne .bulut::after{content:"";position:absolute;background:#fff;border-radius:50%}
+.sahne .bulut::before{width:44%;height:150%;left:14%;top:-70%}
+.sahne .bulut::after{width:32%;height:120%;left:52%;top:-45%}
+:root[data-tema="koyu"] .sahne .bulut{background:#59608f;opacity:.55}
+:root[data-tema="koyu"] .sahne .bulut::before,:root[data-tema="koyu"] .sahne .bulut::after{background:#59608f}
+@keyframes bulut{from{transform:translateX(-160px)}to{transform:translateX(calc(100vw + 160px))}}
+.sahne .tepe{position:absolute;bottom:62px;border-radius:50% 50% 0 0;background:#8fd28a}
+.sahne .cim{position:absolute;left:0;right:0;bottom:0;height:78px;background:linear-gradient(#78c96f,#5fb35a);border-top:4px solid #4a9a4a}
+:root[data-tema="koyu"] .sahne .tepe{background:#2f4f53}
+:root[data-tema="koyu"] .sahne .cim{background:linear-gradient(#335a45,#27473a);border-top-color:#1f3a2e}
+.sahne .cicek{position:absolute;bottom:14px;font-size:20px;animation:sallan 3s ease-in-out infinite;transform-origin:50% 100%}
+@keyframes sallan{50%{transform:rotate(9deg)}}
+#bidikKutu{position:absolute;bottom:24px;left:0;width:200px;height:261px;cursor:pointer;will-change:transform}
+#bidikGolge{position:absolute;bottom:-4px;left:34px;width:132px;height:16px;border-radius:50%;background:rgba(0,0,0,.18);z-index:0}
+#bidikKare{position:absolute;inset:0;background-repeat:no-repeat;z-index:1;transition:opacity .35s}
+#konusma{position:absolute;bottom:262px;left:-16px;min-width:140px;max-width:250px;background:#fff;color:#23253a;border:2.5px solid #23253a;
+  border-radius:16px;padding:9px 13px;font-weight:700;font-size:14px;line-height:1.35;text-align:center;opacity:0;transform:scale(.8);
+  transition:opacity .25s,transform .25s;pointer-events:none;z-index:3}
+#konusma.acik{opacity:1;transform:scale(1)}
+#konusma::after{content:"";position:absolute;left:50%;bottom:-11px;margin-left:-8px;border:8px solid transparent;border-top-color:#23253a;border-bottom:0}
+.sahne .kalp{position:absolute;font-size:22px;pointer-events:none;animation:kalpUc 1.5s ease-out forwards;z-index:4}
+@keyframes kalpUc{from{opacity:1;transform:translateY(0) scale(.6)}to{opacity:0;transform:translateY(-120px) scale(1.2)}}
+.anaKarsi{margin:16px 2px 4px;font-size:21px;font-weight:800}
+.anaAlt{color:var(--soluk);margin:0 2px 14px}
+.anaHizli{display:flex;flex-wrap:wrap;gap:10px;margin-top:14px}
+@media (max-width:860px){.sahne{height:380px}#bidikKutu{width:160px;height:209px;bottom:20px}#konusma{bottom:210px}.sahne .gunes{right:24px;top:18px;width:56px;height:56px}}
+@media (prefers-reduced-motion:reduce){.sahne .bulut,.sahne .gunes,.sahne .cicek{animation:none}}
 /* --- sevgi kosesi --- */
 .sevgi{position:relative;border-radius:16px;padding:16px 12px 14px;text-align:center;overflow:hidden;
   background:linear-gradient(160deg,rgba(255,77,109,.20),rgba(255,77,109,.06));border:1.5px solid rgba(255,77,109,.35)}
@@ -319,6 +355,7 @@ body:not(.uzak) .sadece-uzak{display:none !important}
 <aside class="yan">
   <div class="marka"><img src="/bidik.png" alt=""><div><b>Bıdık Stüdyo</b><small>Eğlenceli Shorts · <span class="surum" id="surum"></span></small></div></div>
   <nav id="sekmeler">
+    <button data-sekme="anasayfa" onclick="sekme('anasayfa')"><span class="ikon">🏠</span> Ana sayfa</button>
     <button data-sekme="senaryolar" onclick="sekme('senaryolar')"><span class="ikon">📝</span> Senaryolar<span class="sayi" id="bSayi"></span></button>
     <button data-sekme="videolar" onclick="sekme('videolar')"><span class="ikon">🎬</span> Videolar<span class="sayi" id="vSayi"></span></button>
     <button data-sekme="analiz" onclick="sekme('analiz')"><span class="ikon">📊</span> Analiz</button>
@@ -345,6 +382,33 @@ body:not(.uzak) .sadece-uzak{display:none !important}
 
 <main>
   <div id="guncelBant"></div>
+
+  <section class="sekme" id="s-anasayfa">
+    <div class="sahne" id="sahne">
+      <div class="gunes"></div>
+      <div class="bulut" style="top:40px;width:120px;animation-duration:70s"></div>
+      <div class="bulut" style="top:92px;width:84px;animation-duration:95s;animation-delay:-40s"></div>
+      <div class="bulut" style="top:20px;width:100px;animation-duration:120s;animation-delay:-85s"></div>
+      <div class="tepe" style="left:-6%;width:46%;height:120px"></div>
+      <div class="tepe" style="left:34%;width:40%;height:84px"></div>
+      <div class="tepe" style="left:66%;width:48%;height:136px"></div>
+      <div class="cim"></div>
+      <div class="cicek" style="left:7%">🌼</div><div class="cicek" style="left:23%;animation-delay:-1s">🌷</div>
+      <div class="cicek" style="left:46%;animation-delay:-2s">🌸</div><div class="cicek" style="left:71%;animation-delay:-.6s">🌼</div>
+      <div class="cicek" style="left:90%;animation-delay:-1.6s">🌷</div>
+      <div id="bidikKutu" onclick="bidikTikla()">
+        <div id="konusma"></div><div id="bidikGolge"></div><div id="bidikKare"></div>
+      </div>
+    </div>
+    <div class="anaKarsi" id="anaSelam">Merhaba Deniz!</div>
+    <p class="anaAlt">Bıdık seni bekliyordu. Üzerine tıklarsan dans eder. 💛</p>
+    <div class="anaHizli">
+      <button class="ana" onclick="senaryoUret()">✨ Yeni senaryolar yaz</button>
+      <button onclick="sekme('senaryolar')">📝 Senaryolara git</button>
+      <button onclick="sekme('videolar')">🎬 Videolar</button>
+      <button onclick="sekme('analiz')">📊 Analiz</button>
+    </div>
+  </section>
 
   <section class="sekme" id="s-senaryolar">
     <div id="ilkKurulum"></div>
@@ -469,7 +533,7 @@ async function post(url, veri){
 }
 
 /* --- sekmeler ve tema --- */
-const SEKME_ADI = {senaryolar:"📝 Senaryolar", videolar:"🎬 Videolar", analiz:"📊 Analiz", youtube:"▶️ YouTube", ayarlar:"⚙️ Ayarlar"};
+const SEKME_ADI = {anasayfa:"🏠 Ana sayfa", senaryolar:"📝 Senaryolar", videolar:"🎬 Videolar", analiz:"📊 Analiz", youtube:"▶️ YouTube", ayarlar:"⚙️ Ayarlar"};
 function sekme(ad){
   aktifSekme = ad;
   $("sayfaBaslik").textContent = SEKME_ADI[ad] || "";
@@ -478,6 +542,7 @@ function sekme(ad){
   if(location.hash !== "#"+ad) history.replaceState(null, "", "#"+ad);
   if(ad === "ayarlar" && !UZAK) telefonYenile("durum");
   if(ad === "analiz") analizYukle();
+  bidikDurum(ad === "anasayfa");
   window.scrollTo(0,0);
 }
 function temaUygula(t){ document.documentElement.dataset.tema = t; $("temaBtn").textContent = t === "koyu" ? "☀️" : "🌙"; }
@@ -636,6 +701,89 @@ function adminGir(e){
     $("adminIpucu").textContent = "Kullanıcı adı hatalı"; $("adminIpucu").classList.add("hata"); $("adminAd").select();
   }
 }
+/* --- ana sayfa: kendi kendine hareket eden Bidik --- */
+const KOSTUM_SIRASI = ["yok","astronot","kaptan","bilimci","safari","dedektif","buyucu","asci","doktor","pervane","migfer","kulaklik"];
+const BIDIK = {acik:false, kostum:"yok", x:40, yon:1, mod:"sallan", modBitis:0, kare:0, sonKare:0, hop:0, konusmaBitis:0, kostumBitis:0, raf:0};
+const BIDIK_SOZ = ["Merhaba! Bugün ne öğreniyoruz?","Bir şey biliyor musun? Ben bir yumurtayım! 🥚","Bugün yeni video var mı? 🎬","Karnım acıktı… yumurta değilim, söz!","Deniz, sen çok iyi bir yönetmensin!","Hadi bir şov yapalım! ✨","İzleyenlerimiz bizi çok seviyor 💛","Uzay çok büyük, ben çok küçüğüm 🚀","Bugün hava çok güzel!"];
+function bidikSelam(){
+  const s = new Date().getHours();
+  $("anaSelam").textContent = (s < 6 ? "İyi geceler" : s < 12 ? "Günaydın" : s < 18 ? "Merhaba" : "İyi akşamlar") + " Deniz!";
+}
+function bidikKareYukle(k){
+  const img = new Image();
+  img.onload = () => { BIDIK.kostum = k; $("bidikKare").style.backgroundImage = `url(/bidik-kareler/${k}.png)`; $("bidikKare").style.opacity = 1; };
+  img.src = `/bidik-kareler/${k}.png`;
+}
+function bidikSoyle(m, sn=3.4){
+  const k = $("konusma"); k.textContent = m; k.classList.add("acik");
+  BIDIK.konusmaBitis = performance.now() + sn*1000;
+}
+function bidikKalp(){
+  const s = $("sahne"), kutu = $("bidikKutu").getBoundingClientRect(), sr = s.getBoundingClientRect();
+  for(let i=0;i<4;i++){
+    const e = document.createElement("div"); e.className = "kalp"; e.textContent = ["❤️","💛","💖","⭐"][i%4];
+    e.style.left = (kutu.left - sr.left + 30 + Math.random()*kutu.width*0.7) + "px";
+    e.style.top = (kutu.top - sr.top + 20 + Math.random()*40) + "px"; e.style.animationDelay = (i*0.12)+"s";
+    s.appendChild(e); setTimeout(() => e.remove(), 1900);
+  }
+}
+function bidikTikla(){
+  BIDIK.mod = "dans"; BIDIK.modBitis = performance.now() + 3200; bidikKalp();
+  bidikSoyle(["Yaşasın! 🎉","Dans zamanı! 💃","Beni çok seviyorsunuz! 💛"][Math.floor(Math.random()*3)]);
+}
+function bidikDurum(ac){
+  BIDIK.acik = ac;
+  if(ac){ bidikSelam(); if(!BIDIK.raf){ BIDIK.sonKare = performance.now(); BIDIK.raf = requestAnimationFrame(bidikDongu); } }
+}
+function bidikDongu(t){
+  if(!BIDIK.acik){ BIDIK.raf = 0; return; }
+  BIDIK.raf = requestAnimationFrame(bidikDongu);
+  const sahne = $("sahne"), kutu = $("bidikKutu"), gen = kutu.offsetWidth, W = sahne.clientWidth;
+  const dt = Math.min(0.05, (t - (BIDIK.t0 || t)) / 1000); BIDIK.t0 = t;
+  const azalt = matchMedia("(prefers-reduced-motion:reduce)").matches;
+  // mod degisimi
+  if(t > BIDIK.modBitis){
+    const r = Math.random();
+    BIDIK.mod = r < 0.45 ? "yuru" : r < 0.7 ? "sallan" : r < 0.88 ? "dans" : "zipla";
+    BIDIK.modBitis = t + (BIDIK.mod === "yuru" ? 4500 + Math.random()*3500 : BIDIK.mod === "dans" ? 3000 : 2200);
+    if(BIDIK.mod === "yuru" && Math.random() < 0.5) BIDIK.yon *= -1;
+    if(BIDIK.mod === "zipla") BIDIK.hop = 0.0001;
+    if(Math.random() < 0.55 && t > BIDIK.konusmaBitis) bidikSoyle(BIDIK_SOZ[Math.floor(Math.random()*BIDIK_SOZ.length)]);
+  }
+  if(t > BIDIK.konusmaBitis) $("konusma").classList.remove("acik");
+  // kostum degisimi
+  if(!BIDIK.kostumBitis) BIDIK.kostumBitis = t + 22000;
+  if(t > BIDIK.kostumBitis){
+    BIDIK.kostumBitis = t + 22000;
+    const sira = KOSTUM_SIRASI[(KOSTUM_SIRASI.indexOf(BIDIK.kostum) + 1) % KOSTUM_SIRASI.length];
+    $("bidikKare").style.opacity = 0;
+    setTimeout(() => bidikKareYukle(sira), 350);
+    bidikSoyle(sira === "yok" ? "Kıyafetsiz de çok yakışıklıyım 😎" : "Yeni kıyafetim nasıl? ✨", 3);
+  }
+  // hareket
+  let hizY = 0, satir = 0, hiz = 11;
+  if(BIDIK.mod === "yuru" && !azalt){
+    BIDIK.x += BIDIK.yon * 70 * dt; satir = 0; hiz = 14;
+    if(BIDIK.x > W - gen - 10){ BIDIK.x = W - gen - 10; BIDIK.yon = -1; }
+    if(BIDIK.x < 10){ BIDIK.x = 10; BIDIK.yon = 1; }
+  }else if(BIDIK.mod === "dans" && !azalt){ satir = 1; hiz = 12; }
+  else if(BIDIK.mod === "zipla" && !azalt){ satir = 1; hiz = 16; }
+  else { satir = 0; hiz = 9; }
+  const yAdim = Math.abs(Math.sin(t / 190)) * (BIDIK.mod === "yuru" ? 9 : 0);
+  let ziplamaPx = 0;
+  if(BIDIK.mod === "zipla"){ BIDIK.hop += dt * 1.15; ziplamaPx = Math.abs(Math.sin(BIDIK.hop * Math.PI)) * 120; }
+  // kare
+  BIDIK.kare = (BIDIK.kare + dt * hiz) % 12;
+  const olcek = gen / 260, kare = Math.floor(BIDIK.kare);
+  const kr = $("bidikKare");
+  kr.style.backgroundSize = `${260*12*olcek}px ${340*2*olcek}px`;
+  kr.style.backgroundPosition = `${-kare*260*olcek}px ${-satir*340*olcek}px`;
+  kutu.style.transform = `translate(${BIDIK.x}px, ${-(yAdim + ziplamaPx)}px) scaleX(${BIDIK.yon})`;
+  $("konusma").style.transform = `scaleX(${BIDIK.yon}) ` + ($("konusma").classList.contains("acik") ? "scale(1)" : "scale(.8)");
+  $("bidikGolge").style.transform = `scale(${1 - (yAdim + ziplamaPx) / 260})`;
+}
+bidikKareYukle("yok");
+
 /* --- sevgi kosesi: ucusan kalpler --- */
 function kalpleriBaslat(){
   const k = $("sevgi"), renk = ["❤️","💕","💖","💗","💘"];
@@ -958,7 +1106,7 @@ async function guncelle(){
 document.addEventListener("keydown", e => { if(e.key === "Escape"){ paylasKapat(); silKapat(); } });
 setInterval(()=>fetch("/api/nabiz",{method:"POST",body:"{}"}).catch(()=>{}), 5000);
 fetch("/api/nabiz",{method:"POST",body:"{}"}).catch(()=>{});
-sekme(["senaryolar","videolar","analiz","youtube","ayarlar"].includes(location.hash.slice(1)) ? location.hash.slice(1) : "senaryolar");
+sekme(["anasayfa","senaryolar","videolar","analiz","youtube","ayarlar"].includes(location.hash.slice(1)) ? location.hash.slice(1) : "anasayfa");
 kalpleriBaslat();
 adminGoster();
 yenile(true);

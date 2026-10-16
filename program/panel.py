@@ -663,6 +663,58 @@ def kostum_resmi(ad):
     return _KOSTUM_RESIM[ad]
 
 
+_KARE_RESIM = {}
+KARE_GEN, KARE_YUK, KARE_ADET = 260, 340, 12
+
+
+def kare_sayfasi(ad):
+    """Ana sayfa icin seffaf zeminli Bidik kare serisi (tek PNG: ust satir el sallama, alt satir dans)."""
+    if ad != "yok" and ad not in kostumler.KOSTUMLER:
+        return None
+    if ad not in _KARE_RESIM:
+        import io, math
+        from PIL import Image, ImageChops
+        from karakter import ciz_bidik
+        ss = 2
+        sayfa = Image.new("RGBA", (KARE_GEN * KARE_ADET, KARE_YUK * 2), (0, 0, 0, 0))
+        for satir in range(2):
+            for n in range(KARE_ADET):
+                f = n / KARE_ADET
+                ayar = dict(x=KARE_GEN / 2 * ss, y=(KARE_YUK - 14) * ss, olcek=0.48 * ss,
+                            kostum=None if ad == "yok" else ad)
+                if satir == 0:   # el sallama + goz kirpma
+                    ayar.update(ifade="mutlu", kol="el_salla", kol_faz=f, kirp=1.0 if n == 7 else 0.0,
+                                agiz=0.35 if n % 4 in (1, 2) else 0.0)
+                else:            # dans: kollar havada, zipla, saga sola egil
+                    ayar.update(ifade="mutlu", kol="kollar_havada", kol_faz=f,
+                                ziplama=abs(math.sin(f * math.pi * 2)) * 34,
+                                egilme=math.sin(f * math.pi * 2) * 0.35, agiz=0.5 if n % 2 else 0.1)
+                iki = []
+                for zemin in ((0, 0, 0), (255, 255, 255)):   # fark yontemiyle tam seffaflik
+                    im = Image.new("RGB", (KARE_GEN * ss, KARE_YUK * ss), zemin)
+                    ciz_bidik(im, **ayar)
+                    iki.append(im.resize((KARE_GEN, KARE_YUK), Image.LANCZOS))
+                siyah, beyaz = iki
+                fark = ImageChops.subtract(beyaz, siyah).convert("L")      # 255 - alfa*255
+                alfa = fark.point(lambda v: 255 - v)
+                kare = siyah.copy().convert("RGBA")
+                px, ap = kare.load(), alfa.load()
+                for yy in range(KARE_YUK):
+                    for xx in range(KARE_GEN):
+                        a = ap[xx, yy]
+                        if a:
+                            r, g, b, _ = px[xx, yy]
+                            k = 255.0 / a
+                            px[xx, yy] = (min(255, int(r * k)), min(255, int(g * k)), min(255, int(b * k)), a)
+                        else:
+                            px[xx, yy] = (0, 0, 0, 0)
+                sayfa.paste(kare, (n * KARE_GEN, satir * KARE_YUK))
+        tampon = io.BytesIO()
+        sayfa.save(tampon, "PNG", optimize=True)
+        _KARE_RESIM[ad] = tampon.getvalue()
+    return _KARE_RESIM[ad]
+
+
 def analiz_rapor(v):
     return {"rapor": analiz.rapor(v.get("donem", "haftalik"))}
 
@@ -838,6 +890,17 @@ class Isleyici(BaseHTTPRequestHandler):
             self._dosya("program/bidik.png")
         elif yol.startswith("/kostum/") and yol.endswith(".png"):
             b = kostum_resmi(yol[len("/kostum/"):-4])
+            if b is None:
+                return self.send_error(404)
+            self.send_response(200)
+            self.send_header("Content-Type", "image/png")
+            self.send_header("Cache-Control", "max-age=86400")
+            self.send_header("Content-Length", str(len(b)))
+            self.end_headers()
+            self.wfile.write(b)
+            return
+        elif yol.startswith("/bidik-kareler/") and yol.endswith(".png"):
+            b = kare_sayfasi(yol[len("/bidik-kareler/"):-4])
             if b is None:
                 return self.send_error(404)
             self.send_response(200)
