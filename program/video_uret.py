@@ -373,6 +373,49 @@ def son_cagri(d, k):
             d.ellipse([px - r, py - r, px + r, py + r], outline=(255, 183, 3), width=int(12 * SS * (1 - t) + 2))
 
 
+# --- kanal imzasi: acilista seri etiketi, kapanista yorum sorusu + "yarin" vaadi ------------
+KAPANIS_VARYANTLARI = ["Yarın yeni bir sürpriz var! Tahmin et?", "Sen biliyor muydun? Yarın yenisi geliyor!",
+                       "Yorumla: sen ne düşünüyorsun? Yarın yeni konu!", "Yarın başka bir merak! Gelecek misin?"]
+
+
+def marka_imzasi(sen):
+    """Bellekteki senaryoya (dosyaya yazilmaz) son bir 'yorum sorusu + yarin' sahnesi ekler."""
+    from ortak import ayarlar as _a
+    if not _a().get("imza_acik", True) or sen.get("_imzali"):
+        return
+    soru = str(sen.get("yorum_sorusu") or "").strip()
+    if 3 <= len(soru) <= 38:
+        metin = soru + " Yarın yeni bir konu!"
+    else:
+        metin = KAPANIS_VARYANTLARI[sum(map(ord, sen.get("baslik", ""))) % len(KAPANIS_VARYANTLARI)]
+    sen["sahneler"].append({"sure": 2.4, "ifade": "mutlu", "kol": "el_salla", "ziplama": 18,
+                            "replik": metin, "konusuyor": True})
+    sen["_imzali"] = True
+
+
+SERI_SURE_KARE = 66      # seri etiketi ilk 2,2 saniye gorunur
+
+
+def seri_etiketi(d, k, ad):
+    """Videonun ilk saniyelerinde ustte 'BIDIK BILIR MI?' seri etiketi (sese dokunmaz, kancayi geciktirmez)."""
+    if k >= SERI_SURE_KARE or not ad:
+        return
+    giris = _yay(min(1.0, k / 10))
+    cikis = 1.0 if k < SERI_SURE_KARE - 8 else max(0.0, (SERI_SURE_KARE - k) / 8)
+    olc = giris * cikis
+    if olc <= 0.02:
+        return
+    f = _font(46 * (0.85 + 0.15 * olc))
+    tw = d.textlength(ad, font=f)
+    cx, cy = W / 2 * SS, (150 - 30 * (1 - olc)) * SS
+    pad_x, yuk = 44 * SS, 50 * SS
+    d.rounded_rectangle([cx - tw / 2 - pad_x, cy - yuk + 8 * SS, cx + tw / 2 + pad_x, cy + yuk + 8 * SS],
+                        radius=int(yuk), fill=(210, 160, 20))
+    d.rounded_rectangle([cx - tw / 2 - pad_x, cy - yuk, cx + tw / 2 + pad_x, cy + yuk],
+                        radius=int(yuk), fill=(255, 205, 40), outline=LACI, width=6 * SS)
+    d.text((cx, cy), ad, font=f, fill=LACI, anchor="mm")
+
+
 # --- uretim -------------------------------------------------------------------
 def uret(senaryo_yolu, cikti=None, sesli=None, ilerleme=None, izin_sessiz=False):
     """ilerleme: istege bagli fonksiyon(yuzde:int, mesaj:str)"""
@@ -382,6 +425,7 @@ def uret(senaryo_yolu, cikti=None, sesli=None, ilerleme=None, izin_sessiz=False)
     hatalar = dogrula(sen)
     if hatalar:
         raise ValueError("Senaryo gecersiz: " + "; ".join(hatalar))
+    marka_imzasi(sen)
     cikti = cikti or os.path.splitext(senaryo_yolu)[0] + ".mp4"
     sesli = ses_var_mi() if sesli is None else sesli
     gecici = tempfile.mkdtemp(prefix="bidik_")
@@ -560,6 +604,8 @@ def uret(senaryo_yolu, cikti=None, sesli=None, ilerleme=None, izin_sessiz=False)
             if gd:
                 girisler.on(giris_ad, img, d, gt, gc)
             altyazi(d, s.get("replik", ""))
+            if si == 0 and sen.get("_imzali"):
+                seri_etiketi(d, k, ayarlar().get("seri_adi", "BIDIK BİLİR Mİ?"))
             if cagri_k >= 0:
                 son_cagri(d, cagri_k)
             img.resize((W, H), Image.LANCZOS).save(os.path.join(kare_dir, f"{n:05d}.png"))

@@ -724,6 +724,66 @@ def sohbet_et(v):
         return {"cevap": "", "tur": e.args[0], "hata_metni": e.args[1]}
 
 
+ESKI_DOSYA = os.path.join(KOK, "eski_gizlenen.json")
+ESKI_GUNLUK = 40      # videos.update 50 kota birimi; gunluk 10.000 kotadan yukleme icin pay kalsin
+
+
+def _eski_kayit():
+    try:
+        return oku(ESKI_DOSYA)
+    except (OSError, ValueError):
+        return {}
+
+
+def eski_liste(_):
+    import analiz
+    e = analiz.eski_adaylar()
+    gizlenen = _eski_kayit()
+    return {"baslangic": e["baslangic"], "adet": len(e["adaylar"]), "tekrar": sum(1 for x in e["adaylar"] if x["tekrar"]),
+            "dusuk": sum(1 for x in e["adaylar"] if x["izlenme"] < 50), "gizlenen": len(gizlenen),
+            "gunluk": ESKI_GUNLUK, "ornek": e["adaylar"][:6]}
+
+
+def eski_islem(v):
+    """v: {"islem": "gizle" | "geri"}. Gizleme gunde ESKI_GUNLUK video; geri alma tum gizlenenleri herkese acar."""
+    import analiz
+    islem = v.get("islem")
+    if islem not in ("gizle", "geri"):
+        raise ValueError("gecersiz islem")
+
+    def is_(ilerle):
+        kayit = _eski_kayit()
+        if islem == "gizle":
+            hedef = [x for x in analiz.eski_adaylar()["adaylar"] if x["id"] not in kayit][:ESKI_GUNLUK]
+        else:
+            hedef = [{"id": i, "baslik": b.get("baslik", "")} for i, b in list(kayit.items())[:ESKI_GUNLUK]]
+        if not hedef:
+            return "Yapilacak bir sey yok."
+        sayi = 0
+        for n, x in enumerate(hedef):
+            ilerle(int(100 * n / len(hedef)), f"{n + 1}/{len(hedef)}: {x['baslik'][:40]}")
+            try:
+                if islem == "gizle":
+                    eski = yt.gizlilik_ayarla(x["id"], "private")
+                    if eski in ("public", "unlisted"):
+                        kayit[x["id"]] = {"baslik": x["baslik"], "eski": eski, "tarih": time.strftime("%Y-%m-%d %H:%M")}
+                        sayi += 1
+                else:
+                    yt.gizlilik_ayarla(x["id"], kayit[x["id"]].get("eski") or "public")
+                    kayit.pop(x["id"], None)
+                    sayi += 1
+            finally:
+                yaz(ESKI_DOSYA, kayit)   # her adimdan sonra yaz: yarida kesilse de kayit kaybolmaz
+        kalan = len(analiz.eski_adaylar()["adaylar"]) - len(kayit) if islem == "gizle" else len(kayit)
+        try:
+            analiz.cek()
+        except Exception as e:
+            print("Analiz yenilenemedi:", e)
+        return (f"{sayi} video {'gizlendi' if islem == 'gizle' else 'geri acildi'}."
+                + (f" Kalan: {max(0, kalan)} (yarin devam edebilirsin)." if kalan > 0 else ""))
+    is_baslat("Eski videolar " + ("gizleniyor" if islem == "gizle" else "geri aciliyor"), is_)
+
+
 def analiz_rapor(v):
     return {"rapor": analiz.rapor(v.get("donem", "haftalik"))}
 
@@ -800,7 +860,7 @@ ISLEMLER = {"/api/senaryo-uret": senaryo_uret, "/api/kaydet": kaydet, "/api/onay
             "/api/reddet": reddet, "/api/ayar": ayar, "/api/klasor": klasor_ac,
             "/api/guncelle": guncelle, "/api/nabiz": nabiz,
             "/api/paylas": paylas, "/api/video-sil": video_sil, "/api/youtube-istemci": youtube_istemci,
-            "/api/youtube-bagla": youtube_bagla, "/api/youtube-kes": youtube_kes, "/api/destek": destek, "/api/github-kontrol": github_kontrol, "/api/sohbet": sohbet_et, "/api/sifre": sifre_ayarla, "/api/telefon": telefon_islem, "/api/kapat": kapat, "/api/ertele": ertele, "/api/geri-getir": geri_getir, "/api/analiz": analiz_rapor, "/api/analiz-guncelle": analiz_guncelle, "/api/yeniden-uret": yeniden_uret}
+            "/api/youtube-bagla": youtube_bagla, "/api/youtube-kes": youtube_kes, "/api/destek": destek, "/api/github-kontrol": github_kontrol, "/api/sohbet": sohbet_et, "/api/eski-liste": eski_liste, "/api/eski-islem": eski_islem, "/api/sifre": sifre_ayarla, "/api/telefon": telefon_islem, "/api/kapat": kapat, "/api/ertele": ertele, "/api/geri-getir": geri_getir, "/api/analiz": analiz_rapor, "/api/analiz-guncelle": analiz_guncelle, "/api/yeniden-uret": yeniden_uret}
 
 
 # --- sunucu -------------------------------------------------------------------

@@ -384,6 +384,7 @@ body:not(.uzak) .sadece-uzak{display:none !important}
       </form>
     </div>
     <div class="anaKarsi" id="anaSelam">Merhaba Deniz!</div>
+    <div class="kart" id="anaOzet" style="display:none;margin:0 0 12px"></div>
     <p class="anaAlt">Bıdık seni bekliyordu. Üzerine tıklarsan dans eder. 💛</p>
     <div class="anaHizli">
       <button class="ana" onclick="senaryoUret()">✨ Yeni senaryolar yaz</button>
@@ -423,6 +424,7 @@ body:not(.uzak) .sadece-uzak{display:none !important}
   <section class="sekme" id="s-youtube">
     <h2>YouTube bağlantısı</h2>
     <div id="ytOzet"></div>
+    <div id="eskiKart"></div>
     <div class="adimlar" id="ytAdimlar"></div>
   </section>
 
@@ -541,7 +543,9 @@ function sekme(ad){
   if(location.hash !== "#"+ad) history.replaceState(null, "", "#"+ad);
   if(ad === "ayarlar" && !UZAK) telefonYenile("durum");
   if(ad === "analiz") analizYukle();
+  if(ad === "youtube" && D && D.ayar && D.ayar.youtube_bagli) eskiYukle();
   bidikDurum(ad === "anasayfa");
+  if(ad === "anasayfa") anaOzetYukle();
   window.scrollTo(0,0);
 }
 function temaUygula(t){ document.documentElement.dataset.tema = t; $("temaBtn").textContent = t === "koyu" ? "☀️" : "🌙"; }
@@ -717,6 +721,16 @@ async function sohbetGonder(ev){
 const KOSTUM_SIRASI = ["yok","astronot","kaptan","bilimci","safari","dedektif","buyucu","asci","doktor","pervane","migfer","kulaklik"];
 const BIDIK = {acik:false, kostum:"yok", x:40, yon:1, mod:"sallan", modBitis:0, kare:0, sonKare:0, hop:0, konusmaBitis:0, kostumBitis:0, raf:0};
 const BIDIK_SOZ = ["Merhaba! Bugün ne öğreniyoruz?","Bir şey biliyor musun? Ben bir yumurtayım! 🥚","Bugün yeni video var mı? 🎬","Karnım acıktı… yumurta değilim, söz!","Deniz, sen çok iyi bir yönetmensin!","Hadi bir şov yapalım! ✨","İzleyenlerimiz bizi çok seviyor 💛","Uzay çok büyük, ben çok küçüğüm 🚀","Bugün hava çok güzel!"];
+async function anaOzetYukle(){
+  const k = $("anaOzet");
+  try{
+    const r = (await post("/api/analiz", {donem:"haftalik"})).rapor;
+    if(!r.son_cekim || !(r.yorumlar || []).length){ k.style.display = "none"; return; }
+    k.innerHTML = `<b>📌 Bu haftanın özeti</b><ul style="margin:6px 0 0;padding-left:20px;line-height:1.55">${r.yorumlar.slice(0,4).map(x => `<li>${esc(x)}</li>`).join("")}</ul>
+      <div class="kucuk" style="margin-top:6px"><a href="#" onclick="sekme('analiz');return false">Tüm analizi gör →</a></div>`;
+    k.style.display = "block";
+  }catch(e){ k.style.display = "none"; }
+}
 function bidikSelam(){
   const s = new Date().getHours();
   $("anaSelam").textContent = (s < 6 ? "İyi geceler" : s < 12 ? "Günaydın" : s < 18 ? "Merhaba" : "İyi akşamlar") + " Deniz!";
@@ -804,8 +818,31 @@ function kalpleriBaslat(){
 }
 
 /* --- YouTube sihirbazi --- */
+async function eskiYukle(){
+  let e; try{ e = await post("/api/eski-liste", {}); }catch(x){ return; }
+  const k = $("eskiKart");
+  if(!e.adet && !e.gizlenen){ k.innerHTML = ""; return; }
+  k.innerHTML = `<div class="kart" style="max-width:860px;margin:0 0 14px">
+    <b>🧹 Eski videolar</b>
+    <div class="kucuk" style="margin:6px 0 10px">Bıdık dönemi (${esc(e.baslangic)}) öncesinden herkese açık <b>${e.adet}</b> video var
+      (${e.tekrar} tanesi başka bir videoyla aynı konu, ${e.dusuk} tanesi 50 izlenmenin altında). Profile bakan biri sadece Bıdık'ı görsün diye
+      bunları <b>gizli</b> yapabilirsin. Silinmezler; istediğin zaman geri açılır.
+      YouTube'un günlük işlem sınırı yüzünden günde en fazla <b>${e.gunluk}</b> video gizlenir; önce tekrar edenler ve en az izlenenler.</div>
+    ${e.ornek.length ? `<div class="kucuk">İlk gizlenecekler: ${e.ornek.map(o => esc(o.baslik)).slice(0,4).join(" · ")} …</div>` : ""}
+    <div class="dugmeler">
+      ${e.adet ? `<button class="ana" data-is onclick="eskiIslem('gizle', ${Math.min(e.adet, e.gunluk)})">🙈 Bugün ${Math.min(e.adet, e.gunluk)} eski videoyu gizle</button>` : ""}
+      ${e.gizlenen ? `<button data-is onclick="eskiIslem('geri', ${Math.min(e.gizlenen, e.gunluk)})">↩️ Gizlediklerimi geri aç (${e.gizlenen})</button>` : ""}
+    </div></div>`;
+}
+async function eskiIslem(islem, adet){
+  const m = islem === "gizle" ? `${adet} eski video YouTube'da gizli (özel) yapılsın mı? Silinmezler, istediğin zaman geri açılır.`
+                              : `Gizlediğin videolar tekrar herkese açık yapılsın mı?`;
+  if(!confirm(m)) return;
+  await post("/api/eski-islem", {islem}); bildir(islem === "gizle" ? "Gizleme başladı…" : "Geri açma başladı…"); yenile(false);
+}
 function ytCiz(a){
   const bagli = a.youtube_bagli && a.youtube_kanal, hazir = a.youtube_hazir;
+  if(bagli){ if(aktifSekme === "youtube") eskiYukle(); } else $("eskiKart").innerHTML = "";
   $("ytOzet").innerHTML = bagli
     ? `<div class="kart" style="max-width:860px;margin-bottom:14px;display:flex;gap:12px;align-items:center">
         <span style="font-size:28px">✅</span><div><b>Bağlı kanal: ${esc(a.youtube_kanal)}</b>
@@ -1040,6 +1077,8 @@ async function analizYukle(donem){
   const gecmisNot = r.gecmis_gun < 2 ? "Artışlar 2. günden itibaren görünür (veri birikiyor)" : "";
   const taban = o.taban_donem ? `${adi} paylaşılan videolar` : `Bu dönemde paylaşım yok; tüm Bıdık videoları`;
   $("analizIcerik").innerHTML = `
+    ${(r.yorumlar || []).length ? `<div class="kart" style="margin-bottom:16px"><h3 style="margin:0 0 8px;font-size:15.5px">📌 ${adi} özeti</h3>
+      <ul style="margin:0;padding-left:20px;line-height:1.6">${r.yorumlar.map(x => `<li>${esc(x)}</li>`).join("")}</ul></div>` : ""}
     <div class="kutucuklar">
       ${kut(`${adi} izlenme`, o.donem_izlenme === null ? "–" : "+" + say(o.donem_izlenme), o.donem_izlenme === null ? gecmisNot : "tüm kanal videolarında", o.donem_izlenme > 0)}
       ${kut("Toplam izlenme", say(o.toplam_izlenme), "kanalın tüm videoları")}

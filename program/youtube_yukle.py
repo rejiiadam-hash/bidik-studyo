@@ -130,6 +130,36 @@ def sil(video_id):
     return "silindi"
 
 
+def gizlilik_ayarla(video_id, gizlilik):
+    """Videonun gorunurlugunu degistirir ('private' / 'public'). Donus: eski gizlilik ya da 'yok' / 'zaten'."""
+    from googleapiclient.errors import HttpError
+    if gizlilik not in ("private", "public", "unlisted"):
+        raise ValueError("gecersiz gizlilik")
+    if not silme_izni_var():
+        raise YuklemeHatasi("Videolarin gizliligini degistirmek icin YouTube sekmesindeki 'Izni ver' dugmesiyle "
+                            "baglantiyi bir kez yenile.")
+    yt = _servis()
+    try:
+        r = yt.videos().list(part="status", id=video_id).execute()
+        if not r.get("items"):
+            return "yok"
+        st = r["items"][0]["status"]
+        eski = st.get("privacyStatus", "")
+        if eski == gizlilik:
+            return "zaten"
+        yeni = {"privacyStatus": gizlilik}
+        for k in ("embeddable", "license", "publicStatsViewable", "selfDeclaredMadeForKids"):
+            if k in st:
+                yeni[k] = st[k]
+        yt.videos().update(part="status", body={"id": video_id, "status": yeni}).execute()
+        return eski
+    except HttpError as e:
+        kod = int(getattr(e, "status_code", None) or getattr(getattr(e, "resp", None), "status", 0) or 0)
+        if kod == 403 and "quota" in str(e).lower():
+            raise YuklemeHatasi("YouTube'un gunluk islem kotasi doldu; yarin kaldigi yerden devam edebilirsin.")
+        raise YuklemeHatasi(f"Gizlilik degistirilemedi: {str(e)[:200]}")
+
+
 def bagla(ilerleme=None):
     ilerle = ilerleme or (lambda y, m: None)
     ilerle(20, "Tarayicida Google izin sayfasi acildi; kanal hesabini secip izin ver")

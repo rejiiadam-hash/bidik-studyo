@@ -253,6 +253,7 @@ Sahne alanlari:
 
 YAYIN METINLERI (kesfette bulunmak icin cok onemli):
 - "baslik": merak uyandiran, konunun ana kelimesini iceren, max 60 karakter, en fazla 1 emoji.
+- "yorum_sorusu": videonun bilgisine bagli, izleyiciye yoneltilmis KISA soru (3-38 karakter, or. "Sen hangisini secerdin?"). Video sonunda Bidik bunu sorar.
 - "aciklama": 2-3 kisa cumle. 1) videodaki bilgiyi ozetleyen merak cumlesi, 2) bilgiye kucuk bir ek detay,
   3) izleyiciye yorum yaptiracak bir SORU (or. "Sen bunu biliyor muydun?"). Hashtag YAZMA, onlari ayri alana koy.
 - "hashtagler": TAM 3 hashtag, #isaretiyle, Turkce karakterli olabilir, bosluksuz:
@@ -263,7 +264,7 @@ YAYIN METINLERI (kesfette bulunmak icin cok onemli):
 
 CIKTI: yalnizca su JSON:
 {{"senaryolar": [{{"baslik": "...",
-  "alan": "...", "konu": "kisa konu adi", "aciklama": "...", "hashtagler": ["#...", "#...", "#..."],
+  "alan": "...", "konu": "kisa konu adi", "yorum_sorusu": "...", "aciklama": "...", "hashtagler": ["#...", "#...", "#..."],
   "etiketler": ["..."], "dogrulama_notu": "bilginin dayanagi, tek cumle",
   "sahneler": [ ... ]}}]}}"""
 
@@ -283,7 +284,8 @@ CIKTI yalnizca JSON: {{"puanlar": [{{"no": 0, "kanca": 7, "komiklik": 6, "bilgi"
 # --- yazim ve bilgi denetimi ---------------------------------------------------
 def _metinler(s):
     """Izleyicinin goruecegi tum metinler: (anahtar, deger) listesi."""
-    m = [("baslik", s.get("baslik", "")), ("aciklama", s.get("aciklama", ""))]
+    m = [("baslik", s.get("baslik", "")), ("aciklama", s.get("aciklama", "")),
+         ("yorum_sorusu", s.get("yorum_sorusu", ""))]
     for i, sh in enumerate(s.get("sahneler", [])):
         m.append((f"replik{i}", sh.get("replik", "")))
         k = sh.get("kart") or {}
@@ -306,6 +308,7 @@ def denetim_istemi(senaryolar):
     ozet = []
     for i, s in enumerate(senaryolar):
         ozet.append({"no": i, "baslik": s.get("baslik", ""), "aciklama": s.get("aciklama", ""),
+                     "yorum_sorusu": s.get("yorum_sorusu", ""),
                      "replikler": [x.get("replik", "") for x in s["sahneler"]],
                      "kartlar": [{"sahne": j, "buyuk": (x.get("kart") or {}).get("buyuk", ""),
                                   "alt": (x.get("kart") or {}).get("alt", "")}
@@ -322,7 +325,7 @@ def denetim_istemi(senaryolar):
 Metinler: {json.dumps(ozet, ensure_ascii=False)}
 
 CIKTI yalnizca JSON:
-{{"sonuclar": [{{"no": 0, "baslik": "...", "aciklama": "...", "replikler": ["...", "..."],
+{{"sonuclar": [{{"no": 0, "baslik": "...", "aciklama": "...", "yorum_sorusu": "...", "replikler": ["...", "..."],
   "kartlar": [{{"sahne": 2, "buyuk": "...", "alt": "..."}}], "bilgi_dogru": true, "bilgi_sorunu": ""}}]}}"""
 
 
@@ -362,6 +365,9 @@ def denetle(modeller, senaryolar, ilerle=None):
             uygula("Baslik", s.get("baslik"), r.get("baslik"), lambda v: s.__setitem__("baslik", v), 100)
         if s.get("aciklama"):
             uygula("Aciklama", s.get("aciklama"), r.get("aciklama"), lambda v: s.__setitem__("aciklama", v), 4000)
+        if s.get("yorum_sorusu"):
+            uygula("Yorum sorusu", s.get("yorum_sorusu"), r.get("yorum_sorusu"),
+                   lambda v: s.__setitem__("yorum_sorusu", v), 38)
         for j, sh in enumerate(sahneler):
             if sh.get("replik"):
                 uygula(f"Sahne {j + 1} replik", sh.get("replik"), r["replikler"][j],
@@ -391,6 +397,14 @@ def denetim_isle(s, sonuc):
 
 
 # --- ana akis -----------------------------------------------------------------
+def _benzer_var(s, oncekiler):
+    try:
+        from analiz import benzer_mi
+    except Exception:
+        return False
+    return any(benzer_mi(s.get("konu", ""), o) or benzer_mi(s.get("baslik", ""), o) for o in oncekiler)
+
+
 def calistir(ilerleme=None):
     _ilerle = ilerleme or (lambda y, m: print(m))
     son = {"y": 0}
@@ -405,6 +419,12 @@ def calistir(ilerleme=None):
     kullanilan = [k["konu"] for k in hafiza()["konular"]][-200:]
     bekleyen = [json.load(open(p, encoding="utf-8")).get("konu", "") for p in bekleyen_dosyalar() + ertelenen_dosyalar()]
     kullanilan += bekleyen
+    try:
+        import analiz
+        kanal = analiz.kanal_basliklari(80)
+    except Exception:
+        kanal = []
+    kullanilan += [b[:50] for b in kanal[:40]]   # kanaldaki yayinlanmis konular da tekrarlanmasin
     aday_sayisi = min(int(ayar["aday_sayisi"]), max(5, int(ayar["gunluk_video"]) * 2))   # kisa cevap = hizli ve kesilmez
     alanlar = alan_sec(ayar["alanlar"], aday_sayisi)
     ilerle(15, f"{len(alanlar)} aday senaryo yaziliyor ({modeller[0]})")
@@ -422,7 +442,7 @@ def calistir(ilerleme=None):
         h = dogrula(s)
         if h:
             print("  elendi (format):", s.get("baslik"), "-", "; ".join(h))
-        elif s.get("konu", "").lower() in kucuk:
+        elif s.get("konu", "").lower() in kucuk or _benzer_var(s, kullanilan + kanal):
             print("  elendi (tekrar):", s.get("baslik"))
         else:
             gecerli.append(s)

@@ -8,7 +8,7 @@ Kanal analizi (YouTube Data API v3, mevcut 'youtube.readonly' izniyle - yeni izi
 - alan_agirliklari(): senaryo motoru icin konu alanlarinin basari agirligi (cok izlenen alan daha sik).
 Yerel kayitlardan (videolar/*.json) alan, konu, kostum, giris, arka plan eslestirilir.
 """
-import datetime, glob, json, os, threading, time
+import datetime, glob, json, os, re, threading, time
 
 from ortak import KOK, VIDEO
 
@@ -141,6 +141,41 @@ def _artis(kayit, gun):
     return g[son]["izlenme"] - g[once]["izlenme"] if once != son else None
 
 
+def _sayi_yaz(n):
+    return f"{int(n):,}".replace(",", ".")
+
+
+def _yorumlar(oz, alanlar, saatler, taban):
+    """Panelde 'Bu donemin ozeti': kisa, okunur cikarimlar (veri azsa bunu da soyler)."""
+    y = []
+    if not taban:
+        return ["Henüz özetlenecek video yok."]
+    en = max(taban, key=lambda v: v["izlenme"])
+    y.append(f"En çok izlenen: “{en['baslik'][:60]}” ({_sayi_yaz(en['izlenme'])} izlenme).")
+    if alanlar:
+        b = alanlar[0]
+        y.append(f"En iyi konu alanı: {b['ad']} (video başına {_sayi_yaz(b['ort'])} izlenme"
+                 + (", ancak yalnızca bir video var, kesin sayılmaz" if b["adet"] < 2 else "") + ").")
+        if len(alanlar) > 1 and alanlar[-1]["adet"] >= 1:
+            z = alanlar[-1]
+            y.append(f"En zayıf konu alanı: {z['ad']} (video başına {_sayi_yaz(z['ort'])}). Bir süre daha az öne çıkarabiliriz.")
+    if saatler and saatler[0]["adet"] >= 1:
+        y.append(f"En iyi yayın saati: {saatler[0]['ad']} (video başına {_sayi_yaz(saatler[0]['ort'])} izlenme).")
+    bidik = sorted(v["izlenme"] for v in taban if v["bidik"])
+    if bidik:
+        med = bidik[len(bidik) // 2]
+        y.append(f"Bıdık videolarının ortanca izlenmesi {_sayi_yaz(med)}; ilk 30 gün hedefi 1.000"
+                 + (" (hedefe ulaşıldı)." if med >= 1000 else "."))
+    if oz["gecmis_gun"] >= 7 and oz["donem_izlenme"] and oz["abone_artis"] is not None and oz["donem_izlenme"] > 0:
+        oran = 100 * oz["abone_artis"] / oz["donem_izlenme"]
+        y.append(f"Aboneye dönüşüm bu dönemde: %{oran:.2f}".replace(".", ",") + " (ilk hedef %0,12).")
+    elif oz["abone"] and oz["toplam_izlenme"]:
+        oran = 100 * oz["abone"] / oz["toplam_izlenme"]
+        y.append(f"Aboneye dönüşüm (tüm zamanlar): %{oran:.2f}".replace(".", ",")
+                 + " (ilk hedef %0,12). Dönemlik oran, veri 7 güne ulaşınca gösterilecek.")
+    return y
+
+
 def rapor(donem="haftalik"):
     gun = {"gunluk": 1, "haftalik": 7, "aylik": 30}.get(donem, 7)
     veri = _oku()
@@ -182,7 +217,13 @@ def rapor(donem="haftalik"):
         sinir = (datetime.date.fromisoformat(son) - datetime.timedelta(days=gun)).isoformat()
         once = max([d for d in abone if d <= sinir] or [min(abone)])
         abone_artis = abone[son] - abone[once] if once != son else None
+    ozet_ = {"toplam_izlenme": toplam_izlenme, "donem_izlenme": donem_izlenme, "abone_artis": abone_artis,
+             "ort_izlenme": round(izl / len(taban)) if taban else 0, "taban": taban, "hizli": hizli,
+             "abone": veri.get("abone"),
+             "gecmis_gun": len({d for k in veri.get("videolar", {}).values() for d in (k.get("gunluk") or {})})}
     return {
+        "yorumlar": _yorumlar(ozet_, grupla("alan", taban, lambda k: ALAN_ADI.get(k, k)),
+                              sorted(grupla("saat", taban), key=lambda x: -x["ort"]), taban),
         "donem": donem, "gun": gun, "son_cekim": veri.get("son_cekim", ""), "hata": DURUM["hata"],
         "gecmis_gun": len({d for k in veri.get("videolar", {}).values() for d in (k.get("gunluk") or {})}),
         "ozet": {"toplam_izlenme": toplam_izlenme, "donem_izlenme": donem_izlenme, "abone": veri.get("abone"),
@@ -194,6 +235,53 @@ def rapor(donem="haftalik"):
         "en_cok": sorted(taban, key=lambda v: -v["izlenme"])[:8],
         "hizli": hizli,
     }
+
+
+# --- tekrar eden konular ve eski videolar ------------------------------------------------------
+_DURAK = {"hakk", "şaşı", "şoke", "şok", "bilg", "gerç", "sırr", "sırl", "gizem", "sıra", "nedi", "nede", "nasıl", "ilgi",
+          "inan", "unut", "bunu", "bilm", "mutl", "kesi", "ortaya", "çıkt", "çözü",
+          "hang", "görü", "olur", "kalı", "kala", "dakik", "nere", "neyi", "yapı", "yapa", "bulu", "tüm", "başk", "sonu"}
+
+
+def _kokler(metin):
+    m = (metin or "").replace("İ", "i").replace("I", "ı").lower()
+    kelime = re.findall(r"[a-zçğıöşü0-9]+", m)
+    return {k[:4] for k in kelime if len(k) >= 4 and k[:4] not in _DURAK}
+
+
+def benzer_mi(a, b):
+    """Iki baslik/konu ayni konuyu mu anlatiyor? (ortak koklerin orani; en az 2 ortak kok)"""
+    ka, kb = _kokler(a), _kokler(b)
+    ortak = ka & kb
+    return len(ortak) >= 2 and len(ortak) / max(1, min(len(ka), len(kb))) >= 0.6
+
+
+def kanal_basliklari(adet=80):
+    """Kanaldaki (gizli olanlar dahil degil) en yeni basliklar: senaryo yazarina 'tekrarlama' listesi."""
+    v = [(k.get("yayin", ""), k.get("baslik", "")) for k in _oku().get("videolar", {}).values()
+         if k.get("baslik") and k.get("gizlilik") != "private"]
+    return [b for _, b in sorted(v, reverse=True)[:adet]]
+
+
+def eski_adaylar():
+    """Bidik donemi oncesinden kalan herkese acik videolar (gizlenmeye aday). Tekrar edenler / dusukler once."""
+    veri = _oku()
+    bidikler = [k.get("yayin", "")[:10] for k in veri.get("videolar", {}).values() if k.get("bidik") and k.get("yayin")]
+    if not bidikler:
+        return {"baslangic": "", "adaylar": []}
+    baslangic = min(bidikler)
+    hepsi = sorted(((k.get("yayin", ""), vid, k) for vid, k in veri.get("videolar", {}).items() if k.get("baslik")),
+                   key=lambda x: x[0])
+    gorulen, adaylar = [], []
+    for yayin, vid, k in hepsi:
+        tekrar = any(benzer_mi(k["baslik"], g) for g in gorulen)
+        gorulen.append(k["baslik"])
+        if yayin[:10] >= baslangic or k.get("bidik") or k.get("gizlilik") != "public":
+            continue
+        iz = _son(k)["izlenme"]
+        adaylar.append({"id": vid, "baslik": k["baslik"], "yayin": yayin[:10], "izlenme": iz, "tekrar": tekrar})
+    adaylar.sort(key=lambda x: (not x["tekrar"], x["izlenme"]))
+    return {"baslangic": baslangic, "adaylar": adaylar}
 
 
 def alan_agirliklari(alanlar):

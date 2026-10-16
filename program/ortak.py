@@ -22,6 +22,8 @@ VARSAYILAN_AYAR = {
     "youtube_gizlilik": "private",
     "son_cagri": True,   # videonun son 2 sn'sinde Begen + Abone ol animasyonu
     "tema": "koyu",
+    "imza_acik": True,               # acilista seri etiketi + kapanista yorum sorusu / yarin vaadi
+    "seri_adi": "BIDIK BİLİR Mİ?",
     "paylasim_saatleri": ["11:00", "15:00", "19:00"],
     "youtube_kanal": "",
     "github_depo": "rejiiadam-hash/bidik-studyo",     # "kullanici/depo": bos ise GitHub guncelleme kanali kapali

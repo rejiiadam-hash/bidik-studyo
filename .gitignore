@@ -12,3 +12,10 @@ silinenler/
 yedek/
 guncelleme/
 .venv/
+analiz.json
+hafiza.json
+oturumlar.json
+eski_gizlenen.json
+arka_gecmis.json
+giris_gecmis.json
+kimlik/
